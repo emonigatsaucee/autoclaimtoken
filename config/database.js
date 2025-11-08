@@ -2,15 +2,20 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/autoclaimtoken',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
 const initializeDatabase = async () => {
+  console.log('Connecting to database...');
+  console.log('Database URL:', process.env.DATABASE_URL ? 'Set (Render PostgreSQL)' : 'Not set (Local)');
+  
   const client = await pool.connect();
   try {
+    console.log('Database connection established');
+    
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -76,6 +81,7 @@ const initializeDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_blockchain_scans_wallet ON blockchain_scans(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_user ON recovery_jobs(user_id);
     `);
+    console.log('Database tables created/verified successfully');
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);

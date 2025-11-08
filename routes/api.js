@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool } = require('../config/mockDatabase');
+const { pool } = require('../config/database');
 const BlockchainScanner = require('../services/realBlockchainScanner');
 const RecoveryEngine = require('../services/recoveryEngine');
 const { ethers } = require('ethers');
@@ -7,6 +7,30 @@ const { ethers } = require('ethers');
 const router = express.Router();
 const scanner = new BlockchainScanner();
 const recoveryEngine = new RecoveryEngine();
+
+// Health check for API
+router.get('/health', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    
+    res.json({ 
+      status: 'healthy', 
+      database: 'connected',
+      api: 'operational',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'unhealthy', 
+      database: 'disconnected',
+      api: 'degraded',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 // Wallet connection and user registration
 router.post('/connect-wallet', async (req, res) => {

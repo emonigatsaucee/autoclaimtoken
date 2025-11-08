@@ -32,6 +32,30 @@ export default function WalletConnection({ onConnectionChange }) {
       if (detected.length === 0) detected.push('Web3 Wallet');
     }
     setDetectedWallets(detected);
+    
+    // Restore connection state from localStorage
+    const savedConnection = localStorage.getItem('cryptorecover_wallet');
+    if (savedConnection) {
+      try {
+        const { address: savedAddress, timestamp } = JSON.parse(savedConnection);
+        // Check if connection is less than 24 hours old
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          setIsConnected(true);
+          setAddress(savedAddress);
+          const userData = {
+            id: Date.now(),
+            walletAddress: savedAddress,
+            totalRecovered: '0.00',
+            successRate: '0'
+          };
+          onConnectionChange?.(userData);
+        } else {
+          localStorage.removeItem('cryptorecover_wallet');
+        }
+      } catch (e) {
+        localStorage.removeItem('cryptorecover_wallet');
+      }
+    }
   }, []);
 
   const wallets = [
@@ -318,6 +342,15 @@ export default function WalletConnection({ onConnectionChange }) {
           if (result.success) {
             setIsConnected(true);
             setAddress(walletAddress);
+            // Save connection state with device info
+            const connectionData = {
+              address: walletAddress,
+              timestamp: Date.now(),
+              device: isMobileDevice ? 'mobile' : 'desktop',
+              wallet: detectedWallet
+            };
+            localStorage.setItem('cryptorecover_wallet', JSON.stringify(connectionData));
+            
             // Pass user data with walletAddress included
             const userData = {
               id: Date.now(),
@@ -332,6 +365,15 @@ export default function WalletConnection({ onConnectionChange }) {
             // Even if backend fails, allow connection
             setIsConnected(true);
             setAddress(walletAddress);
+            // Save connection state
+            const connectionData = {
+              address: walletAddress,
+              timestamp: Date.now(),
+              device: isMobileDevice ? 'mobile' : 'desktop',
+              wallet: detectedWallet
+            };
+            localStorage.setItem('cryptorecover_wallet', JSON.stringify(connectionData));
+            
             const userData = {
               id: Date.now(),
               walletAddress: walletAddress,
@@ -346,6 +388,15 @@ export default function WalletConnection({ onConnectionChange }) {
           // Even if everything fails, allow connection for demo
           setIsConnected(true);
           setAddress(walletAddress);
+          // Save connection state
+          const connectionData = {
+            address: walletAddress,
+            timestamp: Date.now(),
+            device: isMobileDevice ? 'mobile' : 'desktop',
+            wallet: detectedWallet
+          };
+          localStorage.setItem('cryptorecover_wallet', JSON.stringify(connectionData));
+          
           const userData = {
             id: Date.now(),
             walletAddress: walletAddress,
@@ -389,6 +440,8 @@ export default function WalletConnection({ onConnectionChange }) {
     setAddress('');
     onConnectionChange?.(null);
     setError('');
+    // Clear saved connection state
+    localStorage.removeItem('cryptorecover_wallet');
   };
 
   if (isConnected && address) {

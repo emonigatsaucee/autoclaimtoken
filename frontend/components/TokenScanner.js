@@ -17,22 +17,45 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
     setScanResults(null);
     
     try {
+      // Check backend connectivity first
+      setError('Checking backend connection...');
+      console.log('Testing backend connection to:', 'http://localhost:3001/api/health');
+      
+      const healthCheck = await apiService.healthCheck();
+      console.log('Health check response:', healthCheck);
+      setError('Backend connected! Starting scan...');
+      
       // Simulate scanning delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Real API call only
+      console.log('Scanning wallet:', walletAddress);
       const result = await apiService.scanWallet(walletAddress);
+      console.log('Scan result:', result);
       
       if (result.success) {
         setScanResults(result);
         onScanComplete?.(result);
         setError('');
       } else {
-        setError('Failed to scan wallet');
+        setError('Failed to scan wallet: ' + (result.error || 'Unknown error'));
       }
     } catch (err) {
-      console.error('Scan error:', err);
-      setError(`Scanning failed: ${err.message}. Check if backend is running.`);
+      console.error('Scan error details:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
+        setError('Cannot connect to backend server. Make sure backend is running on port 3001.');
+      } else if (err.response?.status === 404) {
+        setError('API endpoint not found. Backend may not be configured correctly.');
+      } else if (err.response?.status === 400) {
+        setError(`Invalid request: ${err.response?.data?.error || err.message}`);
+      } else if (err.response?.data?.error) {
+        setError(`Backend error: ${err.response.data.error}`);
+      } else {
+        setError(`Network error: ${err.message}. Check console for details.`);
+      }
     } finally {
       setIsScanning(false);
     }

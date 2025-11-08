@@ -62,7 +62,7 @@ export const apiService = {
 
   // Health check
   healthCheck: async () => {
-    const response = await api.get('/health', { baseURL: API_BASE_URL });
+    const response = await api.get('/health');
     return response.data;
   },
 };
