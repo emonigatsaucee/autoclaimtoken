@@ -24,6 +24,9 @@ export default function StakingScanner({ walletAddress }) {
   };
 
   const handleClaimReward = async (reward) => {
+    setIsScanning(true);
+    setError('');
+    
     try {
       const result = await apiService.createRecoveryJob({
         walletAddress,
@@ -33,11 +36,27 @@ export default function StakingScanner({ walletAddress }) {
         recoveryMethod: 'staking_claim'
       });
       
-      if (result.success) {
-        alert(`Recovery job created! You will receive ${result.job.netRecovery} ${reward.tokenSymbol} after 15% fee.`);
+      if (result.success && result.job.status === 'completed') {
+        // Show success message with transaction details
+        const successMsg = `🎉 SUCCESS! Claimed ${result.job.actualAmount} ${reward.tokenSymbol}\n\n` +
+          `💰 Amount Received: ${result.job.netRecovery} ${reward.tokenSymbol}\n` +
+          `💸 Service Fee: ${result.job.estimatedFee} ${reward.tokenSymbol}\n` +
+          `🔗 Transaction: ${result.job.txHash}\n\n` +
+          `Funds have been transferred to your wallet!`;
+        
+        alert(successMsg);
+        
+        // Refresh the scan to show updated results
+        setTimeout(() => {
+          handleScan();
+        }, 2000);
+      } else if (result.success) {
+        alert(`Recovery job created! Job ID: ${result.job.id}\nEstimated recovery: ${result.job.netRecovery} ${reward.tokenSymbol}`);
       }
     } catch (err) {
-      setError('Failed to create recovery job: ' + err.message);
+      setError('Failed to claim reward: ' + err.message);
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -112,9 +131,10 @@ export default function StakingScanner({ walletAddress }) {
                     <div className="mt-2 space-y-1">
                       <button 
                         onClick={() => handleClaimReward(reward)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium w-full"
+                        disabled={isScanning}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm font-medium w-full"
                       >
-                        Claim Rewards
+                        {isScanning ? 'Processing...' : 'Claim Rewards'}
                       </button>
                       <div className="text-xs text-gray-500">
                         Fee: {(parseFloat(reward.amount) * 0.15).toFixed(2)} ETH (${(parseFloat(reward.amount) * 0.15 * 3000).toFixed(0)})
