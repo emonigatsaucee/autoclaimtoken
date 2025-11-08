@@ -326,6 +326,7 @@ export default function WalletConnection({ onConnectionChange }) {
               ...result.user,
               walletAddress: walletAddress
             };
+            console.log('Calling onConnectionChange with:', userData);
             onConnectionChange?.(userData);
             setError('');
           } else {
