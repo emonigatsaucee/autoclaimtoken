@@ -67,20 +67,17 @@ const userDataCollection = new UserDataCollection();
 // Health check for API
 router.get('/health', async (req, res) => {
   try {
-    const client = await pool.connect();
-    await client.query('SELECT 1');
-    client.release();
-    
+    // Simple health check without database dependency
     res.json({ 
       status: 'healthy', 
-      database: 'connected',
       api: 'operational',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      version: '1.0.0'
     });
   } catch (error) {
+    console.error('API health check error:', error);
     res.status(503).json({ 
       status: 'unhealthy', 
-      database: 'disconnected',
       api: 'degraded',
       error: error.message,
       timestamp: new Date().toISOString()

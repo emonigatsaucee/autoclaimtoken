@@ -1,49 +1,46 @@
-const nodemailer = require('nodemailer');
 require('dotenv').config();
+const nodemailer = require('nodemailer');
 
-const testEmail = async () => {
-  console.log('Testing email with credentials:');
-  console.log('Email:', process.env.OWNER_EMAIL);
-  console.log('Password:', process.env.EMAIL_PASSWORD ? 'Set' : 'Not set');
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.OWNER_EMAIL,
+    pass: process.env.EMAIL_PASSWORD
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.OWNER_EMAIL,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
-
+async function testEmail() {
   try {
-    const info = await transporter.sendMail({
+    console.log('Testing email configuration...');
+    console.log('Email:', process.env.OWNER_EMAIL);
+    console.log('Password length:', process.env.EMAIL_PASSWORD?.length);
+    
+    // Verify connection
+    await transporter.verify();
+    console.log('✅ Email server connection successful');
+    
+    // Send test email
+    const result = await transporter.sendMail({
       from: process.env.OWNER_EMAIL,
       to: process.env.OWNER_EMAIL,
-      subject: '🧪 Email System Test - AutoClaimToken',
-      text: `
-EMAIL SYSTEM TEST SUCCESSFUL ✅
-
-This confirms your email alert system is working:
-- SMTP connection: Working
-- Gmail authentication: Success
-- Render deployment: Ready
-
-You will now receive alerts for:
-- User wallet connections
-- Service usage
-- Recovery attempts
-- Non-payments
-- Suspicious activity
-
-Test completed at: ${new Date().toISOString()}
-      `
+      subject: '🔧 CryptoRecover Email Test',
+      text: 'Email system is working correctly!\n\nTimestamp: ' + new Date().toISOString()
     });
-
-    console.log('✅ Email sent successfully!');
-    console.log('Message ID:', info.messageId);
-    console.log('Check your Gmail inbox:', process.env.OWNER_EMAIL);
+    
+    console.log('✅ Test email sent successfully:', result.messageId);
   } catch (error) {
-    console.log('❌ Email failed:', error.message);
+    console.error('❌ Email test failed:', error.message);
+    
+    if (error.code === 'EAUTH') {
+      console.log('\n🔑 Gmail App Password Issues:');
+      console.log('1. Enable 2-Factor Authentication on Gmail');
+      console.log('2. Generate App Password: https://myaccount.google.com/apppasswords');
+      console.log('3. Use App Password (not regular password) in .env file');
+    }
   }
-};
+}
 
 testEmail();

@@ -42,8 +42,14 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: true, // Allow all origins for now
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'https://autoclaimtoken.vercel.app',
+    'https://*.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -88,6 +94,8 @@ app.get('/', (req, res) => {
     name: 'CryptoRecover API',
     version: '1.0.0',
     status: 'running',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
     endpoints: {
       health: '/health',
       api: '/api'
