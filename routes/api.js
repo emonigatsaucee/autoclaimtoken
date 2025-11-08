@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool } = require('../config/database');
+const { pool } = require('../config/mockDatabase');
 const BlockchainScanner = require('../services/blockchainScanner');
 const RecoveryEngine = require('../services/recoveryEngine');
 const { ethers } = require('ethers');

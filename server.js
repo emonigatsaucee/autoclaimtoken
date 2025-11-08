@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-const { initializeDatabase } = require('./config/database');
+const { initializeDatabase } = require('./config/mockDatabase');
 const apiRoutes = require('./routes/api');
 
 const app = express();
