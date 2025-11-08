@@ -21,10 +21,17 @@ const initializeDatabase = async (retries = 3) => {
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         wallet_address VARCHAR(42) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        ip_address INET,
+        user_agent TEXT,
+        country VARCHAR(2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_scan TIMESTAMP,
         total_recovered DECIMAL(20,8) DEFAULT 0,
-        success_rate DECIMAL(5,2) DEFAULT 0
+        success_rate DECIMAL(5,2) DEFAULT 0,
+        payment_status VARCHAR(20) DEFAULT 'pending',
+        service_agreement_accepted BOOLEAN DEFAULT false,
+        kyc_verified BOOLEAN DEFAULT false
       );
 
       CREATE TABLE IF NOT EXISTS wallets (

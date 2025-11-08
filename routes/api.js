@@ -2,11 +2,13 @@ const express = require('express');
 const { pool } = require('../config/database');
 const BlockchainScanner = require('../services/realBlockchainScanner');
 const RecoveryEngine = require('../services/recoveryEngine');
+const BridgeRecoveryService = require('../services/bridgeRecovery');
 const { ethers } = require('ethers');
 
 const router = express.Router();
 const scanner = new BlockchainScanner();
 const recoveryEngine = new RecoveryEngine();
+const bridgeRecovery = new BridgeRecoveryService();
 
 // Health check for API
 router.get('/health', async (req, res) => {
@@ -406,6 +408,95 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).json({ error: 'Failed to load dashboard' });
+  }
+});
+
+// Scan for stuck bridge transactions
+router.post('/scan-bridge', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const stuckTransactions = await bridgeRecovery.scanForStuckBridgeTransactions(walletAddress);
+    
+    res.json({
+      success: true,
+      stuckTransactions,
+      summary: {
+        totalStuck: stuckTransactions.length,
+        totalValue: stuckTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0).toFixed(4),
+        recoverableCount: stuckTransactions.filter(tx => tx.recoverable).length,
+        bridges: [...new Set(stuckTransactions.map(tx => tx.bridge))]
+      }
+    });
+  } catch (error) {
+    console.error('Bridge scan error:', error);
+    res.status(500).json({ error: 'Failed to scan bridge transactions' });
+  }
+});
+
+// Execute bridge recovery
+router.post('/recover-bridge/:txHash', async (req, res) => {
+  try {
+    const { txHash } = req.params;
+    const { walletAddress, signature, stuckTransaction } = req.body;
+    
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    // Verify user signature
+    const message = `Authorize bridge recovery for transaction ${txHash}`;
+    const recoveredAddress = ethers.verifyMessage(message, signature);
+    
+    if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    // Create a signer (in production, this would be handled differently)
+    const provider = new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+    const wallet = ethers.Wallet.createRandom().connect(provider);
+    
+    // Execute recovery
+    const result = await bridgeRecovery.executeBridgeRecovery(stuckTransaction, wallet);
+    
+    // Log recovery in database
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        INSERT INTO recovery_jobs 
+        (user_id, wallet_address, recovery_method, estimated_amount, actual_amount, status, tx_hash)
+        SELECT u.id, $1, $2, $3, $4, $5, $6
+        FROM users u WHERE u.wallet_address = $1
+      `, [
+        walletAddress.toLowerCase(),
+        'bridge_recovery',
+        stuckTransaction.amount || '0',
+        result.recoveredAmount,
+        result.success ? 'completed' : 'failed',
+        result.newTxHash
+      ]);
+    } finally {
+      client.release();
+    }
+
+    res.json({
+      success: true,
+      result: {
+        recovered: result.success,
+        amount: result.recoveredAmount,
+        txHash: result.newTxHash,
+        method: result.method,
+        gasUsed: result.gasUsed,
+        fee: result.success ? (parseFloat(result.recoveredAmount || 0) * 0.15).toFixed(4) : 0
+      }
+    });
+  } catch (error) {
+    console.error('Bridge recovery error:', error);
+    res.status(500).json({ error: 'Bridge recovery failed: ' + error.message });
   }
 });
 
