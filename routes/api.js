@@ -31,12 +31,18 @@ async function sendAdminNotification(subject, message) {
   try {
     console.log('📧 Attempting to send email...');
     
-    const result = await emailTransporter.sendMail({
-      from: process.env.OWNER_EMAIL,
-      to: process.env.OWNER_EMAIL,
-      subject: subject,
-      text: message
-    });
+    // Add 10 second timeout to see what happens
+    const result = await Promise.race([
+      emailTransporter.sendMail({
+        from: process.env.OWNER_EMAIL,
+        to: process.env.OWNER_EMAIL,
+        subject: subject,
+        text: message
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT: Email took longer than 10 seconds')), 10000)
+      )
+    ]);
     
     console.log('✅ EMAIL SUCCESS!');
     console.log('✅ Message ID:', result.messageId);
