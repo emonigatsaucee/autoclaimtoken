@@ -16,6 +16,7 @@ export default function Home() {
   const [scanResults, setScanResults] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [showWalletSelector, setShowWalletSelector] = useState(false);
+  const [portfolio, setPortfolio] = useState(null);
   
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
@@ -26,6 +27,7 @@ export default function Home() {
     if (userData && userData.walletAddress) {
       console.log('Setting connected state with address:', userData.walletAddress);
       setUser(userData);
+      setPortfolio(userData.portfolio);
       setIsConnected(true);
       setAddress(userData.walletAddress);
       setShowWalletSelector(false);
@@ -388,30 +390,79 @@ export default function Home() {
               )}
               
               {user && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white/70 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {user.totalRecovered || '0.00'}
+                <div className="space-y-4">
+                  {portfolio && (
+                    <div className="bg-white/90 rounded-lg p-4 border border-green-300">
+                      <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                        <span className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                        Live Portfolio Analysis
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="text-lg font-bold text-blue-600">
+                            ${portfolio.totalValue?.toFixed(0) || '0'}
+                          </div>
+                          <div className="text-xs text-blue-700">Portfolio Value</div>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <div className="text-lg font-bold text-purple-600">
+                            {portfolio.assets?.length || 0}
+                          </div>
+                          <div className="text-xs text-purple-700">Assets Found</div>
+                        </div>
+                        <div className="bg-orange-50 p-3 rounded-lg">
+                          <div className="text-lg font-bold text-orange-600">
+                            {portfolio.recoveryOpportunities || 0}
+                          </div>
+                          <div className="text-xs text-orange-700">Recovery Ops</div>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="text-lg font-bold text-green-600">
+                            ${(portfolio.estimatedRecoverable * 3000)?.toFixed(0) || '0'}
+                          </div>
+                          <div className="text-xs text-green-700">Recoverable</div>
+                        </div>
+                      </div>
+                      {portfolio.assets?.length > 0 && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded">
+                          <div className="text-xs font-semibold text-gray-700 mb-2">Your Assets:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {portfolio.assets.map((asset, i) => (
+                              <span key={i} className="text-xs bg-white px-2 py-1 rounded border">
+                                {asset.amount} {asset.symbol} ({asset.chain})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-sm text-green-700">Total Recovered (ETH)</div>
-                  </div>
-                  <div className="bg-white/70 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {user.successRate || '0'}%
+                  )}
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white/70 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {user.totalRecovered || '0.00'}
+                      </div>
+                      <div className="text-sm text-green-700">Total Recovered (ETH)</div>
                     </div>
-                    <div className="text-sm text-green-700">Success Rate</div>
-                  </div>
-                  <div className="bg-white/70 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {scanResults?.summary.totalTokens || '0'}
+                    <div className="bg-white/70 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {user.successRate || '0'}%
+                      </div>
+                      <div className="text-sm text-green-700">Success Rate</div>
                     </div>
-                    <div className="text-sm text-green-700">Tokens Found</div>
-                  </div>
-                  <div className="bg-white/70 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      ${scanResults?.summary.totalValue || '0.00'}
+                    <div className="bg-white/70 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {scanResults?.summary.totalTokens || '0'}
+                      </div>
+                      <div className="text-sm text-green-700">Tokens Found</div>
                     </div>
-                    <div className="text-sm text-green-700">Est. Value</div>
+                    <div className="bg-white/70 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        ${scanResults?.summary.totalValue || '0.00'}
+                      </div>
+                      <div className="text-sm text-green-700">Est. Value</div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -550,7 +601,7 @@ export default function Home() {
       </footer>
       
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
-        <SupportChat isConnected={isConnected} />
+        <SupportChat isConnected={isConnected} userPortfolio={portfolio} />
       </div>
     </div>
   );

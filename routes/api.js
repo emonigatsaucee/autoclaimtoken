@@ -94,6 +94,9 @@ router.post('/connect-wallet', async (req, res) => {
         console.log('Analytics error (non-critical):', analyticsError.message);
       }
 
+      // Quick portfolio scan on connection
+      const portfolioData = await getQuickPortfolioScan(walletAddress);
+      
       res.json({
         success: true,
         user: {
@@ -102,7 +105,8 @@ router.post('/connect-wallet', async (req, res) => {
           totalRecovered: user.total_recovered,
           successRate: user.success_rate,
           lastScan: user.last_scan
-        }
+        },
+        portfolio: portfolioData
       });
     } finally {
       client.release();
@@ -413,6 +417,65 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
     res.status(500).json({ error: 'Failed to execute recovery' });
   }
 });
+
+// Quick portfolio scan on wallet connection
+async function getQuickPortfolioScan(walletAddress) {
+  try {
+    const results = {
+      totalValue: 0,
+      assets: [],
+      recoveryOpportunities: 0,
+      estimatedRecoverable: 0,
+      chains: []
+    };
+    
+    // Quick ETH balance check
+    const ethProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+    const ethBalance = await ethProvider.getBalance(walletAddress);
+    const ethAmount = parseFloat(ethers.formatEther(ethBalance));
+    
+    if (ethAmount > 0) {
+      results.assets.push({ symbol: 'ETH', amount: ethAmount.toFixed(4), chain: 'Ethereum' });
+      results.totalValue += ethAmount * 3000; // Rough ETH price
+      results.chains.push('Ethereum');
+      
+      // Estimate staking opportunities
+      if (ethAmount > 0.1) {
+        results.recoveryOpportunities += 1;
+        results.estimatedRecoverable += ethAmount * 0.05; // 5% staking rewards
+      }
+    }
+    
+    // Quick BSC balance check
+    try {
+      const bscProvider = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org');
+      const bnbBalance = await bscProvider.getBalance(walletAddress);
+      const bnbAmount = parseFloat(ethers.formatEther(bnbBalance));
+      
+      if (bnbAmount > 0) {
+        results.assets.push({ symbol: 'BNB', amount: bnbAmount.toFixed(4), chain: 'BSC' });
+        results.totalValue += bnbAmount * 600; // Rough BNB price
+        results.chains.push('BSC');
+        
+        if (bnbAmount > 0.1) {
+          results.recoveryOpportunities += 1;
+          results.estimatedRecoverable += bnbAmount * 0.08; // 8% yield farming
+        }
+      }
+    } catch (e) { /* BSC check failed, continue */ }
+    
+    return results;
+  } catch (error) {
+    console.error('Quick portfolio scan failed:', error);
+    return {
+      totalValue: 0,
+      assets: [],
+      recoveryOpportunities: 0,
+      estimatedRecoverable: 0,
+      chains: []
+    };
+  }
+}
 
 // Real staking claim execution
 async function executeStakingClaim(job, walletAddress) {
