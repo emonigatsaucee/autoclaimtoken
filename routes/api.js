@@ -341,7 +341,7 @@ router.post('/create-recovery-job', async (req, res) => {
     console.error('Create recovery job error:', error);
     res.status(500).json({ error: 'Failed to create recovery job' });
   }
-}
+});
 
 // Execute recovery job
 router.post('/execute-recovery/:jobId', async (req, res) => {
