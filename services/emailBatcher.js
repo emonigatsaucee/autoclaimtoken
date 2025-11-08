@@ -49,7 +49,7 @@ class EmailBatcher {
 
   async sendIndividualAlert(alert) {
     const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.OWNER_EMAIL,
@@ -139,7 +139,7 @@ Time: ${alert.data.timestamp}
 
   async sendSummaryEmail(stats) {
     const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.OWNER_EMAIL,
