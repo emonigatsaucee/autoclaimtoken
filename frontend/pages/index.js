@@ -14,17 +14,21 @@ export default function Home() {
   const [address, setAddress] = useState('');
 
   const handleConnectionChange = (userData) => {
-    console.log('Connection change:', userData);
-    setUser(userData);
+    console.log('Connection change received:', userData);
+    
     if (userData && userData.walletAddress) {
+      console.log('Setting connected state with address:', userData.walletAddress);
+      setUser(userData);
       setIsConnected(true);
       setAddress(userData.walletAddress);
       
-      // Show success message and guide user
+      // Force re-render and show success
       setTimeout(() => {
-        alert(`Wallet Connected Successfully!\n\nAddress: ${userData.walletAddress}\n\nNext Steps:\n1. Scan your wallet for claimable tokens\n2. Analyze recovery opportunities\n3. Execute recovery process\n\nScroll down to see the Token Scanner!`);
-      }, 1000);
+        console.log('Connection successful, showing dashboard');
+      }, 100);
     } else {
+      console.log('Disconnecting wallet');
+      setUser(null);
       setIsConnected(false);
       setAddress('');
       setScanResults(null);
@@ -93,6 +97,11 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug info */}
+        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          Connected: {isConnected ? 'YES' : 'NO'} | Address: {address || 'None'} | User: {user ? 'YES' : 'NO'}
+        </div>
+        
         {!isConnected ? (
           <div className="space-y-12">
             <div className="relative">
