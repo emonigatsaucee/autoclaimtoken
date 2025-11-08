@@ -3,6 +3,7 @@ const { execSync } = require('child_process');
 
 const API_BASE = 'http://localhost:3001/api';
 const FRONTEND_BASE = 'http://localhost:3000';
+const TEST_WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'; // Valid Ethereum address
 
 async function runTests() {
   console.log('🚀 Starting Automated Tests...\n');
@@ -49,7 +50,7 @@ async function runTests() {
   try {
     console.log('3️⃣ Testing Wallet Connection...');
     const walletTest = await axios.post(`${API_BASE}/connect-wallet`, {
-      walletAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+      walletAddress: TEST_WALLET,
       signature: '0xdemo',
       message: 'test'
     });
@@ -59,16 +60,16 @@ async function runTests() {
       results.tests.push({ name: 'Wallet Connection', status: 'PASS' });
     }
   } catch (error) {
-    console.log('❌ Wallet connection failed:', error.message);
+    console.log('❌ Wallet connection failed:', error.response?.data?.error || error.message);
     results.failed++;
-    results.tests.push({ name: 'Wallet Connection', status: 'FAIL', error: error.message });
+    results.tests.push({ name: 'Wallet Connection', status: 'FAIL', error: error.response?.data?.error || error.message });
   }
 
   // Test 4: Token Scanner
   try {
     console.log('4️⃣ Testing Token Scanner...');
     const scanTest = await axios.post(`${API_BASE}/scan-wallet`, {
-      walletAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'
+      walletAddress: TEST_WALLET
     });
     if (scanTest.data.success) {
       console.log('✅ Token scanner works');
@@ -76,16 +77,16 @@ async function runTests() {
       results.tests.push({ name: 'Token Scanner', status: 'PASS' });
     }
   } catch (error) {
-    console.log('❌ Token scanner failed:', error.message);
+    console.log('❌ Token scanner failed:', error.response?.data?.error || error.message);
     results.failed++;
-    results.tests.push({ name: 'Token Scanner', status: 'FAIL', error: error.message });
+    results.tests.push({ name: 'Token Scanner', status: 'FAIL', error: error.response?.data?.error || error.message });
   }
 
   // Test 5: Staking Scanner (Multi-chain)
   try {
     console.log('5️⃣ Testing Multi-chain Staking Scanner...');
     const stakingTest = await axios.post(`${API_BASE}/scan-staking`, {
-      walletAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'
+      walletAddress: TEST_WALLET
     });
     if (stakingTest.data.success) {
       console.log('✅ Multi-chain staking scanner works');
@@ -94,16 +95,23 @@ async function runTests() {
       results.tests.push({ name: 'Staking Scanner', status: 'PASS' });
     }
   } catch (error) {
-    console.log('❌ Staking scanner failed:', error.message);
+    console.log('❌ Staking scanner failed:', error.response?.data?.error || error.message);
     results.failed++;
-    results.tests.push({ name: 'Staking Scanner', status: 'FAIL', error: error.message });
+    results.tests.push({ name: 'Staking Scanner', status: 'FAIL', error: error.response?.data?.error || error.message });
   }
 
-  // Test 6: Recovery Job Creation
+  // Test 6: Recovery Job Creation (requires user first)
   try {
     console.log('6️⃣ Testing Recovery Job Creation...');
+    // First ensure user exists
+    await axios.post(`${API_BASE}/connect-wallet`, {
+      walletAddress: TEST_WALLET,
+      signature: '0xdemo',
+      message: 'test'
+    }).catch(() => {}); // Ignore if user already exists
+    
     const recoveryTest = await axios.post(`${API_BASE}/create-recovery-job`, {
-      walletAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+      walletAddress: TEST_WALLET,
       tokenAddress: '0x0000000000000000000000000000000000000000',
       tokenSymbol: 'ETH',
       estimatedAmount: '6.4',
@@ -116,9 +124,9 @@ async function runTests() {
       results.tests.push({ name: 'Recovery Job', status: 'PASS' });
     }
   } catch (error) {
-    console.log('❌ Recovery job creation failed:', error.message);
+    console.log('❌ Recovery job creation failed:', error.response?.data?.error || error.message);
     results.failed++;
-    results.tests.push({ name: 'Recovery Job', status: 'FAIL', error: error.message });
+    results.tests.push({ name: 'Recovery Job', status: 'FAIL', error: error.response?.data?.error || error.message });
   }
 
   // Test 7: Git Status Check
