@@ -19,10 +19,17 @@ const emailTransporter = nodemailer.createTransport({
   }
 });
 
-// Simple email function using your Gmail
+// Email function with detailed debugging
 async function sendAdminNotification(subject, message) {
+  console.log('🔍 EMAIL DEBUG - Starting email send process');
+  console.log('📧 Subject:', subject);
+  console.log('📧 From:', process.env.OWNER_EMAIL);
+  console.log('📧 To:', process.env.OWNER_EMAIL);
+  console.log('📧 Password set:', process.env.EMAIL_PASSWORD ? 'YES' : 'NO');
+  console.log('📧 Password length:', process.env.EMAIL_PASSWORD?.length);
+  
   try {
-    console.log('📧 Sending email:', subject);
+    console.log('📧 Attempting to send email...');
     
     const result = await emailTransporter.sendMail({
       from: process.env.OWNER_EMAIL,
@@ -31,13 +38,23 @@ async function sendAdminNotification(subject, message) {
       text: message
     });
     
-    console.log('✅ Email sent successfully:', result.messageId);
+    console.log('✅ EMAIL SUCCESS!');
+    console.log('✅ Message ID:', result.messageId);
+    console.log('✅ Response:', JSON.stringify(result, null, 2));
     return true;
     
   } catch (error) {
-    console.error('❌ Email failed:', error.message);
-    console.log('🚨 EMAIL ALERT:', subject);
-    console.log(message);
+    console.log('❌ EMAIL FAILED!');
+    console.log('❌ Error type:', error.constructor.name);
+    console.log('❌ Error code:', error.code);
+    console.log('❌ Error message:', error.message);
+    console.log('❌ Full error:', JSON.stringify(error, null, 2));
+    
+    console.log('🚨 CONSOLE BACKUP ALERT:');
+    console.log('🚨 Subject:', subject);
+    console.log('🚨 Message:', message);
+    console.log('🚨 END ALERT');
+    
     return false;
   }
 }
