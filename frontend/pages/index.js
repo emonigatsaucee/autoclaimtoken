@@ -175,9 +175,9 @@ export default function Home() {
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://phantom.app/favicon.ico" alt="Phantom" className="w-10 h-10 object-contain" />
+                        <img src="https://rainbow.me/favicon.ico" alt="Rainbow" className="w-10 h-10 object-contain" />
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">PHANTOM</div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">RAINBOW</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">

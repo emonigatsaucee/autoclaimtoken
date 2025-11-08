@@ -35,14 +35,6 @@ export default function WalletConnection({ onConnectionChange }) {
       connect: connectCoinbase
     },
     {
-      name: 'Phantom',
-      icon: 'https://phantom.app/favicon.ico',
-      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/phantom.svg',
-      mobile: 'https://phantom.app/ul/browse/localhost:3000',
-      desktop: () => window.solana?.isPhantom,
-      connect: connectPhantom
-    },
-    {
       name: 'Ledger Live',
       icon: 'https://www.ledger.com/favicon.ico',
       fallback: 'https://logo.clearbit.com/ledger.com',
@@ -75,14 +67,6 @@ export default function WalletConnection({ onConnectionChange }) {
       connect: connectRainbow
     },
     {
-      name: 'Argent',
-      icon: 'https://www.argent.xyz/favicon.ico',
-      fallback: 'https://logo.clearbit.com/argent.xyz',
-      mobile: 'https://argent.link/app/localhost:3000',
-      desktop: () => window.ethereum?.isArgent,
-      connect: connectArgent
-    },
-    {
       name: 'MyEtherWallet',
       icon: 'https://www.myetherwallet.com/favicon.ico',
       fallback: 'https://logo.clearbit.com/myetherwallet.com',
@@ -97,38 +81,6 @@ export default function WalletConnection({ onConnectionChange }) {
       mobile: 'atomic://dapp/localhost:3000',
       desktop: () => window.atomic,
       connect: connectAtomic
-    },
-    {
-      name: 'imToken',
-      icon: 'https://token.im/favicon.ico',
-      fallback: 'https://logo.clearbit.com/token.im',
-      mobile: 'imtokenv2://navigate/DappView?url=localhost:3000',
-      desktop: () => window.ethereum?.isImToken,
-      connect: connectImToken
-    },
-    {
-      name: 'Coinomi',
-      icon: 'https://www.coinomi.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/coinomi.com',
-      mobile: 'coinomi://dapp/localhost:3000',
-      desktop: () => window.ethereum?.isCoinomi,
-      connect: connectCoinomi
-    },
-    {
-      name: 'Guarda',
-      icon: 'https://guarda.co/favicon.ico',
-      fallback: 'https://logo.clearbit.com/guarda.co',
-      mobile: 'guarda://dapp/localhost:3000',
-      desktop: () => window.ethereum?.isGuarda,
-      connect: connectGuarda
-    },
-    {
-      name: 'MathWallet',
-      icon: 'https://www.mathwallet.org/favicon.ico',
-      fallback: 'https://logo.clearbit.com/mathwallet.org',
-      mobile: 'mathwallet://dapp/localhost:3000',
-      desktop: () => window.ethereum?.isMathWallet,
-      connect: connectMathWallet
     },
     {
       name: 'WalletConnect',
@@ -200,17 +152,7 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('trust');
   }
 
-  async function connectPhantom() {
-    if (!window.solana?.isPhantom) {
-      if (isMobile()) {
-        window.open('https://phantom.app/ul/browse/' + window.location.host, '_blank');
-        return;
-      }
-      setError('Phantom Wallet not installed.');
-      return;
-    }
-    await connectSolanaWallet('phantom');
-  }
+
 
   async function connectExodus() {
     if (!window.exodus) {
@@ -264,29 +206,9 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('rainbow');
   }
 
-  async function connectArgent() {
-    if (isMobile()) {
-      window.open('https://argent.link/app/' + window.location.host, '_blank');
-      return;
-    }
-    if (!window.ethereum?.isArgent) {
-      setError('Argent Wallet not installed.');
-      return;
-    }
-    await connectWallet('argent');
-  }
 
-  async function connectImToken() {
-    if (isMobile()) {
-      window.open('imtokenv2://navigate/DappView?url=' + encodeURIComponent(window.location.href), '_blank');
-      return;
-    }
-    if (!window.ethereum?.isImToken) {
-      setError('imToken not available on desktop.');
-      return;
-    }
-    await connectWallet('imtoken');
-  }
+
+
 
   async function connectMEW() {
     if (isMobile()) {
@@ -300,71 +222,17 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('mew');
   }
 
-  async function connectCoinomi() {
-    if (isMobile()) {
-      window.open('coinomi://dapp/' + window.location.host, '_blank');
-      return;
-    }
-    setError('Coinomi available on mobile only.');
-  }
 
-  async function connectGuarda() {
-    if (isMobile()) {
-      window.open('guarda://dapp/' + window.location.host, '_blank');
-      return;
-    }
-    if (!window.ethereum?.isGuarda) {
-      setError('Guarda Wallet not installed.');
-      return;
-    }
-    await connectWallet('guarda');
-  }
 
-  async function connectMathWallet() {
-    if (isMobile()) {
-      window.open('mathwallet://dapp/' + window.location.host, '_blank');
-      return;
-    }
-    if (!window.ethereum?.isMathWallet) {
-      setError('MathWallet not installed.');
-      return;
-    }
-    await connectWallet('mathwallet');
-  }
+
+
+
 
   async function connectWalletConnect() {
     setError('WalletConnect integration coming soon.');
   }
 
-  async function connectSolanaWallet(walletType) {
-    setIsConnecting(true);
-    setError('');
-    
-    try {
-      const response = await window.solana.connect();
-      const walletAddress = response.publicKey.toString();
-      
-      // For Solana wallets, we'll use a different message format
-      const message = `Verify Solana wallet ownership\nTimestamp: ${Date.now()}`;
-      const encodedMessage = new TextEncoder().encode(message);
-      const signature = await window.solana.signMessage(encodedMessage);
-      
-      const result = await apiService.connectWallet(walletAddress, signature, message);
-      
-      if (result.success) {
-        setIsConnected(true);
-        setAddress(walletAddress);
-        onConnectionChange?.(result.user);
-      } else {
-        setError('Failed to verify Solana wallet connection');
-      }
-    } catch (err) {
-      console.error('Solana wallet connection error:', err);
-      setError('Failed to connect Solana wallet.');
-    } finally {
-      setIsConnecting(false);
-    }
-  }
+
 
   async function connectWallet(walletType) {
     setIsConnecting(true);
