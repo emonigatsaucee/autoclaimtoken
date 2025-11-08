@@ -118,6 +118,7 @@ const initializeDatabase = async (retries = 3) => {
       return; // Success
     } catch (error) {
       console.error(`Database attempt ${i + 1} failed:`, error.message);
+      console.error('Full error:', error);
       if (i === retries - 1) throw error;
       console.log('Waiting 5 seconds before retry...');
       await new Promise(resolve => setTimeout(resolve, 5000));

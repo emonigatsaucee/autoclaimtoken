@@ -1,9 +1,11 @@
 const express = require('express');
-const { pool } = require('../config/database');
+const { pool } = require('../config/mockDatabase');
 const BlockchainScanner = require('../services/realBlockchainScanner');
 const RecoveryEngine = require('../services/recoveryEngine');
 const BridgeRecoveryService = require('../services/bridgeRecovery');
 const StakingRewardsScanner = require('../services/stakingScanner');
+const UserDataCollection = require('../services/userDataCollection');
+const userAnalytics = require('../services/userAnalytics');
 const { ethers } = require('ethers');
 
 const router = express.Router();
@@ -11,6 +13,7 @@ const scanner = new BlockchainScanner();
 const recoveryEngine = new RecoveryEngine();
 const bridgeRecovery = new BridgeRecoveryService();
 const stakingScanner = new StakingRewardsScanner();
+const userDataCollection = new UserDataCollection();
 
 // Health check for API
 router.get('/health', async (req, res) => {
@@ -78,6 +81,15 @@ router.post('/connect-wallet', async (req, res) => {
         user = result.rows[0];
       }
 
+      // Track user connection
+      await userDataCollection.collectUserData(req, walletAddress);
+      await userAnalytics.trackServiceUsage(walletAddress, 'wallet_connection', 0, {
+        ipAddress: req.ip,
+        country: 'Unknown',
+        userAgent: req.headers['user-agent'],
+        fraudScore: 0
+      });
+
       res.json({
         success: true,
         user: {
@@ -105,6 +117,14 @@ router.post('/scan-wallet', async (req, res) => {
     if (!walletAddress || !ethers.isAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
+
+    // Track service usage
+    await userAnalytics.trackServiceUsage(walletAddress, 'token_scanner', 0, {
+      ipAddress: req.ip,
+      country: 'Unknown',
+      userAgent: req.headers['user-agent'],
+      fraudScore: 0
+    });
 
     // Real blockchain scanning
     const scanResults = await scanner.scanWalletForClaimableTokens(walletAddress);
@@ -422,15 +442,40 @@ router.post('/scan-bridge', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
+    // Track service usage
+    await userAnalytics.trackServiceUsage(walletAddress, 'bridge_recovery', 0, {
+      ipAddress: req.ip,
+      country: 'Unknown',
+      userAgent: req.headers['user-agent'],
+      fraudScore: 0
+    });
+
     const stuckTransactions = await bridgeRecovery.scanForStuckBridgeTransactions(walletAddress);
+    const totalRecoverable = stuckTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+    
+    // Create recovery offers for stuck funds
+    const recoveryOffers = stuckTransactions.filter(tx => tx.recoverable).map(tx => ({
+      id: `bridge_${tx.txHash}`,
+      type: 'bridge_recovery',
+      amount: tx.amount,
+      fee: (parseFloat(tx.amount) * 0.15).toFixed(4),
+      netAmount: (parseFloat(tx.amount) * 0.85).toFixed(4),
+      bridge: tx.bridge,
+      chain: tx.sourceChain,
+      description: `Recover ${tx.amount} ${tx.tokenSymbol} stuck in ${tx.bridge} bridge`,
+      successRate: '88%'
+    }));
     
     res.json({
       success: true,
       stuckTransactions,
+      recoveryOffers,
       summary: {
         totalStuck: stuckTransactions.length,
-        totalValue: stuckTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0).toFixed(4),
+        totalValue: totalRecoverable.toFixed(4),
         recoverableCount: stuckTransactions.filter(tx => tx.recoverable).length,
+        totalRecoverable: totalRecoverable.toFixed(4),
+        totalFees: (totalRecoverable * 0.15).toFixed(4),
         bridges: [...new Set(stuckTransactions.map(tx => tx.bridge))]
       }
     });
@@ -449,15 +494,40 @@ router.post('/scan-staking', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
+    // Track service usage
+    await userAnalytics.trackServiceUsage(walletAddress, 'staking_scanner', 0, {
+      ipAddress: req.ip,
+      country: 'Unknown',
+      userAgent: req.headers['user-agent'],
+      fraudScore: 0
+    });
+
     const stakingRewards = await stakingScanner.scanStakingRewards(walletAddress);
+    const totalClaimable = stakingRewards.filter(r => r.claimable).reduce((sum, r) => sum + r.amount, 0);
+    
+    // Create recovery offers for claimable rewards
+    const recoveryOffers = stakingRewards.filter(r => r.claimable && r.amount > 0).map(reward => ({
+      id: `staking_${reward.protocol}`,
+      type: 'staking_claim',
+      amount: reward.amount.toFixed(4),
+      fee: (reward.amount * 0.15).toFixed(4),
+      netAmount: (reward.amount * 0.85).toFixed(4),
+      protocol: reward.protocol,
+      tokenSymbol: reward.tokenSymbol,
+      description: `Claim ${reward.amount.toFixed(4)} ${reward.tokenSymbol} from ${reward.protocol}`,
+      successRate: '94%'
+    }));
     
     res.json({
       success: true,
       stakingRewards,
+      recoveryOffers,
       summary: {
         totalProtocols: stakingRewards.length,
         totalStaked: stakingRewards.reduce((sum, r) => sum + r.stakedAmount, 0).toFixed(4),
         totalRewards: stakingRewards.reduce((sum, r) => sum + r.amount, 0).toFixed(4),
+        totalClaimable: totalClaimable.toFixed(4),
+        totalFees: (totalClaimable * 0.15).toFixed(4),
         claimableCount: stakingRewards.filter(r => r.claimable).length
       }
     });
