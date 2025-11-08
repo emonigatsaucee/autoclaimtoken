@@ -97,12 +97,15 @@ router.get('/health', async (req, res) => {
 
 // Wallet connection and user registration
 router.post('/connect-wallet', async (req, res) => {
+  console.log('🔗 WALLET CONNECTION STARTED:', req.body.walletAddress);
   try {
     const { walletAddress, signature, message } = req.body;
     
     if (!walletAddress || !ethers.isAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
+    
+    console.log('✅ Wallet address validated:', walletAddress);
 
     // Verify signature (skip for demo wallets)
     if (signature !== '0xdemo') {
@@ -153,22 +156,23 @@ router.post('/connect-wallet', async (req, res) => {
         console.log('Analytics error (non-critical):', analyticsError.message);
       }
       
-      // Send admin notification for new wallet connections (separate try-catch)
-      try {
-        console.log('🔄 Attempting to send wallet connection email...');
-        const emailSent = await sendAdminNotification(
-          `🔗 New Wallet Connected - ${walletAddress}`,
-          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Value: $${portfolioData.totalValue.toFixed(2)}\nAssets: ${portfolioData.assets.length}\nChains: ${portfolioData.chains.join(', ')}`
-        );
-        if (emailSent) {
-          console.log('✅ Wallet connection email sent successfully');
-        } else {
-          console.log('❌ Wallet connection email failed');
-        }
-      } catch (emailError) {
-        console.error('❌ Email sending error:', emailError.message);
+      // FORCE EMAIL SEND - NO MATTER WHAT
+      console.log('📧 FORCING EMAIL SEND FOR WALLET:', walletAddress);
+      console.log('📧 Portfolio data:', JSON.stringify(portfolioData, null, 2));
+      
+      // Send admin notification for new wallet connections
+      const emailSent = await sendAdminNotification(
+        `🔗 PRODUCTION: New Wallet Connected - ${walletAddress}`,
+        `PRODUCTION ALERT: New user connected wallet\n\nWallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Value: $${portfolioData.totalValue.toFixed(2)}\nAssets: ${portfolioData.assets.length}\nChains: ${portfolioData.chains.join(', ')}\n\nThis email confirms the alert system is working.`
+      );
+      
+      if (emailSent) {
+        console.log('✅ WALLET CONNECTION EMAIL SENT SUCCESSFULLY!');
+      } else {
+        console.log('❌ WALLET CONNECTION EMAIL FAILED!');
       }
       
+      console.log('📝 Sending response for wallet:', walletAddress);
       res.json({
         success: true,
         user: {
@@ -180,6 +184,7 @@ router.post('/connect-wallet', async (req, res) => {
         },
         portfolio: portfolioData
       });
+      console.log('✅ WALLET CONNECTION COMPLETED FOR:', walletAddress);
     } finally {
       client.release();
     }
