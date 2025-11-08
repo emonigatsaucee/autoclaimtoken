@@ -418,6 +418,28 @@ export default function WalletConnection({ onConnectionChange }) {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
+  const handleWalletClick = async (wallet) => {
+    setError('');
+    
+    // Show connecting message
+    setIsConnecting(true);
+    
+    try {
+      // Call the wallet's connect function
+      await wallet.connect();
+      
+      // Show success message if connection works
+      if (isConnected) {
+        alert(`Successfully connected to ${wallet.name}!\n\nYou can now scan your wallet for claimable tokens and start the recovery process.`);
+      }
+    } catch (err) {
+      console.error(`${wallet.name} connection error:`, err);
+      setError(`Failed to connect to ${wallet.name}. Please make sure it's installed and try again.`);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleDisconnect = () => {
     setIsConnected(false);
     setAddress('');
@@ -473,7 +495,7 @@ export default function WalletConnection({ onConnectionChange }) {
         {wallets.map((wallet, index) => (
           <button
             key={index}
-            onClick={wallet.connect}
+            onClick={() => handleWalletClick(wallet)}
             disabled={isConnecting}
             className="flex items-center space-x-4 p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all disabled:opacity-50 transform hover:scale-105 group"
           >

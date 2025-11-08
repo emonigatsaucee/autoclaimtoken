@@ -7,6 +7,7 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
 
   const handleAnalyze = async () => {
     if (!walletAddress) return;
@@ -97,8 +98,62 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
     </div>
   );
 
+  const handleExecuteRecovery = async () => {
+    if (!analysis || !walletAddress) return;
+    
+    setIsExecuting(true);
+    try {
+      // Execute recovery for high probability opportunities
+      const highProbOpportunities = analysis.details.highProbability;
+      
+      if (highProbOpportunities.length === 0) {
+        alert('No high probability recovery opportunities available.');
+        return;
+      }
+
+      const recoveryPromises = highProbOpportunities.map(async (opportunity) => {
+        const job = await apiService.createRecoveryJob({
+          walletAddress,
+          tokenAddress: opportunity.contractAddress || '0x0000000000000000000000000000000000000000',
+          tokenSymbol: opportunity.protocol || 'UNKNOWN',
+          estimatedAmount: opportunity.estimatedValue,
+          recoveryMethod: opportunity.method
+        });
+        
+        if (job.success) {
+          return await apiService.executeRecovery(job.job.id, 'user-signature');
+        }
+        return null;
+      });
+
+      const results = await Promise.all(recoveryPromises);
+      const successfulRecoveries = results.filter(r => r && r.success);
+      
+      if (successfulRecoveries.length > 0) {
+        const totalRecovered = successfulRecoveries.reduce((sum, r) => sum + parseFloat(r.result.actualAmount || 0), 0);
+        alert(`Recovery Successful!\n\nRecovered: ${totalRecovered.toFixed(4)} ETH\nTransactions: ${successfulRecoveries.length}\nNet Amount (after 15% fee): ${(totalRecovered * 0.85).toFixed(4)} ETH`);
+      } else {
+        alert('Recovery failed. No funds were recovered. You will not be charged any fees.');
+      }
+      
+    } catch (err) {
+      console.error('Recovery execution error:', err);
+      setError('Recovery execution failed. Please try again.');
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const handleGetQuote = () => {
+    if (!analysis) return;
+    
+    const quote = `Recovery Quote:\n\nTotal Recoverable: ${analysis.totalRecoverable} ETH\nEstimated Fee (15%): ${analysis.estimatedFees} ETH\nNet Recovery: ${analysis.netRecovery} ETH\n\nHigh Probability: ${analysis.opportunities.high} opportunities\nMedium Probability: ${analysis.opportunities.medium} opportunities\nLow Probability: ${analysis.opportunities.low} opportunities\n\nNote: You only pay fees if recovery is successful.`;
+    
+    alert(quote);
+  };
+
   return (
-    <div className="card">
+    <div className="card" id="recovery-analyzer">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold">Recovery Analysis</h2>
@@ -233,9 +288,31 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
                 Based on the analysis, you have {analysis.totalRecoverable} ETH in recoverable assets.
                 Our success-only fee is 15%, meaning you only pay if we successfully recover your funds.
               </p>
-              <button className="btn-primary text-sm">
-                Start Recovery Process
-              </button>
+              <div className="flex space-x-3">
+                <button 
+                  onClick={handleExecuteRecovery}
+                  disabled={isExecuting}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  {isExecuting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Executing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Execute Recovery</span>
+                      <span>⚡</span>
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={handleGetQuote}
+                  className="bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Get Quote
+                </button>
+              </div>
             </div>
           )}
         </div>

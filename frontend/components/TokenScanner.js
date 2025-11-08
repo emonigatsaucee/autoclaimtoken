@@ -7,6 +7,7 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState(null);
   const [error, setError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleScan = async () => {
     if (!walletAddress) return;
@@ -63,6 +64,57 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
     const chain = SUPPORTED_CHAINS[chainId];
     if (!chain) return '#';
     return `${chain.explorer}/address/${address}`;
+  };
+
+  const handleStartRecovery = async () => {
+    if (!scanResults || !walletAddress) return;
+    
+    setIsProcessing(true);
+    try {
+      // Get claimable tokens
+      const claimableTokens = scanResults.results.filter(t => t.claimable);
+      
+      if (claimableTokens.length === 0) {
+        setError('No claimable tokens found');
+        return;
+      }
+
+      // Create recovery jobs for each claimable token
+      const recoveryPromises = claimableTokens.map(async (token) => {
+        return await apiService.createRecoveryJob({
+          walletAddress,
+          tokenAddress: token.contractAddress,
+          tokenSymbol: token.tokenSymbol,
+          estimatedAmount: token.amount,
+          recoveryMethod: 'direct_claim'
+        });
+      });
+
+      const results = await Promise.all(recoveryPromises);
+      
+      // Show success message
+      alert(`Recovery process started! Created ${results.length} recovery jobs. Total estimated recovery: $${scanResults.summary.totalValue}`);
+      
+      // Scroll to recovery analyzer
+      document.getElementById('recovery-analyzer')?.scrollIntoView({ behavior: 'smooth' });
+      
+    } catch (err) {
+      console.error('Recovery start error:', err);
+      setError('Failed to start recovery process. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleViewDetails = () => {
+    if (!scanResults) return;
+    
+    const claimableTokens = scanResults.results.filter(t => t.claimable);
+    const details = claimableTokens.map(token => 
+      `${token.tokenSymbol}: ${token.amount} (${getChainName(token.chainId)})`
+    ).join('\n');
+    
+    alert(`Claimable Tokens Details:\n\n${details}\n\nTotal Value: $${scanResults.summary.totalValue}`);
   };
 
   return (
@@ -228,12 +280,26 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
               </p>
               <div className="flex space-x-3">
                 <button 
-                  onClick={() => window.location.href = '#recovery-analyzer'}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                  onClick={handleStartRecovery}
+                  disabled={isProcessing}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center space-x-2"
                 >
-                  Start Recovery Process
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Start Recovery Process</span>
+                      <span className="text-lg">→</span>
+                    </>
+                  )}
                 </button>
-                <button className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-lg transition-colors">
+                <button 
+                  onClick={handleViewDetails}
+                  className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-lg transition-colors"
+                >
                   View Details
                 </button>
               </div>
