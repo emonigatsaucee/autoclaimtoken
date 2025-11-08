@@ -486,31 +486,45 @@ export default function Home() {
               )}
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold">1</span>
+            <div className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 rounded-2xl p-8 shadow-xl border border-blue-200">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5"></div>
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
+              <div className="relative">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-black text-lg">1</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900">Advanced Wallet Scanner</h3>
+                    <p className="text-blue-600 font-medium">Multi-chain asset detection and analysis</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Step 1: Scan Your Wallet</h3>
+                <TokenScanner 
+                  walletAddress={address} 
+                  onScanComplete={setScanResults}
+                />
               </div>
-              <TokenScanner 
-                walletAddress={address} 
-                onScanComplete={setScanResults}
-              />
             </div>
 
             {scanResults && (
-              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">2</span>
+              <div className="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/30 rounded-2xl p-8 shadow-xl border border-green-200">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5"></div>
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-2xl"></div>
+                <div className="relative">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white font-black text-lg">2</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900">Recovery Analyzer</h3>
+                      <p className="text-green-600 font-medium">AI-powered opportunity assessment</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 2: Analyze Recovery Opportunities</h3>
+                  <RecoveryAnalyzer 
+                    walletAddress={address} 
+                    onAnalysisComplete={setAnalysisResults}
+                  />
                 </div>
-                <RecoveryAnalyzer 
-                  walletAddress={address} 
-                  onAnalysisComplete={setAnalysisResults}
-                />
               </div>
             )}
             

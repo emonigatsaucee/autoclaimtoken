@@ -9,7 +9,7 @@ export default function SupportChat({ isConnected, userPortfolio }) {
   const agent = {
     name: 'Sarah Chen',
     title: 'Senior Crypto Recovery Specialist',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+    avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0Qjc2ODgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDMwQzEwIDI1IDEzIDIyIDIwIDIyUzMwIDI1IDMwIDMwIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
     experience: '5+ years',
     specialties: ['DeFi Recovery', 'Multi-Chain Assets', 'Staking Rewards'],
     recoveredAmount: '$2.4M+',
@@ -79,7 +79,7 @@ export default function SupportChat({ isConnected, userPortfolio }) {
     // Auto-reply based on message
     setTimeout(() => {
       setIsTyping(false);
-      let reply = "I'll help you with that. Let me connect you with a specialist.";
+      let reply = "I understand your question. Let me provide you with the most accurate information to help resolve this quickly.";
       
       // Advanced AI responses based on context
       if (!isConnected) {
@@ -102,7 +102,16 @@ export default function SupportChat({ isConnected, userPortfolio }) {
           const assets = userPortfolio?.assets || [];
           const assetList = assets.map(a => `${a.amount} ${a.symbol} (${a.chain})`).join('\n');
           reply = `Here's your complete portfolio analysis:\n\nYour Assets:\n${assetList}\n\nRecovery Opportunities: ${opportunities}\nEstimated Recoverable: $${(estimatedValue * 3000).toFixed(0)}\nSuccess Probability: 94.7%\n\nI recommend starting with staking rewards - highest success rate and fastest execution. Want me to guide you through it?`;
+        } else if (newMessage.toLowerCase().includes('help') || newMessage.toLowerCase().includes('support')) {
+          reply = `I'm here to provide comprehensive support for your crypto recovery needs. I can help you with:\n\n• Wallet connection and validation\n• Asset scanning and analysis\n• Recovery process guidance\n• Fee calculations and explanations\n• Technical troubleshooting\n\nWhat specific area would you like assistance with?`;
+        } else if (newMessage.toLowerCase().includes('how') || newMessage.toLowerCase().includes('what')) {
+          reply = `Great question! I specialize in step-by-step guidance for crypto recovery. Based on your connected wallet, I can provide detailed instructions for:\n\n• Claiming staking rewards\n• Recovering bridge funds\n• Accessing forgotten tokens\n• Optimizing recovery strategies\n\nCould you be more specific about what you'd like to know?`;
+        } else {
+          reply = `I understand you're looking for assistance. As your dedicated recovery specialist, I can help with any questions about:\n\n• Your wallet analysis and opportunities\n• Recovery processes and procedures\n• Fees, timelines, and success rates\n• Technical support and guidance\n\nPlease let me know what specific information you need, and I'll provide detailed assistance.`;
         }
+      } else {
+        // General fallback for non-connected users
+        reply = `Thank you for your question. I'm here to help you understand our crypto recovery services. I can provide information about:\n\n• Supported wallet types and connections\n• Recovery capabilities and success rates\n• Security measures and safety protocols\n• Getting started with the platform\n\nWhat would you like to know more about?`;
       }
       
       const botMsg = { 
