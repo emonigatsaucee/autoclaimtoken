@@ -36,52 +36,62 @@ export default function WalletConnection({ onConnectionChange }) {
   const wallets = [
     {
       name: 'MetaMask',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/metamask.svg',
+      icon: 'https://metamask.io/favicon.ico',
+      fallback: 'https://logo.clearbit.com/metamask.io',
       connect: connectMetaMask
     },
     {
       name: 'Trust Wallet',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trustwallet.svg',
+      icon: 'https://trustwallet.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/trustwallet.com',
       connect: connectTrust
     },
     {
       name: 'Coinbase Wallet',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg',
+      icon: 'https://www.coinbase.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/coinbase.com',
       connect: connectCoinbase
     },
     {
       name: 'Ledger Live',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ledger.svg',
+      icon: 'https://www.ledger.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/ledger.com',
       connect: connectLedger
     },
     {
       name: 'Trezor',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trezor.svg',
+      icon: 'https://trezor.io/favicon.ico',
+      fallback: 'https://logo.clearbit.com/trezor.io',
       connect: connectTrezor
     },
     {
       name: 'Exodus',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/exodus.svg',
+      icon: 'https://www.exodus.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/exodus.com',
       connect: connectExodus
     },
     {
       name: 'Rainbow',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/rainbow.svg',
+      icon: 'https://rainbow.me/favicon.ico',
+      fallback: 'https://logo.clearbit.com/rainbow.me',
       connect: connectRainbow
     },
     {
       name: 'MyEtherWallet',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/myetherwallet.svg',
+      icon: 'https://www.myetherwallet.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/myetherwallet.com',
       connect: connectMEW
     },
     {
       name: 'Atomic Wallet',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/atomicwallet.svg',
+      icon: 'https://atomicwallet.io/favicon.ico',
+      fallback: 'https://logo.clearbit.com/atomicwallet.io',
       connect: connectAtomic
     },
     {
       name: 'WalletConnect',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/walletconnect.svg',
+      icon: 'https://walletconnect.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/walletconnect.com',
       connect: connectWalletConnect
     },
     {
@@ -454,6 +464,13 @@ export default function WalletConnection({ onConnectionChange }) {
                   src={wallet.icon} 
                   alt={wallet.name}
                   className="w-10 h-10 object-contain"
+                  onError={(e) => {
+                    if (wallet.fallback && e.target.src !== wallet.fallback) {
+                      e.target.src = wallet.fallback;
+                    } else {
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEzLjEgMjAuMSAxNCAyMCAxNEg0QzIuOSAxNCAyIDEzLjEgMiAxMlYxMEMyIDguOSAyLjkgOCA0IDhIMjBDMjAuMSA4IDIxIDguOSAyMSAxMFYxMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+';
+                    }
+                  }}
                 />
               </div>
               <div className="flex-1 text-left">

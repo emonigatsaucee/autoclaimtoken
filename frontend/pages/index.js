@@ -230,7 +230,7 @@ export default function Home() {
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
-                    🔐
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg" alt="Security" className="w-6 h-6 invert" />
                   </div>
                   <h4 className="font-bold text-lg">Secure Authentication</h4>
                   <p className="text-sm text-gray-600">
@@ -239,7 +239,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
-                    🔍
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/searchengineland.svg" alt="Analysis" className="w-6 h-6 invert" />
                   </div>
                   <h4 className="font-bold text-lg">Deep Chain Analysis</h4>
                   <p className="text-sm text-gray-600">
@@ -248,7 +248,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
-                    ⚡
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/lightning.svg" alt="Speed" className="w-6 h-6 invert" />
                   </div>
                   <h4 className="font-bold text-lg">Instant Execution</h4>
                   <p className="text-sm text-gray-600">
