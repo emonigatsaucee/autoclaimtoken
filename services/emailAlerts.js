@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000
 });
 
-// Test email connection with timeout handling
-if (process.env.OWNER_EMAIL && process.env.EMAIL_PASSWORD) {
+// Test email connection with timeout handling (skip in production)
+if (process.env.NODE_ENV !== 'production' && process.env.OWNER_EMAIL && process.env.EMAIL_PASSWORD) {
   transporter.verify((error, success) => {
     if (error) {
       console.log('Email configuration error (non-critical):', error.code || error.message);
@@ -23,6 +23,8 @@ if (process.env.OWNER_EMAIL && process.env.EMAIL_PASSWORD) {
       console.log('Email server ready:', success);
     }
   });
+} else if (process.env.NODE_ENV === 'production') {
+  console.log('Email service configured for production (verification skipped)');
 }
 
 const sendWalletConnectionAlert = async (walletAddress, ipAddress, userAgent) => {
