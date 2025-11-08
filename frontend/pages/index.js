@@ -33,8 +33,8 @@ export default function Home() {
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
-      title: "Smart Recovery",
-      description: "AI-powered analysis with 75-90% success rates using multiple recovery methods"
+      title: "Advanced Forensics",
+      description: "Proprietary blockchain analysis engine with 75-90% success rates using multi-vector recovery protocols"
     },
     {
       icon: <Shield className="w-6 h-6" />,
@@ -242,7 +242,7 @@ export default function Home() {
                   </div>
                   <h4 className="font-semibold">Scan & Analyze</h4>
                   <p className="text-sm text-gray-600">
-                    AI scans multiple blockchains for recoverable assets
+                    Advanced forensics engine scans multiple blockchains for recoverable assets
                   </p>
                 </div>
                 <div className="space-y-3">
