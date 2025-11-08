@@ -44,7 +44,7 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://your-frontend-domain.vercel.app'] 
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    : true, // Allow all origins in development for mobile testing
   credentials: true
 }));
 
@@ -141,10 +141,11 @@ const startServer = async () => {
     await initializeDatabase();
     console.log('Database initialized successfully');
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`Mobile access: http://192.168.0.109:${PORT}/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
