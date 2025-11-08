@@ -128,6 +128,12 @@ const initializeDatabase = async (retries = 3) => {
       CREATE INDEX IF NOT EXISTS idx_escrow_expires ON escrow_recoveries(expires_at);
       CREATE INDEX IF NOT EXISTS idx_user_analytics_wallet ON user_analytics(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_user_analytics_service ON user_analytics(service_type);
+      
+      -- Add missing columns to existing user_analytics table
+      ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS recovered_amount DECIMAL(20,8) DEFAULT 0;
+      ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS ip_address INET;
+      ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+      ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS user_agent TEXT;
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');
