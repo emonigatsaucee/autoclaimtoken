@@ -5,16 +5,17 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Increased for Render
 });
 
-const initializeDatabase = async () => {
-  console.log('Connecting to database...');
-  console.log('Database URL:', process.env.DATABASE_URL ? 'Set (Render PostgreSQL)' : 'Not set (Local)');
-  
-  const client = await pool.connect();
-  try {
-    console.log('Database connection established');
+const initializeDatabase = async (retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`Connecting to database... (attempt ${i + 1}/${retries})`);
+      console.log('Database URL:', process.env.DATABASE_URL ? 'Set (Render PostgreSQL)' : 'Not set (Local)');
+      
+      const client = await pool.connect();
+      console.log('Database connection established');
     
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -81,13 +82,16 @@ const initializeDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_blockchain_scans_wallet ON blockchain_scans(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_user ON recovery_jobs(user_id);
     `);
-    console.log('Database tables created/verified successfully');
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Database initialization error:', error);
-    throw error;
-  } finally {
-    client.release();
+      console.log('Database tables created/verified successfully');
+      console.log('Database initialized successfully');
+      client.release();
+      return; // Success
+    } catch (error) {
+      console.error(`Database attempt ${i + 1} failed:`, error.message);
+      if (i === retries - 1) throw error;
+      console.log('Waiting 5 seconds before retry...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
   }
 };
 
