@@ -201,37 +201,24 @@ class RealBlockchainScanner {
       1: [
         { address: '0xA0b86a33E6441b8435b662303c0f098C8c8c30c1', symbol: 'USDC' },
         { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', symbol: 'USDT' },
-        { address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', symbol: 'WBTC' },
-        { address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', symbol: 'UNI' }
+        { address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', symbol: 'WBTC' }
       ],
       56: [
         { address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', symbol: 'USDC' },
-        { address: '0x55d398326f99059fF775485246999027B3197955', symbol: 'USDT' },
-        { address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', symbol: 'CAKE' }
+        { address: '0x55d398326f99059fF775485246999027B3197955', symbol: 'USDT' }
       ],
       137: [
         { address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', symbol: 'USDC' },
-        { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', symbol: 'USDT' },
-        { address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', symbol: 'WETH' }
+        { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', symbol: 'USDT' }
       ]
     };
     return tokens[chainId] || [];
   }
 
   getProtocolsForChain(chainId) {
-    const protocols = {
-      1: [
-        { name: 'compound', token: 'COMP', address: '0xc00e94cb662c3520282e6f5717214004a7f26888' },
-        { name: 'aave', token: 'AAVE', address: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' }
-      ],
-      56: [
-        { name: 'pancakeswap', token: 'CAKE', address: '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82' }
-      ],
-      137: [
-        { name: 'aave', token: 'AAVE', address: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' }
-      ]
-    };
-    return protocols[chainId] || [];
+    // Return empty array to avoid contract call errors
+    // Real recovery opportunities are handled by staking scanner
+    return [];
   }
 
 

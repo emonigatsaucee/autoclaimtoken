@@ -9,6 +9,7 @@ import StakingScanner from '../components/StakingScanner';
 import NFTScanner from '../components/NFTScanner';
 import WealthIntelligence from '../components/WealthIntelligence';
 import SupportChat from '../components/SupportChat';
+import NetworkGuide from '../components/NetworkGuide';
 
 export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
@@ -20,6 +21,8 @@ export default function Home() {
   
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
+  const [showNetworkGuide, setShowNetworkGuide] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState(null);
 
   const handleConnectionChange = (userData) => {
     console.log('Connection change received:', userData);
@@ -207,6 +210,15 @@ export default function Home() {
                       <span className="text-yellow-400 mr-2">•</span>INSTITUTIONAL GRADE
                     </div>
                   </div>
+                  
+                  <div className="mb-8">
+                    <button
+                      onClick={() => setShowNetworkGuide(!showNetworkGuide)}
+                      className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all hover:scale-105"
+                    >
+                      🌐 Choose Best Network for Recovery
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -259,6 +271,22 @@ export default function Home() {
                 </div>
               </div>
             </div>
+            
+            {showNetworkGuide && (
+              <div className="max-w-7xl mx-auto px-8 mb-12">
+                <NetworkGuide 
+                  onNetworkSelect={(network) => {
+                    setSelectedNetwork(network);
+                    setShowNetworkGuide(false);
+                    // Scroll to wallet connection
+                    setTimeout(() => {
+                      document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  userWalletType="new"
+                />
+              </div>
+            )}
 
             <div className="bg-white py-20">
               <div className="max-w-7xl mx-auto px-8">
@@ -309,7 +337,23 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="max-w-md mx-auto space-y-4">
+            <div id="wallet-connection" className="max-w-md mx-auto space-y-4">
+              {selectedNetwork && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${selectedNetwork.color}`}></div>
+                    <span className="font-bold text-blue-800">{selectedNetwork.name} Selected</span>
+                    <span className="text-sm text-blue-600">• {selectedNetwork.successRate}% Success Rate</span>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Optimized for: {selectedNetwork.bestFor.join(', ')}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Average Recovery: {selectedNetwork.avgRecovery} • Time: {selectedNetwork.avgTime}
+                  </p>
+                </div>
+              )}
+              
               <WalletConnection onConnectionChange={handleConnectionChange} />
               <div className="text-center">
                 <button
@@ -633,7 +677,11 @@ export default function Home() {
       </footer>
       
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
-        <SupportChat isConnected={isConnected} userPortfolio={portfolio} />
+        <SupportChat 
+          isConnected={isConnected} 
+          userPortfolio={portfolio}
+          selectedNetwork={selectedNetwork}
+        />
       </div>
     </div>
   );
