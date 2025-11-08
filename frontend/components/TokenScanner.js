@@ -19,7 +19,7 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
     try {
       // Check backend connectivity first
       setError('Checking backend connection...');
-      console.log('Testing backend connection to:', 'http://localhost:3001/api/health');
+      console.log('Testing backend connection to:', (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api/health');
       
       const healthCheck = await apiService.healthCheck();
       console.log('Health check response:', healthCheck);
@@ -46,7 +46,7 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
       console.error('Error status:', err.response?.status);
       
       if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
-        setError('Cannot connect to backend server. Make sure backend is running on port 3001.');
+        setError('Cannot connect to backend server at ' + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'));
       } else if (err.response?.status === 404) {
         setError('API endpoint not found. Backend may not be configured correctly.');
       } else if (err.response?.status === 400) {
