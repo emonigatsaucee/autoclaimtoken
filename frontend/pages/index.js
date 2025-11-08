@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Shield, Zap, TrendingUp, Users, Brain, Lock, Coins, Target } from 'lucide-react';
 import WalletConnection from '../components/WalletConnection';
+import WalletSelector from '../components/WalletSelector';
 import TokenScanner from '../components/TokenScanner';
 import RecoveryAnalyzer from '../components/RecoveryAnalyzer';
 
@@ -9,6 +10,7 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [scanResults, setScanResults] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
+  const [showWalletSelector, setShowWalletSelector] = useState(false);
   
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
@@ -21,6 +23,7 @@ export default function Home() {
       setUser(userData);
       setIsConnected(true);
       setAddress(userData.walletAddress);
+      setShowWalletSelector(false);
       
       // Force re-render and show success
       setTimeout(() => {
@@ -33,8 +36,31 @@ export default function Home() {
       setAddress('');
       setScanResults(null);
       setAnalysisResults(null);
+      setShowWalletSelector(false);
     }
   };
+
+  const handleWalletSelectorConnect = (connectionData) => {
+    if (connectionData.success) {
+      const userData = {
+        id: Date.now(),
+        walletAddress: connectionData.walletAddress,
+        totalRecovered: '0.00',
+        successRate: '0',
+        walletType: connectionData.walletType
+      };
+      handleConnectionChange(userData);
+    }
+  };
+
+  if (showWalletSelector) {
+    return (
+      <WalletSelector 
+        onBack={() => setShowWalletSelector(false)}
+        onWalletConnect={handleWalletSelectorConnect}
+      />
+    );
+  }
 
   const features = [
     {
@@ -276,8 +302,20 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto space-y-4">
               <WalletConnection onConnectionChange={handleConnectionChange} />
+              <div className="text-center">
+                <button
+                  onClick={() => setShowWalletSelector(true)}
+                  className="inline-flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  <Target className="w-5 h-5" />
+                  <span>Connect Other Wallets</span>
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  MetaMask, Trust Wallet, Coinbase, Phantom, Rainbow + 100 more
+                </p>
+              </div>
             </div>
 
             <div className="bg-white rounded-xl p-8 text-center">
