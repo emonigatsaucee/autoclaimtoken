@@ -92,51 +92,91 @@ export default function WalletConnection({ onConnectionChange }) {
   ];
 
   async function connectMetaMask() {
-    if (!window.ethereum) {
-      setError('MetaMask not installed. Please install MetaMask extension.');
-      return;
+    if (isMobileDevice) {
+      // Mobile: Open MetaMask app or redirect to app store
+      if (window.ethereum) {
+        await connectWallet('metamask');
+      } else {
+        window.open('https://metamask.app.link/dapp/' + window.location.host, '_blank');
+        return;
+      }
+    } else {
+      // Desktop: Check for extension
+      if (!window.ethereum) {
+        setError('MetaMask not installed. Please install MetaMask extension.');
+        return;
+      }
+      await connectWallet('metamask');
     }
-    await connectWallet('metamask');
   }
 
   async function connectCoinbase() {
-    if (!window.ethereum) {
-      setError('Coinbase Wallet not installed.');
-      return;
+    if (isMobileDevice) {
+      if (window.ethereum) {
+        await connectWallet('coinbase');
+      } else {
+        window.open('https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href), '_blank');
+        return;
+      }
+    } else {
+      if (!window.ethereum) {
+        setError('Coinbase Wallet not installed.');
+        return;
+      }
+      await connectWallet('coinbase');
     }
-    await connectWallet('coinbase');
   }
 
   async function connectTrust() {
-    if (!window.ethereum) {
-      setError('Trust Wallet not detected. Please make sure it\'s installed and unlocked.');
-      return;
+    if (isMobileDevice) {
+      if (window.ethereum) {
+        await connectWallet('trust');
+      } else {
+        window.open('https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(window.location.href), '_blank');
+        return;
+      }
+    } else {
+      if (!window.ethereum) {
+        setError('Trust Wallet not available on desktop. Use mobile app.');
+        return;
+      }
+      await connectWallet('trust');
     }
-    await connectWallet('trust');
   }
 
   async function connectExodus() {
-    if (!window.ethereum) {
-      setError('Exodus Wallet not detected.');
+    if (isMobileDevice) {
+      window.open('exodus://open?url=' + encodeURIComponent(window.location.href), '_blank');
       return;
+    } else {
+      if (!window.ethereum) {
+        setError('Exodus Wallet not detected.');
+        return;
+      }
+      await connectWallet('exodus');
     }
-    await connectWallet('exodus');
   }
 
   async function connectAtomic() {
-    if (!window.ethereum) {
-      setError('Atomic Wallet not detected.');
+    if (isMobileDevice) {
+      window.open('atomic://dapp/' + window.location.host, '_blank');
       return;
+    } else {
+      setError('Atomic Wallet available on mobile only.');
     }
-    await connectWallet('atomic');
   }
 
   async function connectLedger() {
-    if (!window.ethereum) {
-      setError('Ledger not detected. Please connect via Ledger Live.');
+    if (isMobileDevice) {
+      window.open('ledgerlive://dapp/' + window.location.host, '_blank');
       return;
+    } else {
+      if (!window.ethereum) {
+        setError('Ledger not detected. Please connect via Ledger Live.');
+        return;
+      }
+      await connectWallet('ledger');
     }
-    await connectWallet('ledger');
   }
 
   async function connectTrezor() {
@@ -144,19 +184,33 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   async function connectRainbow() {
-    if (!window.ethereum) {
-      setError('Rainbow Wallet not detected.');
-      return;
+    if (isMobileDevice) {
+      if (window.ethereum) {
+        await connectWallet('rainbow');
+      } else {
+        window.open('https://rnbwapp.com/' + window.location.host, '_blank');
+        return;
+      }
+    } else {
+      if (!window.ethereum) {
+        setError('Rainbow Wallet not detected.');
+        return;
+      }
+      await connectWallet('rainbow');
     }
-    await connectWallet('rainbow');
   }
 
   async function connectMEW() {
-    if (!window.ethereum) {
-      setError('MyEtherWallet not detected.');
+    if (isMobileDevice) {
+      window.open('https://www.myetherwallet.com/wallet/access', '_blank');
       return;
+    } else {
+      if (!window.ethereum) {
+        setError('MyEtherWallet not detected.');
+        return;
+      }
+      await connectWallet('mew');
     }
-    await connectWallet('mew');
   }
 
   async function connectWalletConnect() {
