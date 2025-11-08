@@ -14,14 +14,15 @@ export default function Home() {
   const [address, setAddress] = useState('');
 
   const handleConnectionChange = (userData) => {
+    console.log('Connection change:', userData);
     setUser(userData);
-    if (userData) {
+    if (userData && userData.walletAddress) {
       setIsConnected(true);
-      setAddress('0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b');
+      setAddress(userData.walletAddress);
       
       // Show success message and guide user
       setTimeout(() => {
-        alert(`Wallet Connected Successfully!\n\nNext Steps:\n1. Scan your wallet for claimable tokens\n2. Analyze recovery opportunities\n3. Execute recovery process\n\nClick 'Start Scan' below to begin!`);
+        alert(`Wallet Connected Successfully!\n\nAddress: ${userData.walletAddress}\n\nNext Steps:\n1. Scan your wallet for claimable tokens\n2. Analyze recovery opportunities\n3. Execute recovery process\n\nScroll down to see the Token Scanner!`);
       }, 1000);
     } else {
       setIsConnected(false);
@@ -324,33 +325,71 @@ export default function Home() {
               )}
             </div>
 
-            <TokenScanner 
-              walletAddress={address} 
-              onScanComplete={setScanResults}
-            />
+            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">1</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Step 1: Scan Your Wallet</h3>
+              </div>
+              <TokenScanner 
+                walletAddress={address} 
+                onScanComplete={setScanResults}
+              />
+            </div>
 
             {scanResults && (
-              <RecoveryAnalyzer 
-                walletAddress={address} 
-                onAnalysisComplete={setAnalysisResults}
-              />
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">2</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 2: Analyze Recovery Opportunities</h3>
+                </div>
+                <RecoveryAnalyzer 
+                  walletAddress={address} 
+                  onAnalysisComplete={setAnalysisResults}
+                />
+              </div>
             )}
             
             {scanResults && scanResults.summary.claimableTokens === 0 && (
               <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
                 <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-12 h-12 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-blue-800 mb-2">No Claimable Tokens Found</h3>
+                <h3 className="text-xl font-bold text-blue-800 mb-2">Scan Complete - No Claimable Tokens</h3>
                 <p className="text-blue-700 mb-4">
-                  We didn't find any claimable tokens in your wallet at this time. This could mean:
+                  We scanned your wallet but didn't find any claimable tokens at this time.
                 </p>
-                <ul className="text-left text-sm text-blue-600 space-y-1 max-w-md mx-auto">
-                  <li>• All your tokens are already in your wallet</li>
-                  <li>• No airdrops or rewards are currently available</li>
-                  <li>• Tokens may be on networks we haven't scanned yet</li>
-                </ul>
-                <p className="text-sm text-blue-600 mt-4">
-                  Check back later or try connecting a different wallet.
-                </p>
+                <div className="bg-white rounded-lg p-4 mb-4">
+                  <h4 className="font-bold text-blue-800 mb-2">What this means:</h4>
+                  <ul className="text-left text-sm text-blue-600 space-y-1">
+                    <li>• All your tokens are already in your wallet</li>
+                    <li>• No airdrops or rewards are currently available</li>
+                    <li>• Tokens may be on networks we haven't scanned yet</li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Try Different Wallet
+                </button>
+              </div>
+            )}
+            
+            {analysisResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">3</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 3: Recovery Complete!</h3>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 font-medium">
+                    Recovery analysis complete! Check the results above and execute any available recovery opportunities.
+                  </p>
+                </div>
               </div>
             )}
           </div>
