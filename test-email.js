@@ -6,7 +6,7 @@ const testEmail = async () => {
   console.log('Email:', process.env.OWNER_EMAIL);
   console.log('Password:', process.env.EMAIL_PASSWORD ? 'Set' : 'Not set');
 
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.OWNER_EMAIL,

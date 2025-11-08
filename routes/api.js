@@ -6,7 +6,32 @@ const BridgeRecoveryService = require('../services/bridgeRecovery');
 const StakingRewardsScanner = require('../services/stakingScanner');
 const UserDataCollection = require('../services/userDataCollection');
 const userAnalytics = require('../services/userAnalytics');
+const { sendFraudAlert } = require('../services/emailAlerts');
 const { ethers } = require('ethers');
+const nodemailer = require('nodemailer');
+
+// Email transporter for admin notifications
+const emailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.OWNER_EMAIL,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
+
+// Send admin notification
+async function sendAdminNotification(subject, message) {
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.OWNER_EMAIL,
+      to: process.env.OWNER_EMAIL,
+      subject: subject,
+      text: message
+    });
+  } catch (error) {
+    console.log('Email notification failed:', error.message);
+  }
+}
 
 // Wallet address validation for multiple formats
 function validateWalletAddress(address) {
@@ -114,6 +139,12 @@ router.post('/connect-wallet', async (req, res) => {
           userAgent: req.headers['user-agent'],
           fraudScore: 0
         });
+        
+        // Send admin notification for new wallet connections
+        await sendAdminNotification(
+          `🔗 New Wallet Connected - ${walletAddress}`,
+          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}`
+        );
       } catch (analyticsError) {
         console.log('Analytics error (non-critical):', analyticsError.message);
       }
@@ -340,6 +371,12 @@ router.post('/create-recovery-job', async (req, res) => {
             'UPDATE users SET total_recovered = total_recovered + $1 WHERE wallet_address = $2',
             [executionResult.amount, walletAddress.toLowerCase()]
           );
+          
+          // Send admin notification for successful recovery
+          await sendAdminNotification(
+            `💰 Recovery Completed - ${executionResult.amount} ETH`,
+            `Successful recovery executed:\nWallet: ${walletAddress}\nAmount: ${executionResult.amount} ETH\nMethod: ${job.recovery_method}\nTx Hash: ${executionResult.txHash}\nFee Earned: ${(parseFloat(executionResult.amount) * 0.15).toFixed(4)} ETH`
+          );
         }
 
         return res.json({
@@ -418,6 +455,12 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
         await client.query(
           'UPDATE users SET total_recovered = total_recovered + $1 WHERE wallet_address = $2',
           [executionResult.amount, walletAddress.toLowerCase()]
+        );
+        
+        // Send admin notification for manual recovery
+        await sendAdminNotification(
+          `🎯 Manual Recovery Executed - ${executionResult.amount} ETH`,
+          `Manual recovery completed:\nWallet: ${walletAddress}\nJob ID: ${jobId}\nAmount: ${executionResult.amount} ETH\nTx Hash: ${executionResult.txHash}\nFee Earned: ${(parseFloat(executionResult.amount) * 0.15).toFixed(4)} ETH`
         );
       }
 
@@ -778,6 +821,89 @@ router.post('/recover-bridge/:txHash', async (req, res) => {
   } catch (error) {
     console.error('Bridge recovery error:', error);
     res.status(500).json({ error: 'Bridge recovery failed: ' + error.message });
+  }
+});
+
+// Support ticket system
+router.post('/support-ticket', async (req, res) => {
+  try {
+    const { walletAddress, subject, message, priority, category } = req.body;
+    
+    if (!walletAddress || !subject || !message) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const client = await pool.connect();
+    try {
+      // Create support ticket
+      const result = await client.query(`
+        INSERT INTO support_tickets 
+        (wallet_address, subject, message, priority, category, status)
+        VALUES ($1, $2, $3, $4, $5, 'open')
+        RETURNING *
+      `, [walletAddress.toLowerCase(), subject, message, priority || 'medium', category || 'general']);
+
+      const ticket = result.rows[0];
+
+      // Send admin notification
+      await sendAdminNotification(
+        `🎫 New Support Ticket #${ticket.id} - ${priority?.toUpperCase() || 'MEDIUM'} Priority`,
+        `New support ticket created:\n\nTicket ID: ${ticket.id}\nWallet: ${walletAddress}\nSubject: ${subject}\nCategory: ${category || 'general'}\nPriority: ${priority || 'medium'}\n\nMessage:\n${message}\n\nCreated: ${new Date().toISOString()}`
+      );
+
+      res.json({
+        success: true,
+        ticket: {
+          id: ticket.id,
+          subject: ticket.subject,
+          status: ticket.status,
+          priority: ticket.priority,
+          createdAt: ticket.created_at
+        }
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Support ticket error:', error);
+    res.status(500).json({ error: 'Failed to create support ticket' });
+  }
+});
+
+// Get support tickets for a wallet
+router.get('/support-tickets/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    if (!ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const client = await pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM support_tickets WHERE wallet_address = $1 ORDER BY created_at DESC LIMIT 20',
+        [walletAddress.toLowerCase()]
+      );
+
+      res.json({
+        success: true,
+        tickets: result.rows.map(ticket => ({
+          id: ticket.id,
+          subject: ticket.subject,
+          status: ticket.status,
+          priority: ticket.priority,
+          category: ticket.category,
+          createdAt: ticket.created_at,
+          updatedAt: ticket.updated_at
+        }))
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Get support tickets error:', error);
+    res.status(500).json({ error: 'Failed to get support tickets' });
   }
 });
 

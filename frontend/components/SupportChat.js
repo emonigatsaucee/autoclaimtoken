@@ -1,23 +1,51 @@
-import { useState } from 'react';
-import { MessageCircle, Send, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Send, X, Star, Shield, Zap, TrendingUp, Award, Clock, Users, DollarSign } from 'lucide-react';
 
-// Intelligent AI Response System
+// Advanced AI Response System with Personality
 function generateIntelligentResponse(message, isConnected, userPortfolio, agent) {
   const msg = message.toLowerCase();
   const opportunities = userPortfolio?.recoveryOpportunities || 0;
   const estimatedValue = userPortfolio?.estimatedRecoverable || 0;
   const assets = userPortfolio?.assets || [];
   
-  // Analyze message intent and context
+  // Advanced intent analysis with emotional intelligence
   const intent = analyzeIntent(msg);
+  const emotion = detectEmotion(msg);
+  const urgency = detectUrgency(msg);
   const context = {
     isConnected,
     hasOpportunities: opportunities > 0,
     portfolioValue: estimatedValue,
-    assetCount: assets.length
+    assetCount: assets.length,
+    emotion,
+    urgency
   };
   
   return generateContextualResponse(intent, context, message, agent, userPortfolio);
+}
+
+// Detect user emotion for empathetic responses
+function detectEmotion(message) {
+  const emotions = {
+    frustrated: ['frustrated', 'annoyed', 'angry', 'mad', 'upset', 'irritated'],
+    worried: ['worried', 'concerned', 'scared', 'nervous', 'anxious', 'afraid'],
+    excited: ['excited', 'amazing', 'awesome', 'great', 'fantastic', 'wonderful'],
+    confused: ['confused', 'lost', 'dont understand', "don't get", 'unclear'],
+    skeptical: ['doubt', 'suspicious', 'scam', 'fake', 'trust', 'believe']
+  };
+  
+  for (const [emotion, keywords] of Object.entries(emotions)) {
+    if (keywords.some(keyword => message.includes(keyword))) {
+      return emotion;
+    }
+  }
+  return 'neutral';
+}
+
+// Detect urgency level
+function detectUrgency(message) {
+  const urgentWords = ['urgent', 'asap', 'immediately', 'now', 'quick', 'fast', 'emergency', 'help'];
+  return urgentWords.some(word => message.includes(word)) ? 'high' : 'normal';
 }
 
 function analyzeIntent(message) {
@@ -108,10 +136,19 @@ function generateContextualResponse(intent, context, originalMessage, agent, use
     },
     
     doubt: () => {
+      if (context.emotion === 'skeptical') {
+        return `I completely understand your skepticism - in crypto, being cautious is survival. Here's what makes me different: I'm completely transparent about my methods, I never touch your private keys, and I only get paid when YOU get paid. I've recovered ${agent.recoveredAmount} because I treat every wallet like it's my own family's money. Want to see my security certifications and audit reports?`;
+      }
       return `I appreciate your skepticism - it shows you're smart about crypto security. Look, I've recovered ${agent.recoveredAmount} for clients, maintained a ${agent.successRate} success rate, and been trusted by 85,000+ users. But don't take my word for it. Connect your wallet (completely safe), let me show you what I find, and you decide. No commitments, no risks. Fair enough?`;
     },
     
     general: () => {
+      if (context.emotion === 'frustrated') {
+        return `I can sense you're frustrated, and I totally get it. Crypto can be overwhelming, especially when you're trying to recover lost funds. Take a deep breath - I'm here to make this as simple as possible. Let me break everything down in plain English. What's the main thing that's bothering you right now?`;
+      }
+      if (context.urgency === 'high') {
+        return `I understand this is urgent for you! Let me fast-track this. ${context.hasOpportunities ? `You have ${context.portfolioValue.toFixed(1)} ETH ready to claim right now. I can execute this in the next 60 seconds.` : 'Connect your wallet and I\'ll scan everything in under 30 seconds.'} What do you need me to prioritize first?`;
+      }
       if (context.hasOpportunities) {
         return `I'm analyzing your question in the context of your ${context.portfolioValue.toFixed(1)} ETH recovery opportunity. Could you be more specific about what you'd like to know? I can explain the technical details, walk through the process, discuss security, or just start the recovery right now. What would be most helpful?`;
       }
@@ -128,25 +165,31 @@ export default function SupportChat({ isConnected, userPortfolio }) {
   const [showProfile, setShowProfile] = useState(false);
   
   const agent = {
-    name: 'Sarah Chen',
-    title: 'Senior Crypto Recovery Specialist',
-    avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM0Qjc2ODgiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIxNiIgcj0iNiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDMwQzEwIDI1IDEzIDIyIDIwIDIyUzMwIDI1IDMwIDMwIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K',
-    experience: '5+ years',
-    specialties: ['DeFi Recovery', 'Multi-Chain Assets', 'Staking Rewards'],
-    recoveredAmount: '$2.4M+',
-    successRate: '94.7%'
+    name: 'Alex Rivera',
+    title: 'Elite Blockchain Recovery Engineer',
+    avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzM5OGVmNDtzdG9wLW9wYWNpdHk6MSIgLz4KPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMTk3NmQyO3N0b3Atb3BhY2l0eToxIiAvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxjaXJjbGUgY3g9IjIwIiBjeT0iMTYiIHI9IjYiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMCAzMEMxMCAyNSAxMyAyMiAyMCAyMlMzMCAyNSAzMCAzMCIgZmlsbD0id2hpdGUiLz4KPC9zdmc+',
+    experience: '7+ years',
+    specialties: ['Advanced DeFi Recovery', 'Cross-Chain Forensics', 'MEV Protection', 'Smart Contract Auditing'],
+    recoveredAmount: '$12.7M+',
+    successRate: '96.8%',
+    certifications: ['Certified Blockchain Security Professional', 'DeFi Security Specialist'],
+    languages: ['English', 'Spanish', 'Mandarin'],
+    timezone: 'Available 24/7',
+    responseTime: '< 30 seconds'
   };
   
   const getPersonalizedGreeting = () => {
+    const timeOfDay = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening';
+    
     if (!isConnected) {
-      return `Hi! I'm ${agent.name}, your dedicated crypto recovery specialist. I've helped recover over ${agent.recoveredAmount} in lost assets. Connect your wallet and I'll analyze your recovery opportunities!`;
+      return `Good ${timeOfDay}! I'm ${agent.name}, your elite blockchain recovery engineer. I've successfully recovered ${agent.recoveredAmount} across 50+ blockchains with a ${agent.successRate} success rate. I specialize in finding hidden opportunities others miss. Ready to discover what's waiting in your wallet?`;
     }
     
     if (userPortfolio?.recoveryOpportunities > 0) {
-      return `Welcome back! I can see you have ${userPortfolio.recoveryOpportunities} recovery opportunities worth ~$${(userPortfolio.estimatedRecoverable * 3000).toFixed(0)}. I'm here to guide you through claiming them step-by-step!`;
+      return `Excellent! I've detected ${userPortfolio.recoveryOpportunities} high-probability recovery opportunities worth approximately $${(userPortfolio.estimatedRecoverable * 3000).toFixed(0)}. My advanced scanning algorithms found assets that most tools miss. I'm excited to help you claim every penny that's rightfully yours!`;
     }
     
-    return `Hi! I'm ${agent.name}. I've analyzed your wallet and I'm ready to help you maximize your crypto recovery. What would you like to explore first?`;
+    return `Welcome! I'm ${agent.name}, and I've just completed a preliminary analysis of your wallet. My proprietary scanning technology is ready to dive deeper and find opportunities across all major blockchains. What type of recovery interests you most?`;
   };
   
   const [messages, setMessages] = useState([
@@ -155,35 +198,43 @@ export default function SupportChat({ isConnected, userPortfolio }) {
       text: getPersonalizedGreeting(),
       sender: 'support', 
       time: new Date(),
-      agent: agent
+      agent: agent,
+      type: 'greeting'
     }
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const messagesEndRef = useRef(null);
+  
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const getSmartQuickHelp = () => {
     if (!isConnected) {
       return [
-        "How do I connect my wallet?",
-        "What wallets do you support?",
-        "Is this service safe?",
-        "What can I recover?"
+        "🔗 Connect my wallet securely",
+        "🛡️ Show me your security credentials",
+        "💰 What can you recover for me?",
+        "⚡ How fast is the process?"
       ];
     }
     
     if (userPortfolio?.recoveryOpportunities > 0) {
       return [
-        `Claim my ${userPortfolio.estimatedRecoverable.toFixed(1)} ETH rewards`,
-        "Show me my recovery breakdown",
-        "Start recovery process now",
-        "What's my success probability?"
+        `🚀 Claim my ${userPortfolio.estimatedRecoverable.toFixed(1)} ETH instantly`,
+        "📊 Show detailed recovery analysis",
+        "🎯 Execute highest-value recovery first",
+        "🔮 What's my success probability?"
       ];
     }
     
     return [
-      "Scan for hidden opportunities",
-      "Check staking rewards",
-      "Find stuck bridge funds",
-      "What are your fees?"
+      "🔍 Deep scan for hidden opportunities",
+      "🥩 Check all staking rewards",
+      "🌉 Find stuck bridge transactions",
+      "💎 Discover forgotten airdrops"
     ];
   };
 
@@ -198,7 +249,9 @@ export default function SupportChat({ isConnected, userPortfolio }) {
     // Show typing indicator
     setIsTyping(true);
     
-    // Intelligent AI response system
+    // Advanced AI response system with realistic delays
+    const responseDelay = currentMessage.length > 50 ? 2000 + Math.random() * 1000 : 1000 + Math.random() * 800;
+    
     setTimeout(() => {
       setIsTyping(false);
       const reply = generateIntelligentResponse(currentMessage, isConnected, userPortfolio, agent);
@@ -208,10 +261,11 @@ export default function SupportChat({ isConnected, userPortfolio }) {
         text: reply, 
         sender: 'support', 
         time: new Date(),
-        agent: agent
+        agent: agent,
+        type: 'response'
       };
       setMessages(prev => [...prev, botMsg]);
-    }, Math.random() * 1000 + 1500); // Human-like response delay
+    }, responseDelay);
   };
 
   const handleQuickHelp = (question) => {
@@ -221,62 +275,154 @@ export default function SupportChat({ isConnected, userPortfolio }) {
 
   if (!isOpen) {
     return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50"
-      >
-        <MessageCircle size={24} />
-      </button>
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 group relative"
+        >
+          <MessageCircle size={24} className="group-hover:animate-pulse" />
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white animate-bounce">
+            !
+          </div>
+        </button>
+        <div className="absolute bottom-16 right-0 bg-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          Chat with {agent.name} • {agent.responseTime} response
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white border border-gray-300 rounded-lg shadow-xl z-50 flex flex-col">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-t-lg">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center space-x-2">
-            <img src={agent.avatar} alt={agent.name} className="w-8 h-8 rounded-full border-2 border-white" />
-            <div>
-              <h3 className="font-semibold text-sm">{agent.name}</h3>
+    <div className="fixed bottom-4 right-4 w-96 h-[550px] bg-white border border-gray-300 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white p-3 rounded-t-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <img 
+                  src={agent.avatar} 
+                  alt={agent.name} 
+                  className="w-10 h-10 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform" 
+                  onClick={() => setShowAgentProfile(!showAgentProfile)}
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-bold text-sm">{agent.name}</h3>
+                  <div className="flex space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 text-xs">
+                  <Shield size={10} className="text-green-400" />
+                  <span className="opacity-90">{agent.title}</span>
+                  <Zap size={10} className="text-yellow-400" />
+                  <span className="opacity-90">{agent.responseTime}</span>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-xs opacity-90">Online • {agent.title}</span>
+                <TrendingUp size={10} className="text-green-400" />
+                <span>{agent.successRate} Success</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <DollarSign size={10} className="text-yellow-400" />
+                <span>{agent.recoveredAmount} Recovered</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Users size={10} className="text-blue-300" />
+                <span>85K+ Clients</span>
               </div>
             </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="text-xs opacity-90">
-          {agent.successRate} Success Rate • {agent.recoveredAmount} Recovered
         </div>
       </div>
       
+      {showAgentProfile && (
+        <div className="bg-gray-50 border-b p-3 text-sm">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div><strong>Experience:</strong> {agent.experience}</div>
+            <div><strong>Languages:</strong> {agent.languages.join(', ')}</div>
+            <div><strong>Specialties:</strong></div>
+            <div className="col-span-2">
+              <div className="flex flex-wrap gap-1 mt-1">
+                {agent.specialties.map((spec, i) => (
+                  <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{spec}</span>
+                ))}
+              </div>
+            </div>
+            <div className="col-span-2 mt-2">
+              <strong>Certifications:</strong>
+              {agent.certifications.map((cert, i) => (
+                <div key={i} className="flex items-center space-x-1 mt-1">
+                  <Award size={12} className="text-yellow-600" />
+                  <span className="text-xs">{cert}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex-1 p-3 overflow-y-auto space-y-2">
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-3`}>
+          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
             {msg.sender === 'support' && (
-              <img 
-                src={msg.agent?.avatar} 
-                alt={msg.agent?.name}
-                className="w-8 h-8 rounded-full mr-2 cursor-pointer"
-                onClick={() => setShowProfile(!showProfile)}
-              />
+              <div className="relative mr-2">
+                <img 
+                  src={msg.agent?.avatar} 
+                  alt={msg.agent?.name}
+                  className="w-8 h-8 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md"
+                  onClick={() => setShowAgentProfile(!showAgentProfile)}
+                />
+                {msg.type === 'greeting' && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white animate-bounce"></div>
+                )}
+              </div>
             )}
-            <div className={`max-w-xs p-3 rounded-lg text-sm ${
-              msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-800 shadow-sm'
+            <div className={`max-w-xs p-3 rounded-lg text-sm shadow-md ${
+              msg.sender === 'user' 
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' 
+                : 'bg-white border border-gray-200 text-gray-800'
             }`}>
               {msg.sender === 'support' && (
-                <div className="text-xs text-blue-600 font-semibold mb-1">{msg.agent?.name}</div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-xs text-blue-600 font-bold">{msg.agent?.name}</span>
+                  <div className="flex items-center space-x-1">
+                    <Shield size={10} className="text-green-500" />
+                    <span className="text-xs text-gray-500">Verified Expert</span>
+                  </div>
+                </div>
               )}
-              <div className="whitespace-pre-line">{msg.text}</div>
-              <div className="text-xs opacity-70 mt-1">
-                {msg.time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-xs opacity-70">
+                  {msg.time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </div>
+                {msg.sender === 'support' && (
+                  <div className="flex items-center space-x-1">
+                    <Clock size={10} className="text-green-500" />
+                    <span className="text-xs text-green-600">Instant</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
+        
+        <div ref={messagesEndRef} />
         
         {isTyping && (
           <div className="flex justify-start mb-3">
@@ -294,12 +440,12 @@ export default function SupportChat({ isConnected, userPortfolio }) {
       </div>
       
       <div className="p-2 border-t">
-        <div className="grid grid-cols-1 gap-2 mb-3 max-h-20 overflow-y-auto">
+        <div className="grid grid-cols-1 gap-2 mb-3 max-h-24 overflow-y-auto">
           {getSmartQuickHelp().map((question, i) => (
             <button
               key={i}
               onClick={() => handleQuickHelp(question)}
-              className="text-sm bg-blue-50 hover:bg-blue-100 p-2 rounded text-left border border-blue-200 transition-colors"
+              className="text-sm bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 p-2 rounded-lg text-left border border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
             >
               {question}
             </button>
@@ -311,12 +457,13 @@ export default function SupportChat({ isConnected, userPortfolio }) {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 p-2 border border-gray-300 rounded text-sm"
+            placeholder="Ask me anything about crypto recovery..."
+            className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           <button
             onClick={handleSend}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+            disabled={!newMessage.trim()}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-all duration-200 hover:shadow-lg"
           >
             <Send size={16} />
           </button>
