@@ -339,9 +339,9 @@ class RecoveryEngine {
   }
 
   async executeDirectClaim(job) {
-    // Simulate direct claim execution
+    // Simulate direct claim execution - always succeed for demo
     return {
-      success: Math.random() > 0.2, // 80% success rate
+      success: true,
       amount: job.estimated_amount * 0.95, // Account for fees
       txHash: '0x' + Math.random().toString(16).substr(2, 64),
       gasUsed: 120000
@@ -349,9 +349,9 @@ class RecoveryEngine {
   }
 
   async executeContractInteraction(job) {
-    // Simulate contract interaction
+    // Simulate contract interaction - always succeed for demo
     return {
-      success: Math.random() > 0.3, // 70% success rate
+      success: true,
       amount: job.estimated_amount * 0.9,
       txHash: '0x' + Math.random().toString(16).substr(2, 64),
       gasUsed: 180000
@@ -359,9 +359,9 @@ class RecoveryEngine {
   }
 
   async executeMulticallBatch(job) {
-    // Simulate batch execution
+    // Simulate batch execution - always succeed for demo
     return {
-      success: Math.random() > 0.25, // 75% success rate
+      success: true,
       amount: job.estimated_amount * 0.92,
       txHash: '0x' + Math.random().toString(16).substr(2, 64),
       gasUsed: 250000
