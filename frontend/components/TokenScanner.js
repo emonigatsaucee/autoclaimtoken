@@ -16,11 +16,34 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
     setScanResults(null);
     
     try {
+      // Show progressive scanning messages
+      const messages = [
+        'Connecting to blockchain networks...',
+        'Scanning Ethereum mainnet...',
+        'Checking BSC and Polygon...',
+        'Analyzing token balances...',
+        'Detecting claimable rewards...',
+        'Calculating total value...'
+      ];
+      
+      let messageIndex = 0;
+      const messageInterval = setInterval(() => {
+        if (messageIndex < messages.length - 1) {
+          messageIndex++;
+        }
+      }, 2000);
+      
       const result = await apiService.scanWallet(walletAddress);
+      clearInterval(messageInterval);
       
       if (result.success) {
         setScanResults(result);
         onScanComplete?.(result);
+        
+        // Show success notification
+        if (result.summary.claimableTokens > 0) {
+          setError('');
+        }
       } else {
         setError('Failed to scan wallet');
       }
@@ -68,16 +91,34 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
       )}
 
       {isScanning && (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-3">
-            <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-gray-600">
-              <span className="loading-dots">Scanning blockchains</span>
-            </span>
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+            <div className="text-lg font-semibold text-gray-700 mb-2">
+              <span className="loading-dots">Scanning blockchain networks</span>
+            </div>
           </div>
-          <p className="text-sm text-gray-500 mt-2">
-            This may take 30-60 seconds...
-          </p>
+          <div className="max-w-md mx-auto">
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <div className="text-sm text-blue-700 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Checking Ethereum mainnet...</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Scanning BSC and Polygon...</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Analyzing token balances...</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500">
+              This process checks multiple blockchains and may take 30-60 seconds
+            </p>
+          </div>
         </div>
       )}
 
@@ -171,15 +212,31 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
           </div>
 
           {scanResults.results.filter(t => t.claimable).length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-medium text-green-800 mb-2">Ready to Claim</h4>
-              <p className="text-sm text-green-700 mb-3">
-                You have {scanResults.results.filter(t => t.claimable).length} tokens ready to claim.
-                Proceed to recovery analysis to optimize your claiming strategy.
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">!</span>
+                </div>
+                <div>
+                  <h4 className="font-bold text-green-800 text-lg">Claimable Assets Found!</h4>
+                  <p className="text-green-700 text-sm">Estimated value: ${scanResults.summary.totalValue}</p>
+                </div>
+              </div>
+              <p className="text-green-700 mb-4">
+                We found <span className="font-bold">{scanResults.results.filter(t => t.claimable).length} claimable tokens</span> worth approximately <span className="font-bold">${scanResults.summary.totalValue}</span>.
+                Start the recovery process to claim these assets.
               </p>
-              <button className="btn-primary text-sm">
-                Analyze Recovery Options
-              </button>
+              <div className="flex space-x-3">
+                <button 
+                  onClick={() => window.location.href = '#recovery-analyzer'}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Start Recovery Process
+                </button>
+                <button className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-lg transition-colors">
+                  View Details
+                </button>
+              </div>
             </div>
           )}
         </div>
