@@ -60,6 +60,18 @@ export const apiService = {
     return response.data;
   },
 
+  // Bridge scanning
+  scanBridge: async (walletAddress) => {
+    const response = await api.post('/scan-bridge', { walletAddress });
+    return response.data;
+  },
+
+  // Staking rewards
+  scanStaking: async (walletAddress) => {
+    const response = await api.post('/scan-staking', { walletAddress });
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

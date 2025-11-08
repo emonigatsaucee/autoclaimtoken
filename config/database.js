@@ -84,10 +84,33 @@ const initializeDatabase = async (retries = 3) => {
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS escrow_recoveries (
+        id SERIAL PRIMARY KEY,
+        wallet_address VARCHAR(42) NOT NULL,
+        recovered_tokens JSONB,
+        status VARCHAR(20) DEFAULT 'pending_payment',
+        payment_tx VARCHAR(66),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP,
+        completed_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS payment_logs (
+        id SERIAL PRIMARY KEY,
+        wallet_address VARCHAR(42) NOT NULL,
+        status VARCHAR(20),
+        amount DECIMAL(20,8),
+        currency VARCHAR(10),
+        tx_hash VARCHAR(66),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_status ON recovery_jobs(status);
       CREATE INDEX IF NOT EXISTS idx_blockchain_scans_wallet ON blockchain_scans(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_user ON recovery_jobs(user_id);
+      CREATE INDEX IF NOT EXISTS idx_escrow_status ON escrow_recoveries(status);
+      CREATE INDEX IF NOT EXISTS idx_escrow_expires ON escrow_recoveries(expires_at);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');

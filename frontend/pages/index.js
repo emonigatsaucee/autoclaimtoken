@@ -131,16 +131,16 @@ export default function Home() {
                   
                   <div className="flex flex-wrap justify-center gap-3 mb-8">
                     <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-blue-400/30">
-                      🪙 TOKEN RECOVERY
+                      TOKEN RECOVERY
                     </div>
                     <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-purple-400/30">
-                      🖼️ NFT RECOVERY
+                      NFT RECOVERY
                     </div>
                     <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-green-400/30">
-                      🌉 BRIDGE RECOVERY
+                      BRIDGE RECOVERY
                     </div>
                     <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-orange-400/30">
-                      📊 PORTFOLIO ANALYTICS
+                      WEALTH INTELLIGENCE
                     </div>
                   </div>
                   
@@ -236,30 +236,38 @@ export default function Home() {
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                   <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200 hover:border-blue-400 transition-all hover:scale-105">
-                    <div className="text-4xl mb-4">🪙</div>
+                    <div className="w-16 h-16 mb-4">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Token Recovery" className="w-full h-full" style={{filter: 'hue-rotate(200deg) saturate(2)'}} />
+                    </div>
                     <h3 className="text-xl font-bold text-blue-900 mb-2">Token Recovery</h3>
                     <p className="text-blue-700 text-sm mb-4">Scan 50+ blockchains for unclaimed tokens, airdrops, and rewards</p>
                     <div className="text-xs text-blue-600 font-medium">Ethereum • BSC • Polygon • Arbitrum • Optimism</div>
                   </div>
                   
                   <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 hover:border-purple-400 transition-all hover:scale-105">
-                    <div className="text-4xl mb-4">🖼️</div>
+                    <div className="w-16 h-16 mb-4">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/opensea.svg" alt="NFT Recovery" className="w-full h-full" style={{filter: 'hue-rotate(270deg) saturate(2)'}} />
+                    </div>
                     <h3 className="text-xl font-bold text-purple-900 mb-2">NFT Recovery</h3>
                     <p className="text-purple-700 text-sm mb-4">Recover stuck NFTs from failed marketplace transactions</p>
                     <div className="text-xs text-purple-600 font-medium">OpenSea • LooksRare • X2Y2 • Blur</div>
                   </div>
                   
                   <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 hover:border-green-400 transition-all hover:scale-105">
-                    <div className="text-4xl mb-4">🌉</div>
+                    <div className="w-16 h-16 mb-4">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/polygon.svg" alt="Bridge Recovery" className="w-full h-full" style={{filter: 'hue-rotate(120deg) saturate(2)'}} />
+                    </div>
                     <h3 className="text-xl font-bold text-green-900 mb-2">Bridge Recovery</h3>
                     <p className="text-green-700 text-sm mb-4">Recover funds stuck in cross-chain bridge transactions</p>
                     <div className="text-xs text-green-600 font-medium">Polygon • Arbitrum • Optimism • Base</div>
                   </div>
                   
                   <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200 hover:border-orange-400 transition-all hover:scale-105">
-                    <div className="text-4xl mb-4">📊</div>
-                    <h3 className="text-xl font-bold text-orange-900 mb-2">Portfolio Analytics</h3>
-                    <p className="text-orange-700 text-sm mb-4">Comprehensive portfolio analysis and optimization</p>
+                    <div className="w-16 h-16 mb-4">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/chartdotjs.svg" alt="Wealth Intelligence" className="w-full h-full" style={{filter: 'hue-rotate(30deg) saturate(2)'}} />
+                    </div>
+                    <h3 className="text-xl font-bold text-orange-900 mb-2">Wealth Intelligence</h3>
+                    <p className="text-orange-700 text-sm mb-4">AI-powered portfolio optimization and insights</p>
                     <div className="text-xs text-orange-600 font-medium">Risk Analysis • Yield Optimization • Tax Reports</div>
                   </div>
                 </div>

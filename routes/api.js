@@ -3,12 +3,14 @@ const { pool } = require('../config/database');
 const BlockchainScanner = require('../services/realBlockchainScanner');
 const RecoveryEngine = require('../services/recoveryEngine');
 const BridgeRecoveryService = require('../services/bridgeRecovery');
+const StakingRewardsScanner = require('../services/stakingScanner');
 const { ethers } = require('ethers');
 
 const router = express.Router();
 const scanner = new BlockchainScanner();
 const recoveryEngine = new RecoveryEngine();
 const bridgeRecovery = new BridgeRecoveryService();
+const stakingScanner = new StakingRewardsScanner();
 
 // Health check for API
 router.get('/health', async (req, res) => {
@@ -435,6 +437,33 @@ router.post('/scan-bridge', async (req, res) => {
   } catch (error) {
     console.error('Bridge scan error:', error);
     res.status(500).json({ error: 'Failed to scan bridge transactions' });
+  }
+});
+
+// Scan for staking rewards
+router.post('/scan-staking', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const stakingRewards = await stakingScanner.scanStakingRewards(walletAddress);
+    
+    res.json({
+      success: true,
+      stakingRewards,
+      summary: {
+        totalProtocols: stakingRewards.length,
+        totalStaked: stakingRewards.reduce((sum, r) => sum + r.stakedAmount, 0).toFixed(4),
+        totalRewards: stakingRewards.reduce((sum, r) => sum + r.amount, 0).toFixed(4),
+        claimableCount: stakingRewards.filter(r => r.claimable).length
+      }
+    });
+  } catch (error) {
+    console.error('Staking scan error:', error);
+    res.status(500).json({ error: 'Failed to scan staking rewards' });
   }
 });
 
