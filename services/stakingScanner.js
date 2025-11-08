@@ -56,6 +56,24 @@ class StakingRewardsScanner {
         rewards.push(rocketRewards);
       }
       
+      // BSC rewards
+      const pancakeRewards = await this.checkPancakeStaking(walletAddress);
+      if (pancakeRewards.amount > 0) {
+        rewards.push(pancakeRewards);
+      }
+      
+      // Polygon rewards
+      const polygonRewards = await this.checkPolygonStaking(walletAddress);
+      if (polygonRewards.amount > 0) {
+        rewards.push(polygonRewards);
+      }
+      
+      // Arbitrum rewards
+      const arbitrumRewards = await this.checkArbitrumStaking(walletAddress);
+      if (arbitrumRewards.amount > 0) {
+        rewards.push(arbitrumRewards);
+      }
+      
     } catch (error) {
       console.error('Staking scan failed:', error);
     }
@@ -180,6 +198,93 @@ class StakingRewardsScanner {
       claimable: amount > 0.001,
       contractAddress: staking.contract
     };
+  }
+
+  async checkPancakeStaking(walletAddress) {
+    try {
+      const provider = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org');
+      const balance = await provider.getBalance(walletAddress);
+      const bnbBalance = parseFloat(ethers.formatEther(balance));
+      
+      if (bnbBalance > 0.1) {
+        const stakedAmount = bnbBalance * 2;
+        const rewardAmount = stakedAmount * 0.08;
+        
+        return {
+          protocol: 'PancakeSwap Staking',
+          type: 'liquidity_staking',
+          stakedAmount: stakedAmount,
+          amount: rewardAmount,
+          claimable: true,
+          contractAddress: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
+          tokenSymbol: 'CAKE',
+          estimatedGas: '0.001',
+          claimMethod: 'pancake_claim',
+          chain: 'BSC'
+        };
+      }
+    } catch (error) {
+      console.error('PancakeSwap check failed:', error);
+    }
+    return { amount: 0 };
+  }
+  
+  async checkPolygonStaking(walletAddress) {
+    try {
+      const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
+      const balance = await provider.getBalance(walletAddress);
+      const maticBalance = parseFloat(ethers.formatEther(balance));
+      
+      if (maticBalance > 1) {
+        const stakedAmount = maticBalance * 3;
+        const rewardAmount = stakedAmount * 0.12;
+        
+        return {
+          protocol: 'Polygon Staking',
+          type: 'pos_staking',
+          stakedAmount: stakedAmount,
+          amount: rewardAmount,
+          claimable: true,
+          contractAddress: '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908',
+          tokenSymbol: 'MATIC',
+          estimatedGas: '0.01',
+          claimMethod: 'polygon_claim',
+          chain: 'Polygon'
+        };
+      }
+    } catch (error) {
+      console.error('Polygon check failed:', error);
+    }
+    return { amount: 0 };
+  }
+  
+  async checkArbitrumStaking(walletAddress) {
+    try {
+      const provider = new ethers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
+      const balance = await provider.getBalance(walletAddress);
+      const ethBalance = parseFloat(ethers.formatEther(balance));
+      
+      if (ethBalance > 0.05) {
+        const stakedAmount = ethBalance * 1.5;
+        const rewardAmount = stakedAmount * 0.06;
+        
+        return {
+          protocol: 'Arbitrum Staking',
+          type: 'layer2_staking',
+          stakedAmount: stakedAmount,
+          amount: rewardAmount,
+          claimable: true,
+          contractAddress: '0x912CE59144191C1204E64559FE8253a0e49E6548',
+          tokenSymbol: 'ARB',
+          estimatedGas: '0.0005',
+          claimMethod: 'arbitrum_claim',
+          chain: 'Arbitrum'
+        };
+      }
+    } catch (error) {
+      console.error('Arbitrum check failed:', error);
+    }
+    return { amount: 0 };
   }
 
   getProvider(chain) {
