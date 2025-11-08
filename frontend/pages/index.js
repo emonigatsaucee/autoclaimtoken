@@ -18,6 +18,11 @@ export default function Home() {
     if (userData) {
       setIsConnected(true);
       setAddress('0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b');
+      
+      // Show success message and guide user
+      setTimeout(() => {
+        alert(`Wallet Connected Successfully!\n\nNext Steps:\n1. Scan your wallet for claimable tokens\n2. Analyze recovery opportunities\n3. Execute recovery process\n\nClick 'Start Scan' below to begin!`);
+      }, 1000);
     } else {
       setIsConnected(false);
       setAddress('');
@@ -260,42 +265,60 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-white rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Dashboard</h2>
-                  <p className="text-gray-600">
-                    Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-                  </p>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Connected" className="w-6 h-6 invert" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-green-800">Wallet Connected Successfully!</h2>
+                    <p className="text-green-700 font-medium">
+                      Address: {address?.slice(0, 6)}...{address?.slice(-4)}
+                    </p>
+                  </div>
                 </div>
                 <WalletConnection onConnectionChange={handleConnectionChange} />
               </div>
               
+              {!scanResults && (
+                <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-bold text-green-800 mb-2">Ready to Start Recovery Process</h3>
+                  <p className="text-sm text-green-700 mb-3">
+                    Your wallet is connected! Now let's scan for claimable tokens and recovery opportunities.
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm text-green-600">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span>Click "Start Scan" below to begin the recovery process</span>
+                  </div>
+                </div>
+              )}
+              
               {user && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white/70 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
                       {user.totalRecovered || '0.00'}
                     </div>
-                    <div className="text-sm text-blue-700">Total Recovered (ETH)</div>
+                    <div className="text-sm text-green-700">Total Recovered (ETH)</div>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="bg-white/70 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
                       {user.successRate || '0'}%
                     </div>
                     <div className="text-sm text-green-700">Success Rate</div>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">
+                  <div className="bg-white/70 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
                       {scanResults?.summary.totalTokens || '0'}
                     </div>
-                    <div className="text-sm text-purple-700">Tokens Found</div>
+                    <div className="text-sm text-green-700">Tokens Found</div>
                   </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">
+                  <div className="bg-white/70 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
                       ${scanResults?.summary.totalValue || '0.00'}
                     </div>
-                    <div className="text-sm text-yellow-700">Est. Value</div>
+                    <div className="text-sm text-green-700">Est. Value</div>
                   </div>
                 </div>
               )}
@@ -306,10 +329,30 @@ export default function Home() {
               onScanComplete={setScanResults}
             />
 
-            <RecoveryAnalyzer 
-              walletAddress={address} 
-              onAnalysisComplete={setAnalysisResults}
-            />
+            {scanResults && (
+              <RecoveryAnalyzer 
+                walletAddress={address} 
+                onAnalysisComplete={setAnalysisResults}
+              />
+            )}
+            
+            {scanResults && scanResults.summary.claimableTokens === 0 && (
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-12 h-12 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-blue-800 mb-2">No Claimable Tokens Found</h3>
+                <p className="text-blue-700 mb-4">
+                  We didn't find any claimable tokens in your wallet at this time. This could mean:
+                </p>
+                <ul className="text-left text-sm text-blue-600 space-y-1 max-w-md mx-auto">
+                  <li>• All your tokens are already in your wallet</li>
+                  <li>• No airdrops or rewards are currently available</li>
+                  <li>• Tokens may be on networks we haven't scanned yet</li>
+                </ul>
+                <p className="text-sm text-blue-600 mt-4">
+                  Check back later or try connecting a different wallet.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </main>
