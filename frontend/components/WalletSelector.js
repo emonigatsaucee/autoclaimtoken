@@ -12,7 +12,8 @@ export default function WalletSelector({ onBack, onWalletConnect }) {
       icon: 'https://metamask.io/favicon.ico',
       description: 'Most popular Ethereum wallet',
       downloadUrl: 'https://metamask.io/download/',
-      installed: typeof window !== 'undefined' && window.ethereum?.isMetaMask
+      installed: typeof window !== 'undefined' && window.ethereum?.isMetaMask,
+      mobileDeepLink: 'https://metamask.app.link/dapp/' + (typeof window !== 'undefined' ? window.location.host : '')
     },
     {
       id: 'trustwallet',
@@ -61,9 +62,19 @@ export default function WalletSelector({ onBack, onWalletConnect }) {
     setConnecting(true);
 
     try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       if (!wallet.installed) {
-        // Redirect to download page
-        window.open(wallet.downloadUrl, '_blank');
+        if (isMobile && wallet.mobileDeepLink) {
+          // Mobile: Try deep link first, fallback to app store
+          window.location.href = wallet.mobileDeepLink;
+          setTimeout(() => {
+            window.open(wallet.downloadUrl, '_blank');
+          }, 2000);
+        } else {
+          // Desktop: Direct to download page
+          window.open(wallet.downloadUrl, '_blank');
+        }
         setConnecting(false);
         return;
       }

@@ -91,7 +91,7 @@ export default function BridgeScanner({ walletAddress }) {
                   <div className="text-xs text-gray-500">{tx.estimatedRecoveryTime}</div>
                   {tx.recoverable && (
                     <button className="bg-red-600 text-white px-3 py-1 rounded text-xs mt-2">
-                      Recover ($299)
+                      Recover (15% fee: ${(parseFloat(tx.amount || 0) * 0.15 * 3000).toFixed(0)})
                     </button>
                   )}
                 </div>

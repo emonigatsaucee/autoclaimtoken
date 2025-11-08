@@ -4,6 +4,10 @@ import WalletConnection from '../components/WalletConnection';
 import WalletSelector from '../components/WalletSelector';
 import TokenScanner from '../components/TokenScanner';
 import RecoveryAnalyzer from '../components/RecoveryAnalyzer';
+import BridgeScanner from '../components/BridgeScanner';
+import StakingScanner from '../components/StakingScanner';
+import NFTScanner from '../components/NFTScanner';
+import WealthIntelligence from '../components/WealthIntelligence';
 
 export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
@@ -464,17 +468,65 @@ export default function Home() {
               </div>
             )}
             
-            {analysisResults && (
+            {scanResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">3</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 3: Bridge Recovery Scanner</h3>
+                </div>
+                <BridgeScanner walletAddress={address} />
+              </div>
+            )}
+
+            {scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">3</span>
+                    <span className="text-white font-bold">4</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 3: Recovery Complete!</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 4: Staking Rewards Scanner</h3>
+                </div>
+                <StakingScanner walletAddress={address} />
+              </div>
+            )}
+
+            {scanResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-pink-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">5</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 5: NFT Recovery Scanner</h3>
+                </div>
+                <NFTScanner walletAddress={address} />
+              </div>
+            )}
+
+            {scanResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-orange-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">6</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 6: Wealth Intelligence</h3>
+                </div>
+                <WealthIntelligence walletAddress={address} />
+              </div>
+            )}
+            
+            {analysisResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">✓</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">All Services Complete!</h3>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-green-800 font-medium">
-                    Recovery analysis complete! Check the results above and execute any available recovery opportunities.
+                    All recovery services completed! Review the results above and execute any available recovery opportunities.
                   </p>
                 </div>
               </div>
