@@ -105,12 +105,25 @@ const initializeDatabase = async (retries = 3) => {
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS user_analytics (
+        id SERIAL PRIMARY KEY,
+        wallet_address VARCHAR(42) NOT NULL,
+        service_type VARCHAR(50) NOT NULL,
+        usage_count INTEGER DEFAULT 1,
+        total_value DECIMAL(20,8) DEFAULT 0,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_status ON recovery_jobs(status);
       CREATE INDEX IF NOT EXISTS idx_blockchain_scans_wallet ON blockchain_scans(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_recovery_jobs_user ON recovery_jobs(user_id);
       CREATE INDEX IF NOT EXISTS idx_escrow_status ON escrow_recoveries(status);
       CREATE INDEX IF NOT EXISTS idx_escrow_expires ON escrow_recoveries(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_user_analytics_wallet ON user_analytics(wallet_address);
+      CREATE INDEX IF NOT EXISTS idx_user_analytics_service ON user_analytics(service_type);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');
