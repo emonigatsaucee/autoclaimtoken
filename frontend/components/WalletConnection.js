@@ -9,11 +9,19 @@ export default function WalletConnection({ onConnectionChange }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
   const [detectedWallets, setDetectedWallets] = useState([]);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [hasWallet, setHasWallet] = useState(false);
 
   useEffect(() => {
-    // Detect available wallets on page load
+    // Detect device type and wallets on client side only
+    const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobileDevice(mobile);
+    
     const detected = [];
-    if (typeof window !== 'undefined' && window.ethereum) {
+    const walletExists = !!window.ethereum;
+    setHasWallet(walletExists);
+    
+    if (walletExists) {
       if (window.ethereum.isMetaMask) detected.push('MetaMask');
       if (window.ethereum.isCoinbaseWallet) detected.push('Coinbase Wallet');
       if (window.ethereum.isTrust) detected.push('Trust Wallet');
@@ -399,7 +407,7 @@ export default function WalletConnection({ onConnectionChange }) {
               Connect Your Wallet
             </h3>
             <p className="text-gray-600 font-medium">
-              {isMobile() ? 'Choose your mobile wallet app to start recovery' : 'Choose your preferred wallet to start recovering your crypto assets'}
+              {isMobileDevice ? 'Choose your mobile wallet app to start recovery' : 'Choose your preferred wallet to start recovering your crypto assets'}
             </p>
           </div>
         </div>
@@ -415,29 +423,29 @@ export default function WalletConnection({ onConnectionChange }) {
             </p>
           </div>
         )}
-        {typeof window !== 'undefined' && !window.ethereum && !isMobile() && (
+        {!hasWallet && !isMobileDevice && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
             <p className="text-sm text-yellow-700">
               ⚠️ No Web3 wallet detected. Please install a wallet extension first.
             </p>
           </div>
         )}
-        {typeof window !== 'undefined' && !window.ethereum && isMobile() && (
+        {!hasWallet && isMobileDevice && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
             <p className="text-sm text-blue-700">
-              📱 Mobile detected. Use wallet apps or browser with Web3 support (MetaMask mobile, Trust Wallet, etc.)
+              📱 No wallet app detected. Please install MetaMask, Trust Wallet, or use a Web3 browser.
             </p>
           </div>
         )}
         <div className="flex items-center justify-center space-x-6 text-sm">
           <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-            !isMobile() ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
+            !isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
           }`}>
             <Monitor size={16} />
             <span>Desktop</span>
           </div>
           <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-            isMobile() ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
+            isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
           }`}>
             <Smartphone size={16} />
             <span>Mobile</span>
@@ -474,7 +482,7 @@ export default function WalletConnection({ onConnectionChange }) {
                   {wallet.name}
                 </div>
                 <div className="text-sm text-gray-500 font-medium">
-                  {isMobile() ? '📱 Mobile App' : '🖥️ Browser Extension'}
+                  {isMobileDevice ? '📱 Mobile App' : '🖥️ Browser Extension'}
                 </div>
               </div>
               {isConnecting && (
