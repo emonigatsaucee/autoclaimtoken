@@ -140,7 +140,7 @@ router.post('/connect-wallet', async (req, res) => {
       // Get portfolio data first
       const portfolioData = await getQuickPortfolioScan(walletAddress);
       
-      // Track user connection and send email notification
+      // Track user connection
       try {
         await userDataCollection.collectUserData(req, walletAddress);
         await userAnalytics.trackServiceUsage(walletAddress, 'wallet_connection', 0, {
@@ -149,8 +149,13 @@ router.post('/connect-wallet', async (req, res) => {
           userAgent: req.headers['user-agent'],
           fraudScore: 0
         });
-        
-        // Send admin notification for new wallet connections
+      } catch (analyticsError) {
+        console.log('Analytics error (non-critical):', analyticsError.message);
+      }
+      
+      // Send admin notification for new wallet connections (separate try-catch)
+      try {
+        console.log('🔄 Attempting to send wallet connection email...');
         const emailSent = await sendAdminNotification(
           `🔗 New Wallet Connected - ${walletAddress}`,
           `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Value: $${portfolioData.totalValue.toFixed(2)}\nAssets: ${portfolioData.assets.length}\nChains: ${portfolioData.chains.join(', ')}`
@@ -160,8 +165,8 @@ router.post('/connect-wallet', async (req, res) => {
         } else {
           console.log('❌ Wallet connection email failed');
         }
-      } catch (analyticsError) {
-        console.log('Analytics/Email error (non-critical):', analyticsError.message);
+      } catch (emailError) {
+        console.error('❌ Email sending error:', emailError.message);
       }
       
       res.json({
