@@ -23,6 +23,24 @@ export default function StakingScanner({ walletAddress }) {
     }
   };
 
+  const handleClaimReward = async (reward) => {
+    try {
+      const result = await apiService.createRecoveryJob({
+        walletAddress,
+        tokenAddress: reward.contractAddress,
+        tokenSymbol: reward.tokenSymbol,
+        estimatedAmount: reward.amount,
+        recoveryMethod: 'staking_claim'
+      });
+      
+      if (result.success) {
+        alert(`Recovery job created! You will receive ${result.job.netRecovery} ${reward.tokenSymbol} after 15% fee.`);
+      }
+    } catch (err) {
+      setError('Failed to create recovery job: ' + err.message);
+    }
+  };
+
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-6">
@@ -84,14 +102,27 @@ export default function StakingScanner({ walletAddress }) {
                 <div>
                   <h4 className="font-bold text-purple-800">{reward.protocol}</h4>
                   <p className="text-sm text-gray-600">{reward.type}</p>
-                  <p className="text-xs text-gray-500">Staked: {reward.stakedAmount}</p>
+                  <p className="text-xs text-gray-500">Staked: {reward.stakedAmount} {reward.tokenSymbol}</p>
+                  <p className="text-xs text-green-600">Gas: ~{reward.estimatedGas} ETH</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-purple-600">{reward.amount} Rewards</div>
+                  <div className="text-lg font-bold text-green-600">{reward.amount} {reward.tokenSymbol}</div>
+                  <div className="text-xs text-gray-500">≈ ${(parseFloat(reward.amount) * 3000).toFixed(0)} USD</div>
                   {reward.claimable && (
-                    <button className="bg-purple-600 text-white px-3 py-1 rounded text-xs mt-2">
-                      Recover (15% fee: ${(parseFloat(reward.amount) * 0.15 * 3000).toFixed(0)})
-                    </button>
+                    <div className="mt-2 space-y-1">
+                      <button 
+                        onClick={() => handleClaimReward(reward)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium w-full"
+                      >
+                        Claim Rewards
+                      </button>
+                      <div className="text-xs text-gray-500">
+                        Fee: {(parseFloat(reward.amount) * 0.15).toFixed(2)} ETH (${(parseFloat(reward.amount) * 0.15 * 3000).toFixed(0)})
+                      </div>
+                      <div className="text-xs text-green-600">
+                        You get: {(parseFloat(reward.amount) * 0.85).toFixed(2)} ETH
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

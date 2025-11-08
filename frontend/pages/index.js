@@ -8,6 +8,7 @@ import BridgeScanner from '../components/BridgeScanner';
 import StakingScanner from '../components/StakingScanner';
 import NFTScanner from '../components/NFTScanner';
 import WealthIntelligence from '../components/WealthIntelligence';
+import SupportChat from '../components/SupportChat';
 
 export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
@@ -545,6 +546,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      <SupportChat />
     </div>
   );
 }
