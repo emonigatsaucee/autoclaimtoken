@@ -10,64 +10,36 @@ const { sendFraudAlert } = require('../services/emailAlerts');
 const { ethers } = require('ethers');
 const nodemailer = require('nodemailer');
 
-// Email transporter for admin notifications
+// Email transporter - Use Gmail with your credentials
 const emailTransporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  service: 'gmail',
   auth: {
     user: process.env.OWNER_EMAIL,
     pass: process.env.EMAIL_PASSWORD
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 60000,
-  greetingTimeout: 30000,
-  socketTimeout: 60000,
-  pool: true,
-  maxConnections: 1,
-  rateDelta: 20000,
-  rateLimit: 5
+  }
 });
 
-// Send admin notification with retry logic
+// Simple email function using your Gmail
 async function sendAdminNotification(subject, message) {
-  const maxRetries = 3;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`📧 Sending email (attempt ${attempt}/${maxRetries}):`, subject);
-      
-      const result = await Promise.race([
-        emailTransporter.sendMail({
-          from: `CryptoRecover <${process.env.OWNER_EMAIL}>`,
-          to: process.env.OWNER_EMAIL,
-          subject: subject,
-          text: message
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email timeout after 30s')), 30000)
-        )
-      ]);
-      
-      console.log('✅ Email sent successfully:', result.messageId);
-      return true;
-      
-    } catch (error) {
-      console.error(`❌ Email attempt ${attempt} failed:`, error.message);
-      
-      if (attempt === maxRetries) {
-        console.error('❌ All email attempts failed');
-        return false;
-      }
-      
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-    }
+  try {
+    console.log('📧 Sending email:', subject);
+    
+    const result = await emailTransporter.sendMail({
+      from: process.env.OWNER_EMAIL,
+      to: process.env.OWNER_EMAIL,
+      subject: subject,
+      text: message
+    });
+    
+    console.log('✅ Email sent successfully:', result.messageId);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Email failed:', error.message);
+    console.log('🚨 EMAIL ALERT:', subject);
+    console.log(message);
+    return false;
   }
-  
-  return false;
 }
 
 // Wallet address validation for multiple formats
