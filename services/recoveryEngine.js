@@ -50,69 +50,18 @@ class RecoveryEngine {
   async analyzeChainRecovery(walletAddress, chainId, provider, txHistory) {
     const analysis = { recoverable: 0, high: [], medium: [], low: [] };
     
-    // Check for stuck transactions
-    const stuckTxs = await this.findStuckTransactions(walletAddress, chainId, provider);
-    for (const tx of stuckTxs) {
-      const recovery = await this.analyzeStuckTransaction(tx, provider);
-      if (recovery.probability > 0.7) {
-        analysis.high.push(recovery);
-      } else if (recovery.probability > 0.4) {
-        analysis.medium.push(recovery);
-      } else {
-        analysis.low.push(recovery);
-      }
-      analysis.recoverable += recovery.estimatedValue;
-    }
-
-    // Check for unclaimed protocol rewards
+    // Only check for real unclaimed protocol rewards
     const unclaimedRewards = await this.findUnclaimedRewards(walletAddress, chainId, provider);
     analysis.high.push(...unclaimedRewards);
     analysis.recoverable += unclaimedRewards.reduce((sum, r) => sum + r.estimatedValue, 0);
-
-    // Check for forgotten LP positions
-    const lpPositions = await this.findForgottenLPPositions(walletAddress, chainId, provider);
-    analysis.medium.push(...lpPositions);
-    analysis.recoverable += lpPositions.reduce((sum, r) => sum + r.estimatedValue, 0);
-
-    // Check for bridge failures
-    const bridgeFailures = await this.findBridgeFailures(walletAddress, chainId, txHistory);
-    analysis.low.push(...bridgeFailures);
-    analysis.recoverable += bridgeFailures.reduce((sum, r) => sum + r.estimatedValue, 0);
 
     return analysis;
   }
 
   async findStuckTransactions(walletAddress, chainId, provider) {
-    const stuckTxs = [];
-    
-    try {
-      // Get recent failed transactions
-      const latestBlock = await provider.getBlockNumber();
-      const fromBlock = latestBlock - 100000; // Last ~2 weeks
-      
-      // This would normally require archive node access
-      // For now, we'll simulate with common stuck transaction patterns
-      const commonStuckPatterns = [
-        {
-          type: 'failed_swap',
-          estimatedValue: 0.1,
-          gasUsed: 150000,
-          reason: 'slippage_too_high'
-        },
-        {
-          type: 'failed_claim',
-          estimatedValue: 0.05,
-          gasUsed: 80000,
-          reason: 'insufficient_gas'
-        }
-      ];
-      
-      stuckTxs.push(...commonStuckPatterns);
-    } catch (error) {
-      console.error('Error finding stuck transactions:', error.message);
-    }
-    
-    return stuckTxs;
+    // Real implementation would require archive node access
+    // Return empty array for now - no fake data
+    return [];
   }
 
   async analyzeStuckTransaction(tx, provider) {
@@ -185,35 +134,9 @@ class RecoveryEngine {
   }
 
   async findForgottenLPPositions(walletAddress, chainId, provider) {
-    const positions = [];
-    
-    // Check for LP tokens in major DEXes
-    const lpTokens = [
-      { name: 'Uniswap V2', factory: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f' },
-      { name: 'SushiSwap', factory: '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac' }
-    ];
-
-    for (const dex of lpTokens) {
-      try {
-        // This would require more complex logic to find all LP pairs
-        // For now, simulate finding forgotten positions
-        const simulatedPosition = {
-          type: 'forgotten_lp',
-          protocol: dex.name,
-          estimatedValue: 0.2,
-          probability: 0.6,
-          method: 'lp_withdrawal',
-          gasEstimate: 200000,
-          requirements: ['remove_liquidity']
-        };
-        
-        positions.push(simulatedPosition);
-      } catch (error) {
-        console.error(`Error checking ${dex.name}:`, error.message);
-      }
-    }
-
-    return positions;
+    // Real implementation would require complex DEX scanning
+    // Return empty array for now - no fake data
+    return [];
   }
 
   async findBridgeFailures(walletAddress, chainId, txHistory) {
@@ -324,7 +247,7 @@ class RecoveryEngine {
       `, [
         result.success ? 'completed' : 'failed',
         result.amount || 0,
-        result.txHash,
+        result.txHash || null,
         recoveryJob.id
       ]);
 
