@@ -124,51 +124,10 @@ class RealBlockchainScanner {
   }
 
   async checkClaimableTokens(walletAddress, chainId, provider) {
-    const claimable = [];
-    
-    try {
-      // Simplified claimable check - avoid complex protocol interactions
-      // Instead, simulate realistic claimable amounts based on wallet activity
-      const balance = await provider.getBalance(walletAddress);
-      const nonce = await provider.getTransactionCount(walletAddress);
-      
-      // If wallet has activity, simulate some claimable rewards
-      if (balance > 0 && nonce > 5) {
-        const ethAmount = parseFloat(ethers.formatEther(balance));
-        
-        // Simulate staking rewards (5% of ETH balance)
-        if (ethAmount > 0.1) {
-          claimable.push({
-            chainId,
-            protocol: 'ethereum_staking',
-            tokenSymbol: 'ETH',
-            amount: (ethAmount * 0.05).toFixed(4),
-            claimable: true,
-            contractAddress: '0x00000000219ab540356cBB839Cbe05303d7705Fa'
-          });
-        }
-        
-        // Simulate DeFi rewards for active wallets
-        if (nonce > 20) {
-          claimable.push({
-            chainId,
-            protocol: 'defi_rewards',
-            tokenSymbol: chainId === 1 ? 'COMP' : chainId === 56 ? 'CAKE' : 'AAVE',
-            amount: (Math.random() * 0.5 + 0.1).toFixed(4),
-            claimable: true,
-            contractAddress: '0x0000000000000000000000000000000000000000'
-          });
-        }
-      }
-      
-    } catch (error) {
-      // Silently handle errors in production
-      if (process.env.NODE_ENV !== 'production') {
-        console.error(`Error checking claimable tokens on chain ${chainId}:`, error.message);
-      }
-    }
-    
-    return claimable;
+    // NO SIMULATED DATA - Only return real claimable tokens
+    // This would require checking actual protocol contracts for unclaimed rewards
+    // For now, return empty array to avoid fake data
+    return [];
   }
 
   async checkStuckTransactions(walletAddress, chainId, provider, claimable) {
