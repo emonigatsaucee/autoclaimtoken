@@ -228,25 +228,54 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   async function connectAnyWallet() {
-    if (!window.ethereum) {
-      setError('No Web3 wallet detected. Please install a wallet extension or use a Web3 browser.');
-      return;
+    if (isMobileDevice) {
+      // Mobile: Try to connect if wallet exists, otherwise show mobile options
+      if (window.ethereum) {
+        let walletName = 'Web3 Wallet';
+        if (window.ethereum.isMetaMask) walletName = 'MetaMask';
+        else if (window.ethereum.isCoinbaseWallet) walletName = 'Coinbase Wallet';
+        else if (window.ethereum.isTrust) walletName = 'Trust Wallet';
+        else if (window.ethereum.isRainbow) walletName = 'Rainbow';
+        else if (window.ethereum.isBraveWallet) walletName = 'Brave Wallet';
+        
+        setError(`Connecting to ${walletName}...`);
+        await connectWallet('any');
+      } else {
+        // Show mobile wallet options
+        const mobileWallets = [
+          'MetaMask: https://metamask.app.link/dapp/' + window.location.host,
+          'Trust Wallet: https://link.trustwallet.com/open_url?coin_id=60&url=' + encodeURIComponent(window.location.href),
+          'Coinbase: https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href)
+        ];
+        
+        if (confirm('No wallet detected. Choose a wallet to install:\n\n1. MetaMask\n2. Trust Wallet\n3. Coinbase Wallet\n\nClick OK for MetaMask, Cancel to see all options.')) {
+          window.open('https://metamask.app.link/dapp/' + window.location.host, '_blank');
+        } else {
+          alert('Mobile Wallet Options:\n\n• MetaMask Mobile\n• Trust Wallet\n• Coinbase Wallet\n• Rainbow\n• Any Web3 browser\n\nInstall any of these apps and return to this page.');
+        }
+      }
+    } else {
+      // Desktop: Check for extension
+      if (!window.ethereum) {
+        setError('No Web3 wallet detected. Please install a wallet extension or use a Web3 browser.');
+        return;
+      }
+      
+      let walletName = 'Unknown Wallet';
+      if (window.ethereum.isMetaMask) walletName = 'MetaMask';
+      else if (window.ethereum.isCoinbaseWallet) walletName = 'Coinbase Wallet';
+      else if (window.ethereum.isTrust) walletName = 'Trust Wallet';
+      else if (window.ethereum.isRainbow) walletName = 'Rainbow';
+      else if (window.ethereum.isBraveWallet) walletName = 'Brave Wallet';
+      else if (window.ethereum.isFrame) walletName = 'Frame';
+      else if (window.ethereum.isOpera) walletName = 'Opera Wallet';
+      else if (window.ethereum.isStatus) walletName = 'Status';
+      else if (window.ethereum.isToshi) walletName = 'Coinbase Wallet';
+      else if (window.ethereum.isImToken) walletName = 'imToken';
+      
+      setError(`Connecting to ${walletName}...`);
+      await connectWallet('any');
     }
-    
-    let walletName = 'Unknown Wallet';
-    if (window.ethereum.isMetaMask) walletName = 'MetaMask';
-    else if (window.ethereum.isCoinbaseWallet) walletName = 'Coinbase Wallet';
-    else if (window.ethereum.isTrust) walletName = 'Trust Wallet';
-    else if (window.ethereum.isRainbow) walletName = 'Rainbow';
-    else if (window.ethereum.isBraveWallet) walletName = 'Brave Wallet';
-    else if (window.ethereum.isFrame) walletName = 'Frame';
-    else if (window.ethereum.isOpera) walletName = 'Opera Wallet';
-    else if (window.ethereum.isStatus) walletName = 'Status';
-    else if (window.ethereum.isToshi) walletName = 'Coinbase Wallet';
-    else if (window.ethereum.isImToken) walletName = 'imToken';
-    
-    setError(`Connecting to ${walletName}...`);
-    await connectWallet('any');
   }
 
   async function connectWallet(walletType) {
