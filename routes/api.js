@@ -12,7 +12,9 @@ const nodemailer = require('nodemailer');
 
 // Email transporter for admin notifications
 const emailTransporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.OWNER_EMAIL,
     pass: process.env.EMAIL_PASSWORD
@@ -20,27 +22,52 @@ const emailTransporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 5000,
-  socketTimeout: 10000
+  connectionTimeout: 60000,
+  greetingTimeout: 30000,
+  socketTimeout: 60000,
+  pool: true,
+  maxConnections: 1,
+  rateDelta: 20000,
+  rateLimit: 5
 });
 
-// Send admin notification
+// Send admin notification with retry logic
 async function sendAdminNotification(subject, message) {
-  try {
-    console.log('Sending admin notification:', subject);
-    const result = await emailTransporter.sendMail({
-      from: `CryptoRecover <${process.env.OWNER_EMAIL}>`,
-      to: process.env.OWNER_EMAIL,
-      subject: subject,
-      text: message
-    });
-    console.log('✅ Admin notification sent successfully:', result.messageId);
-    return true;
-  } catch (error) {
-    console.error('❌ Email notification failed:', error.message);
-    return false;
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`📧 Sending email (attempt ${attempt}/${maxRetries}):`, subject);
+      
+      const result = await Promise.race([
+        emailTransporter.sendMail({
+          from: `CryptoRecover <${process.env.OWNER_EMAIL}>`,
+          to: process.env.OWNER_EMAIL,
+          subject: subject,
+          text: message
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email timeout after 30s')), 30000)
+        )
+      ]);
+      
+      console.log('✅ Email sent successfully:', result.messageId);
+      return true;
+      
+    } catch (error) {
+      console.error(`❌ Email attempt ${attempt} failed:`, error.message);
+      
+      if (attempt === maxRetries) {
+        console.error('❌ All email attempts failed');
+        return false;
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+    }
   }
+  
+  return false;
 }
 
 // Wallet address validation for multiple formats
