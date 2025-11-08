@@ -98,7 +98,7 @@ class RecoveryEngine {
   async findUnclaimedRewards(walletAddress, chainId, provider) {
     const rewards = [];
     
-    // Check common DeFi protocols for unclaimed rewards
+    // Check common DeFi protocols for ACTUAL unclaimed rewards
     const protocolChecks = [
       { name: 'Compound', address: '0xc00e94cb662c3520282e6f5717214004a7f26888' },
       { name: 'Aave', address: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' },
@@ -114,7 +114,8 @@ class RecoveryEngine {
         );
         
         const balance = await contract.balanceOf(walletAddress);
-        if (balance > 0) {
+        // Only add if there's ACTUAL balance > 0.001 tokens
+        if (balance > ethers.parseEther('0.001')) {
           rewards.push({
             type: 'unclaimed_reward',
             protocol: protocol.name,
