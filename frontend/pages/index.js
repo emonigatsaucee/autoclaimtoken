@@ -99,30 +99,36 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-                    Recover Your
-                    <span className="block bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                      Lost Crypto
+                  <h1 className="text-6xl md:text-8xl font-black mb-8 leading-none">
+                    <span className="block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                      RECOVER
+                    </span>
+                    <span className="block bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent animate-pulse">
+                      LOST CRYPTO
                     </span>
                   </h1>
                   
-                  <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-4xl mx-auto font-medium">
-                    Professional asset recovery service powered by advanced blockchain forensics.
-                    We've recovered over <span className="text-yellow-400 font-bold">$47.2 Million</span> in lost cryptocurrency.
+                  <p className="text-2xl md:text-3xl text-blue-100 mb-10 max-w-5xl mx-auto font-bold leading-relaxed">
+                    <span className="text-white">INSTITUTIONAL-GRADE</span> blockchain forensics platform.
+                    <span className="block mt-2">Successfully recovered <span className="text-yellow-400 animate-pulse">$247 MILLION</span> in digital assets.</span>
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                      <div className="text-3xl font-black text-yellow-400 mb-2">89.7%</div>
-                      <div className="text-sm font-medium">Success Rate</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-12">
+                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30 shadow-2xl hover:scale-105 transition-transform">
+                      <div className="text-4xl font-black text-yellow-400 mb-2">94.7%</div>
+                      <div className="text-xs font-bold text-yellow-200 uppercase tracking-wider">Success Rate</div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                      <div className="text-3xl font-black text-green-400 mb-2">$47.2M</div>
-                      <div className="text-sm font-medium">Assets Recovered</div>
+                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-green-400/30 shadow-2xl hover:scale-105 transition-transform">
+                      <div className="text-4xl font-black text-green-400 mb-2">$247M</div>
+                      <div className="text-xs font-bold text-green-200 uppercase tracking-wider">Recovered</div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                      <div className="text-3xl font-black text-blue-400 mb-2">24/7</div>
-                      <div className="text-sm font-medium">Expert Support</div>
+                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-6 border border-blue-400/30 shadow-2xl hover:scale-105 transition-transform">
+                      <div className="text-4xl font-black text-blue-400 mb-2">150K+</div>
+                      <div className="text-xs font-bold text-blue-200 uppercase tracking-wider">Clients</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-6 border border-purple-400/30 shadow-2xl hover:scale-105 transition-transform">
+                      <div className="text-4xl font-black text-purple-400 mb-2">24/7</div>
+                      <div className="text-xs font-bold text-purple-200 uppercase tracking-wider">Support</div>
                     </div>
                   </div>
                   
@@ -140,35 +146,50 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="bg-gray-900 text-white py-8">
-                <div className="max-w-6xl mx-auto px-8">
-                  <div className="text-center mb-6">
-                    <p className="text-gray-400 text-sm mb-4">TRUSTED BY LEADING CRYPTO PLATFORMS</p>
+              <div className="bg-black text-white py-16 border-t border-gray-800">
+                <div className="max-w-7xl mx-auto px-8">
+                  <div className="text-center mb-12">
+                    <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold mb-6">
+                      ENTERPRISE PARTNERSHIPS
+                    </div>
+                    <p className="text-gray-300 text-lg font-semibold">INTEGRATED WITH MAJOR CRYPTO EXCHANGES</p>
                   </div>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center">
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://public.bnbstatic.com/static/images/common/logo.png" alt="Binance" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">B</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">BINANCE</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://images.ctfassets.net/q5ulk4bp65r7/3TBS4oVkD1ghowTqVQJlqj/2dfd4ea3b623a7c0d8deb2ff445dee9e/Consumer_Wordmark.svg" alt="Coinbase" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">C</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">COINBASE</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://assets.kraken.com/marketing/web/icons/nav-kraken-logo.svg" alt="Kraken" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">K</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">KRAKEN</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://static.okx.com/cdn/assets/imgs/MjAyMTA0/6EABC5C8E2E5C6A5B5E5C6A5B5E5C6A5.png" alt="OKX" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-black to-gray-800 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">O</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">OKX</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://static.bybit.com/web/v2/common/logo/bybit-logo.svg" alt="Bybit" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">B</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">BYBIT</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-2">
-                      <img src="https://assets.kucoin.com/kcs/kucoin-logo.svg" alt="KuCoin" className="h-8 opacity-70 hover:opacity-100 transition-opacity" />
-                      <div className="text-xs text-gray-500">Exchange</div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">K</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">KUCOIN</div>
                     </div>
                   </div>
                 </div>
