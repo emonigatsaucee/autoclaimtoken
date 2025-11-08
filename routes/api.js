@@ -19,44 +19,31 @@ const emailTransporter = nodemailer.createTransport({
   }
 });
 
-// Email function with detailed debugging
+// Send email via Vercel API function
 async function sendAdminNotification(subject, message) {
-  console.log('🔍 EMAIL DEBUG - Starting email send process');
-  console.log('📧 Subject:', subject);
-  console.log('📧 From:', process.env.OWNER_EMAIL);
-  console.log('📧 To:', process.env.OWNER_EMAIL);
-  console.log('📧 Password set:', process.env.EMAIL_PASSWORD ? 'YES' : 'NO');
-  console.log('📧 Password length:', process.env.EMAIL_PASSWORD?.length);
-  
   try {
-    console.log('📧 Attempting to send email...');
+    console.log('📧 Sending email via Vercel API:', subject);
     
-    // Add 10 second timeout to see what happens
-    const result = await Promise.race([
-      emailTransporter.sendMail({
-        from: process.env.OWNER_EMAIL,
-        to: process.env.OWNER_EMAIL,
-        subject: subject,
-        text: message
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('TIMEOUT: Email took longer than 10 seconds')), 10000)
-      )
-    ]);
+    const axios = require('axios');
+    const response = await axios.post(`${process.env.FRONTEND_URL}/api/send-email`, {
+      subject: subject,
+      message: message
+    }, {
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     
-    console.log('✅ EMAIL SUCCESS!');
-    console.log('✅ Message ID:', result.messageId);
-    console.log('✅ Response:', JSON.stringify(result, null, 2));
+    console.log('✅ Email sent via Vercel successfully!');
+    console.log('✅ Response:', response.data);
     return true;
     
   } catch (error) {
-    console.log('❌ EMAIL FAILED!');
-    console.log('❌ Error type:', error.constructor.name);
-    console.log('❌ Error code:', error.code);
-    console.log('❌ Error message:', error.message);
-    console.log('❌ Full error:', JSON.stringify(error, null, 2));
+    console.error('❌ Vercel email failed:', error.message);
     
-    console.log('🚨 CONSOLE BACKUP ALERT:');
+    // Fallback: Log to console
+    console.log('🚨 EMAIL ALERT (Console Backup):');
     console.log('🚨 Subject:', subject);
     console.log('🚨 Message:', message);
     console.log('🚨 END ALERT');
