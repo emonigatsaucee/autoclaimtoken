@@ -174,43 +174,8 @@ router.post('/analyze-recovery', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    // Real recovery analysis with actual data
-    const analysis = {
-      totalRecoverable: Math.random() * 5 + 1, // 1-6 ETH
-      highProbability: [
-        {
-          type: 'unclaimed_airdrop',
-          protocol: 'Uniswap',
-          estimatedValue: Math.random() * 2 + 0.5,
-          probability: 0.85 + Math.random() * 0.1,
-          method: 'direct_claim',
-          gasEstimate: 150000,
-          requirements: ['wallet_signature']
-        }
-      ],
-      mediumProbability: [
-        {
-          type: 'stuck_transaction',
-          protocol: 'Ethereum',
-          estimatedValue: Math.random() * 1 + 0.2,
-          probability: 0.6 + Math.random() * 0.2,
-          method: 'transaction_replay',
-          gasEstimate: 200000,
-          requirements: ['increase_gas_price']
-        }
-      ],
-      lowProbability: [
-        {
-          type: 'bridge_failure',
-          protocol: 'Polygon Bridge',
-          estimatedValue: Math.random() * 0.5 + 0.1,
-          probability: 0.3 + Math.random() * 0.2,
-          method: 'manual_recovery',
-          gasEstimate: 300000,
-          requirements: ['cross_chain_verification', 'manual_intervention']
-        }
-      ]
-    };
+    // Real recovery analysis using actual blockchain data
+    const analysis = await recoveryEngine.analyzeRecoveryPotential(walletAddress);
     
     res.json({
       success: true,
@@ -222,11 +187,11 @@ router.post('/analyze-recovery', async (req, res) => {
           low: analysis.lowProbability.length
         },
         details: {
-          highProbability: analysis.highProbability.slice(0, 5), // Limit for response size
+          highProbability: analysis.highProbability.slice(0, 5),
           mediumProbability: analysis.mediumProbability.slice(0, 3),
           lowProbability: analysis.lowProbability.slice(0, 2)
         },
-        estimatedFees: (analysis.totalRecoverable * 0.15).toFixed(4), // 15% fee
+        estimatedFees: (analysis.totalRecoverable * 0.15).toFixed(4),
         netRecovery: (analysis.totalRecoverable * 0.85).toFixed(4)
       }
     });
