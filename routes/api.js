@@ -180,6 +180,9 @@ router.post('/scan-wallet', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
+    // Real blockchain scanning
+    const scanResults = await scanner.scanWalletForClaimableTokens(walletAddress);
+    
     // Track service usage and send scan notification
     try {
       await userAnalytics.trackServiceUsage(walletAddress, 'token_scanner', 0, {
@@ -188,22 +191,9 @@ router.post('/scan-wallet', async (req, res) => {
         userAgent: req.headers['user-agent'],
         fraudScore: 0
       });
-      
-      // Send scan results notification
-      if (scanResults.length > 0) {
-        console.log('Sending scan results email notification...');
-        await sendAdminNotification(
-          `🔍 Wallet Scan Completed - ${scanResults.length} tokens found`,
-          `Wallet: ${walletAddress}\nTokens Found: ${scanResults.length}\nTotal Value: $${totalValue.toFixed(2)}\nClaimable: ${scanResults.filter(r => r.claimable).length}\n\nResults: ${JSON.stringify(scanResults, null, 2)}`
-        );
-        console.log('Scan results email sent successfully');
-      }
     } catch (analyticsError) {
-      console.log('Analytics/Email error (non-critical):', analyticsError.message);
+      console.log('Analytics error (non-critical):', analyticsError.message);
     }
-
-    // Real blockchain scanning
-    const scanResults = await scanner.scanWalletForClaimableTokens(walletAddress);
     
     // Update user's last scan time
     const client = await pool.connect();

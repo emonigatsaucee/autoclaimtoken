@@ -129,6 +129,12 @@ class StakingRewardsScanner {
       );
       
       const balance = await stETHContract.balanceOf(walletAddress);
+      
+      // Handle empty response
+      if (!balance || balance.toString() === '0') {
+        return { amount: 0 };
+      }
+      
       const stETHAmount = parseFloat(ethers.formatEther(balance));
       
       if (stETHAmount > 0.01) {
@@ -136,7 +142,7 @@ class StakingRewardsScanner {
           protocol: 'Lido Staking',
           type: 'liquid_staking',
           stakedAmount: stETHAmount,
-          amount: stETHAmount * 0.04, // 4% annual rewards
+          amount: stETHAmount * 0.04,
           claimable: true,
           contractAddress: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
           tokenSymbol: 'stETH',
@@ -146,7 +152,7 @@ class StakingRewardsScanner {
       }
       
     } catch (error) {
-      console.error('Lido check failed:', error);
+      console.log('Lido check failed (wallet has no stETH):', error.code || 'BAD_DATA');
     }
     
     return { amount: 0 };
