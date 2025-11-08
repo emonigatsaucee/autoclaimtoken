@@ -152,44 +152,44 @@ export default function Home() {
                     <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold mb-6">
                       ENTERPRISE PARTNERSHIPS
                     </div>
-                    <p className="text-gray-300 text-lg font-semibold">INTEGRATED WITH MAJOR CRYPTO EXCHANGES</p>
+                    <p className="text-gray-300 text-lg font-semibold">TRUSTED BY LEADING CRYPTO WALLETS</p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center">
                     <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">B</span>
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://metamask.io/favicon.ico" alt="MetaMask" className="w-10 h-10 object-contain" />
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">BINANCE</div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">METAMASK</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">C</span>
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://trustwallet.com/favicon.ico" alt="Trust Wallet" className="w-10 h-10 object-contain" />
+                      </div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">TRUST WALLET</div>
+                    </div>
+                    <div className="flex flex-col items-center space-y-3 group">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://www.coinbase.com/favicon.ico" alt="Coinbase" className="w-10 h-10 object-contain" />
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">COINBASE</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">K</span>
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://phantom.app/favicon.ico" alt="Phantom" className="w-10 h-10 object-contain" />
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">KRAKEN</div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">PHANTOM</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-black to-gray-800 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">O</span>
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://www.ledger.com/favicon.ico" alt="Ledger" className="w-10 h-10 object-contain" />
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">OKX</div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">LEDGER</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">B</span>
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
+                        <img src="https://www.exodus.com/favicon.ico" alt="Exodus" className="w-10 h-10 object-contain" />
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">BYBIT</div>
-                    </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-white font-black text-lg">K</span>
-                      </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">KUCOIN</div>
+                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">EXODUS</div>
                     </div>
                   </div>
                 </div>
