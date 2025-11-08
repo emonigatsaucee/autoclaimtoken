@@ -13,7 +13,7 @@ export default function WalletConnection({ onConnectionChange }) {
   useEffect(() => {
     // Detect available wallets on page load
     const detected = [];
-    if (window.ethereum) {
+    if (typeof window !== 'undefined' && window.ethereum) {
       if (window.ethereum.isMetaMask) detected.push('MetaMask');
       if (window.ethereum.isCoinbaseWallet) detected.push('Coinbase Wallet');
       if (window.ethereum.isTrust) detected.push('Trust Wallet');
@@ -398,7 +398,7 @@ export default function WalletConnection({ onConnectionChange }) {
             </p>
           </div>
         )}
-        {!window.ethereum && (
+        {typeof window !== 'undefined' && !window.ethereum && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
             <p className="text-sm text-yellow-700">
               ⚠️ No Web3 wallet detected. Please install a wallet extension first.
