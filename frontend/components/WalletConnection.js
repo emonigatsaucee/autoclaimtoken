@@ -321,7 +321,12 @@ export default function WalletConnection({ onConnectionChange }) {
           if (result.success) {
             setIsConnected(true);
             setAddress(walletAddress);
-            onConnectionChange?.(result.user);
+            // Pass user data with walletAddress included
+            const userData = {
+              ...result.user,
+              walletAddress: walletAddress
+            };
+            onConnectionChange?.(userData);
             setError('');
           } else {
             setError('Backend verification failed. Please try again.');
