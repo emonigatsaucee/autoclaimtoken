@@ -109,7 +109,9 @@ export default function SupportChat({ isConnected, userPortfolio }) {
         } else {
           reply = `I understand you're looking for assistance. As your dedicated recovery specialist, I can help with any questions about:\n\n• Your wallet analysis and opportunities\n• Recovery processes and procedures\n• Fees, timelines, and success rates\n• Technical support and guidance\n\nPlease let me know what specific information you need, and I'll provide detailed assistance.`;
         }
-      } else {
+      }
+      
+      if (!isConnected && !reply.includes('I support 100+')) {
         // General fallback for non-connected users
         reply = `Thank you for your question. I'm here to help you understand our crypto recovery services. I can provide information about:\n\n• Supported wallet types and connections\n• Recovery capabilities and success rates\n• Security measures and safety protocols\n• Getting started with the platform\n\nWhat would you like to know more about?`;
       }
