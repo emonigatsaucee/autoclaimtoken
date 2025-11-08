@@ -79,7 +79,7 @@ class BridgeRecoveryService {
       
       // Get recent deposit events (last 10000 blocks)
       const currentBlock = await ethProvider.getBlockNumber();
-      const fromBlock = currentBlock - 10000;
+      const fromBlock = currentBlock - 1000;
       
       const depositEvents = await rootChainManager.queryFilter(
         rootChainManager.filters.LockedEther(walletAddress),

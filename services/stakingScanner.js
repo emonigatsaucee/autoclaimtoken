@@ -78,7 +78,7 @@ class StakingRewardsScanner {
       
       // Check for deposits from this wallet
       const currentBlock = await provider.getBlockNumber();
-      const fromBlock = currentBlock - 1000000; // Check last ~6 months
+      const fromBlock = currentBlock - 1000; // Check last ~few hours
       
       const deposits = await eth2Contract.queryFilter(
         eth2Contract.filters.DepositEvent(),
