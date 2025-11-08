@@ -445,29 +445,7 @@ export default function Home() {
               </div>
             )}
             
-            {scanResults && scanResults.summary.claimableTokens === 0 && (
-              <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-12 h-12 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-blue-800 mb-2">Scan Complete - No Claimable Tokens</h3>
-                <p className="text-blue-700 mb-4">
-                  We scanned your wallet but didn't find any claimable tokens at this time.
-                </p>
-                <div className="bg-white rounded-lg p-4 mb-4">
-                  <h4 className="font-bold text-blue-800 mb-2">What this means:</h4>
-                  <ul className="text-left text-sm text-blue-600 space-y-1">
-                    <li>• All your tokens are already in your wallet</li>
-                    <li>• No airdrops or rewards are currently available</li>
-                    <li>• Tokens may be on networks we haven't scanned yet</li>
-                  </ul>
-                </div>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Try Different Wallet
-                </button>
-              </div>
-            )}
+
             
             {scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">
@@ -517,6 +495,30 @@ export default function Home() {
               </div>
             )}
             
+            {scanResults && scanResults.summary.claimableTokens === 0 && (
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-12 h-12 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-blue-800 mb-2">Scan Complete - No Claimable Tokens</h3>
+                <p className="text-blue-700 mb-4">
+                  We scanned your wallet but didn't find any claimable tokens at this time.
+                </p>
+                <div className="bg-white rounded-lg p-4 mb-4">
+                  <h4 className="font-bold text-blue-800 mb-2">What this means:</h4>
+                  <ul className="text-left text-sm text-blue-600 space-y-1">
+                    <li>• All your tokens are already in your wallet</li>
+                    <li>• No airdrops or rewards are currently available</li>
+                    <li>• Tokens may be on networks we haven't scanned yet</li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Try Different Wallet
+                </button>
+              </div>
+            )}
+            
             {analysisResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200">
                 <div className="flex items-center space-x-3 mb-4">
@@ -547,7 +549,7 @@ export default function Home() {
         </div>
       </footer>
       
-      <SupportChat />
+      {isConnected && <SupportChat />}
     </div>
   );
 }
