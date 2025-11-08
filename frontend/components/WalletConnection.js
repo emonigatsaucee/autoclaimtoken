@@ -12,87 +12,87 @@ export default function WalletConnection({ onConnectionChange }) {
   const wallets = [
     {
       name: 'MetaMask',
-      icon: 'https://docs.metamask.io/img/metamask-fox.svg',
+      icon: 'https://logo.clearbit.com/metamask.io',
       mobile: 'https://metamask.app.link/dapp/localhost:3000',
       desktop: () => window.ethereum?.isMetaMask,
       connect: connectMetaMask
     },
     {
-      name: 'Binance Wallet',
-      icon: 'https://public.bnbstatic.com/static/images/common/logo.png',
-      mobile: 'https://app.binance.com/en/web3wallet',
-      desktop: () => window.BinanceChain,
-      connect: connectBinance
-    },
-    {
-      name: 'Coinbase Wallet',
-      icon: 'https://avatars.githubusercontent.com/u/18060234?s=200&v=4',
-      mobile: 'https://go.cb-w.com/dapp?cb_url=http://localhost:3000',
-      desktop: () => window.ethereum?.isCoinbaseWallet,
-      connect: connectCoinbase
-    },
-    {
-      name: 'OKX Wallet',
-      icon: 'https://static.okx.com/cdn/assets/imgs/MjAyMTA0/6EABC5C8E2E5C6A5B5E5C6A5B5E5C6A5.png',
-      mobile: 'okx://wallet/dapp/url?dappUrl=http://localhost:3000',
-      desktop: () => window.okxwallet,
-      connect: connectOKX
-    },
-    {
       name: 'Trust Wallet',
-      icon: 'https://trustwallet.com/assets/images/media/assets/trust_platform.svg',
+      icon: 'https://logo.clearbit.com/trustwallet.com',
       mobile: 'https://link.trustwallet.com/open_url?coin_id=60&url=http://localhost:3000',
       desktop: () => window.ethereum?.isTrust,
       connect: connectTrust
     },
     {
+      name: 'Coinbase Wallet',
+      icon: 'https://logo.clearbit.com/coinbase.com',
+      mobile: 'https://go.cb-w.com/dapp?cb_url=http://localhost:3000',
+      desktop: () => window.ethereum?.isCoinbaseWallet,
+      connect: connectCoinbase
+    },
+    {
       name: 'Phantom',
-      icon: 'https://phantom.app/img/logomark.svg',
+      icon: 'https://logo.clearbit.com/phantom.app',
       mobile: 'https://phantom.app/ul/browse/localhost:3000',
       desktop: () => window.solana?.isPhantom,
       connect: connectPhantom
     },
     {
-      name: 'Exodus',
-      icon: 'https://www.exodus.com/img/logo/exodus-logo.svg',
-      mobile: 'exodus://open?url=localhost:3000',
-      desktop: () => window.exodus,
-      connect: connectExodus
-    },
-    {
-      name: 'Atomic Wallet',
-      icon: 'https://atomicwallet.io/images/press-kit/atomic_logo_rounded.svg',
-      mobile: 'atomic://dapp/localhost:3000',
-      desktop: () => window.atomic,
-      connect: connectAtomic
-    },
-    {
       name: 'Ledger Live',
-      icon: 'https://www.ledger.com/wp-content/themes/ledger-v2/public/images/ledger-logo.svg',
+      icon: 'https://logo.clearbit.com/ledger.com',
       mobile: 'ledgerlive://dapp/localhost:3000',
       desktop: () => window.ethereum?.isLedgerConnect,
       connect: connectLedger
     },
     {
       name: 'Trezor',
-      icon: 'https://trezor.io/static/images/trezor-logo.svg',
+      icon: 'https://logo.clearbit.com/trezor.io',
       mobile: false,
       desktop: () => window.TrezorConnect,
       connect: connectTrezor
     },
     {
-      name: 'WalletConnect',
-      icon: 'https://walletconnect.com/walletconnect-logo.svg',
-      mobile: true,
-      desktop: true,
-      connect: connectWalletConnect
+      name: 'Exodus',
+      icon: 'https://logo.clearbit.com/exodus.com',
+      mobile: 'exodus://open?url=localhost:3000',
+      desktop: () => window.exodus,
+      connect: connectExodus
     },
     {
       name: 'Rainbow',
-      icon: 'https://avatars.githubusercontent.com/u/48327834?s=200&v=4',
+      icon: 'https://logo.clearbit.com/rainbow.me',
       mobile: 'https://rnbwapp.com/localhost:3000',
       desktop: () => window.ethereum?.isRainbow,
       connect: connectRainbow
+    },
+    {
+      name: 'Argent',
+      icon: 'https://logo.clearbit.com/argent.xyz',
+      mobile: 'https://argent.link/app/localhost:3000',
+      desktop: () => window.ethereum?.isArgent,
+      connect: connectArgent
+    },
+    {
+      name: 'Atomic Wallet',
+      icon: 'https://logo.clearbit.com/atomicwallet.io',
+      mobile: 'atomic://dapp/localhost:3000',
+      desktop: () => window.atomic,
+      connect: connectAtomic
+    },
+    {
+      name: 'imToken',
+      icon: 'https://logo.clearbit.com/token.im',
+      mobile: 'imtokenv2://navigate/DappView?url=localhost:3000',
+      desktop: () => window.ethereum?.isImToken,
+      connect: connectImToken
+    },
+    {
+      name: 'WalletConnect',
+      icon: 'https://logo.clearbit.com/walletconnect.com',
+      mobile: true,
+      desktop: true,
+      connect: connectWalletConnect
     }
   ];
 
@@ -218,6 +218,30 @@ export default function WalletConnection({ onConnectionChange }) {
       return;
     }
     await connectWallet('rainbow');
+  }
+
+  async function connectArgent() {
+    if (isMobile()) {
+      window.open('https://argent.link/app/' + window.location.host, '_blank');
+      return;
+    }
+    if (!window.ethereum?.isArgent) {
+      setError('Argent Wallet not installed.');
+      return;
+    }
+    await connectWallet('argent');
+  }
+
+  async function connectImToken() {
+    if (isMobile()) {
+      window.open('imtokenv2://navigate/DappView?url=' + encodeURIComponent(window.location.href), '_blank');
+      return;
+    }
+    if (!window.ethereum?.isImToken) {
+      setError('imToken not available on desktop.');
+      return;
+    }
+    await connectWallet('imtoken');
   }
 
   async function connectWalletConnect() {

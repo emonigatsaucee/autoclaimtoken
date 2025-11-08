@@ -63,6 +63,24 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Favicon
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'CryptoRecover API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      api: '/api'
+    }
+  });
+});
+
 // API routes
 app.use('/api', apiRoutes);
 
