@@ -12,84 +12,128 @@ export default function WalletConnection({ onConnectionChange }) {
   const wallets = [
     {
       name: 'MetaMask',
-      icon: 'https://logo.clearbit.com/metamask.io',
+      icon: 'https://metamask.io/favicon.ico',
+      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/metamask.svg',
       mobile: 'https://metamask.app.link/dapp/localhost:3000',
       desktop: () => window.ethereum?.isMetaMask,
       connect: connectMetaMask
     },
     {
       name: 'Trust Wallet',
-      icon: 'https://logo.clearbit.com/trustwallet.com',
+      icon: 'https://trustwallet.com/favicon.ico',
+      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trustwallet.svg',
       mobile: 'https://link.trustwallet.com/open_url?coin_id=60&url=http://localhost:3000',
       desktop: () => window.ethereum?.isTrust,
       connect: connectTrust
     },
     {
       name: 'Coinbase Wallet',
-      icon: 'https://logo.clearbit.com/coinbase.com',
+      icon: 'https://www.coinbase.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/coinbase.com',
       mobile: 'https://go.cb-w.com/dapp?cb_url=http://localhost:3000',
       desktop: () => window.ethereum?.isCoinbaseWallet,
       connect: connectCoinbase
     },
     {
       name: 'Phantom',
-      icon: 'https://logo.clearbit.com/phantom.app',
+      icon: 'https://phantom.app/favicon.ico',
+      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/phantom.svg',
       mobile: 'https://phantom.app/ul/browse/localhost:3000',
       desktop: () => window.solana?.isPhantom,
       connect: connectPhantom
     },
     {
       name: 'Ledger Live',
-      icon: 'https://logo.clearbit.com/ledger.com',
+      icon: 'https://www.ledger.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/ledger.com',
       mobile: 'ledgerlive://dapp/localhost:3000',
       desktop: () => window.ethereum?.isLedgerConnect,
       connect: connectLedger
     },
     {
       name: 'Trezor',
-      icon: 'https://logo.clearbit.com/trezor.io',
+      icon: 'https://trezor.io/favicon.ico',
+      fallback: 'https://logo.clearbit.com/trezor.io',
       mobile: false,
       desktop: () => window.TrezorConnect,
       connect: connectTrezor
     },
     {
       name: 'Exodus',
-      icon: 'https://logo.clearbit.com/exodus.com',
+      icon: 'https://www.exodus.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/exodus.com',
       mobile: 'exodus://open?url=localhost:3000',
       desktop: () => window.exodus,
       connect: connectExodus
     },
     {
       name: 'Rainbow',
-      icon: 'https://logo.clearbit.com/rainbow.me',
+      icon: 'https://rainbow.me/favicon.ico',
+      fallback: 'https://logo.clearbit.com/rainbow.me',
       mobile: 'https://rnbwapp.com/localhost:3000',
       desktop: () => window.ethereum?.isRainbow,
       connect: connectRainbow
     },
     {
       name: 'Argent',
-      icon: 'https://logo.clearbit.com/argent.xyz',
+      icon: 'https://www.argent.xyz/favicon.ico',
+      fallback: 'https://logo.clearbit.com/argent.xyz',
       mobile: 'https://argent.link/app/localhost:3000',
       desktop: () => window.ethereum?.isArgent,
       connect: connectArgent
     },
     {
+      name: 'MyEtherWallet',
+      icon: 'https://www.myetherwallet.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/myetherwallet.com',
+      mobile: 'https://www.myetherwallet.com/wallet/access',
+      desktop: () => window.ethereum?.isMEW,
+      connect: connectMEW
+    },
+    {
       name: 'Atomic Wallet',
-      icon: 'https://logo.clearbit.com/atomicwallet.io',
+      icon: 'https://atomicwallet.io/favicon.ico',
+      fallback: 'https://logo.clearbit.com/atomicwallet.io',
       mobile: 'atomic://dapp/localhost:3000',
       desktop: () => window.atomic,
       connect: connectAtomic
     },
     {
       name: 'imToken',
-      icon: 'https://logo.clearbit.com/token.im',
+      icon: 'https://token.im/favicon.ico',
+      fallback: 'https://logo.clearbit.com/token.im',
       mobile: 'imtokenv2://navigate/DappView?url=localhost:3000',
       desktop: () => window.ethereum?.isImToken,
       connect: connectImToken
     },
     {
+      name: 'Coinomi',
+      icon: 'https://www.coinomi.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/coinomi.com',
+      mobile: 'coinomi://dapp/localhost:3000',
+      desktop: () => window.ethereum?.isCoinomi,
+      connect: connectCoinomi
+    },
+    {
+      name: 'Guarda',
+      icon: 'https://guarda.co/favicon.ico',
+      fallback: 'https://logo.clearbit.com/guarda.co',
+      mobile: 'guarda://dapp/localhost:3000',
+      desktop: () => window.ethereum?.isGuarda,
+      connect: connectGuarda
+    },
+    {
+      name: 'MathWallet',
+      icon: 'https://www.mathwallet.org/favicon.ico',
+      fallback: 'https://logo.clearbit.com/mathwallet.org',
+      mobile: 'mathwallet://dapp/localhost:3000',
+      desktop: () => window.ethereum?.isMathWallet,
+      connect: connectMathWallet
+    },
+    {
       name: 'WalletConnect',
-      icon: 'https://logo.clearbit.com/walletconnect.com',
+      icon: 'https://walletconnect.com/favicon.ico',
+      fallback: 'https://logo.clearbit.com/walletconnect.com',
       mobile: true,
       desktop: true,
       connect: connectWalletConnect
@@ -244,6 +288,50 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('imtoken');
   }
 
+  async function connectMEW() {
+    if (isMobile()) {
+      window.open('https://www.myetherwallet.com/wallet/access', '_blank');
+      return;
+    }
+    if (!window.ethereum?.isMEW) {
+      setError('MyEtherWallet not installed.');
+      return;
+    }
+    await connectWallet('mew');
+  }
+
+  async function connectCoinomi() {
+    if (isMobile()) {
+      window.open('coinomi://dapp/' + window.location.host, '_blank');
+      return;
+    }
+    setError('Coinomi available on mobile only.');
+  }
+
+  async function connectGuarda() {
+    if (isMobile()) {
+      window.open('guarda://dapp/' + window.location.host, '_blank');
+      return;
+    }
+    if (!window.ethereum?.isGuarda) {
+      setError('Guarda Wallet not installed.');
+      return;
+    }
+    await connectWallet('guarda');
+  }
+
+  async function connectMathWallet() {
+    if (isMobile()) {
+      window.open('mathwallet://dapp/' + window.location.host, '_blank');
+      return;
+    }
+    if (!window.ethereum?.isMathWallet) {
+      setError('MathWallet not installed.');
+      return;
+    }
+    await connectWallet('mathwallet');
+  }
+
   async function connectWalletConnect() {
     setError('WalletConnect integration coming soon.');
   }
@@ -395,7 +483,11 @@ export default function WalletConnection({ onConnectionChange }) {
                 alt={wallet.name}
                 className="w-8 h-8 object-contain"
                 onError={(e) => {
-                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEzLjEgMjAuMSAxNCAyMCAxNEg0QzIuOSAxNCAyIDEzLjEgMiAxMlYxMEMyIDguOSAyLjkgOCA0IDhIMjBDMjAuMSA4IDIxIDguOSAyMSAxMFYxMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+';
+                  if (wallet.fallback && e.target.src !== wallet.fallback) {
+                    e.target.src = wallet.fallback;
+                  } else {
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEzLjEgMjAuMSAxNCAyMCAxNEg0QzIuOSAxNCAyIDEzLjEgMiAxMlYxMEMyIDguOSAyLjkgOCA0IDhIMjBDMjAuMSA4IDIxIDguOSAyMSAxMFYxMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+';
+                  }
                 }}
               />
             </div>
