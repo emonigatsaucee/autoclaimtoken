@@ -360,31 +360,49 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Connected" className="w-6 h-6 invert" />
+            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border border-green-200 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Connected" className="w-8 h-8 invert" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-green-800">Wallet Connected Successfully!</h2>
-                    <p className="text-green-700 font-medium">
-                      Address: {address?.slice(0, 6)}...{address?.slice(-4)}
+                    <h2 className="text-3xl font-black text-green-900 mb-1">Wallet Connected</h2>
+                    <p className="text-green-700 font-semibold text-lg">
+                      {address?.slice(0, 8)}...{address?.slice(-6)}
                     </p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-600 font-medium">Live Analysis Active</span>
+                    </div>
                   </div>
                 </div>
-                <WalletConnection onConnectionChange={handleConnectionChange} />
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg">
+                  <WalletConnection onConnectionChange={handleConnectionChange} />
+                </div>
               </div>
               
               {!scanResults && (
-                <div className="bg-white/70 rounded-lg p-4 mb-4">
-                  <h3 className="font-bold text-green-800 mb-2">Ready to Start Recovery Process</h3>
-                  <p className="text-sm text-green-700 mb-3">
-                    Your wallet is connected! Now let's scan for claimable tokens and recovery opportunities.
+                <div className="bg-gradient-to-r from-white to-green-50 rounded-xl p-6 mb-6 border border-green-200 shadow-inner">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/rocket.svg" alt="Ready" className="w-5 h-5 invert" />
+                    </div>
+                    <h3 className="text-xl font-black text-green-900">Recovery System Ready</h3>
+                  </div>
+                  <p className="text-green-800 font-medium mb-4">
+                    Advanced multi-chain analysis initialized. Ready to scan for claimable assets and recovery opportunities.
                   </p>
-                  <div className="flex items-center space-x-2 text-sm text-green-600">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <span>Click "Start Scan" below to begin the recovery process</span>
+                  <div className="bg-green-100 rounded-lg p-3 border border-green-300">
+                    <div className="flex items-center space-x-2 text-green-700">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="font-semibold">Next: Click "Start Scan" below to begin comprehensive analysis</span>
+                    </div>
                   </div>
                 </div>
               )}

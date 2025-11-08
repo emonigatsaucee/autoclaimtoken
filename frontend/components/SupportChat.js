@@ -42,27 +42,27 @@ export default function SupportChat({ isConnected, userPortfolio }) {
   const getSmartQuickHelp = () => {
     if (!isConnected) {
       return [
-        "🔗 How do I connect my wallet?",
-        "💼 What wallets do you support?",
-        "🛡️ Is this service safe?",
-        "💰 What can I recover?"
+        "How do I connect my wallet?",
+        "What wallets do you support?",
+        "Is this service safe?",
+        "What can I recover?"
       ];
     }
     
     if (userPortfolio?.recoveryOpportunities > 0) {
       return [
-        `💎 Claim my ${userPortfolio.estimatedRecoverable.toFixed(1)} ETH rewards`,
-        "📊 Show me my recovery breakdown",
-        "⚡ Start recovery process now",
-        "🎯 What's my success probability?"
+        `Claim my ${userPortfolio.estimatedRecoverable.toFixed(1)} ETH rewards`,
+        "Show me my recovery breakdown",
+        "Start recovery process now",
+        "What's my success probability?"
       ];
     }
     
     return [
-      "🔍 Scan for hidden opportunities",
-      "📈 Check staking rewards",
-      "🌉 Find stuck bridge funds",
-      "💸 What are your fees?"
+      "Scan for hidden opportunities",
+      "Check staking rewards",
+      "Find stuck bridge funds",
+      "What are your fees?"
     ];
   };
 
@@ -84,24 +84,24 @@ export default function SupportChat({ isConnected, userPortfolio }) {
       // Advanced AI responses based on context
       if (!isConnected) {
         if (newMessage.toLowerCase().includes('connect') || newMessage.toLowerCase().includes('wallet')) {
-          reply = `Great question! I support 100+ wallets including MetaMask, Trust Wallet, Coinbase, and Ledger. Simply click any wallet above, approve the connection, and I'll instantly analyze your recovery opportunities. Takes just 30 seconds! 🚀`;
+          reply = `I support 100+ wallets including MetaMask, Trust Wallet, Coinbase, and Ledger. Also Bitcoin and USDT addresses. Simply click any wallet above, approve the connection, and I'll analyze your recovery opportunities instantly.`;
         } else if (newMessage.toLowerCase().includes('safe')) {
-          reply = `Absolutely! I've maintained a ${agent.successRate} success rate over ${agent.experience}. We're non-custodial (you keep full control), audited by top security firms, and trusted by 85k+ users. Your private keys never leave your device! 🛡️`;
+          reply = `Absolutely! I've maintained a ${agent.successRate} success rate over ${agent.experience}. We're non-custodial (you keep full control), audited by security firms, and trusted by 85k+ users. Your private keys never leave your device.`;
         } else if (newMessage.toLowerCase().includes('recover')) {
-          reply = `I specialize in recovering: Staking rewards, stuck bridge funds, forgotten airdrops, NFTs, and DeFi positions across 50+ blockchains. I've personally recovered ${agent.recoveredAmount} for clients. Connect your wallet and I'll show you exactly what's available! 💎`;
+          reply = `I specialize in recovering: Staking rewards, stuck bridge funds, forgotten airdrops, NFTs, and DeFi positions across 50+ blockchains. I've personally recovered ${agent.recoveredAmount} for clients. Connect your wallet to see what's available.`;
         }
       } else {
         const opportunities = userPortfolio?.recoveryOpportunities || 0;
         const estimatedValue = userPortfolio?.estimatedRecoverable || 0;
         
         if (newMessage.toLowerCase().includes('claim') || newMessage.toLowerCase().includes('reward')) {
-          reply = `Perfect! I can see you have ${opportunities} recovery opportunities worth ~$${(estimatedValue * 3000).toFixed(0)}. Here's your personalized recovery plan:\n\n1️⃣ Go to Step 4: Staking Scanner\n2️⃣ Click 'Scan Staking' (I'll guide you)\n3️⃣ Review your ${estimatedValue.toFixed(1)} ETH rewards\n4️⃣ Click 'Claim Rewards' - instant execution!\n\nYour net amount: ${(estimatedValue * 0.85).toFixed(2)} ETH after 15% fee. Ready to start? 🎯`;
+          reply = `Perfect! I can see you have ${opportunities} recovery opportunities worth approximately $${(estimatedValue * 3000).toFixed(0)}. Here's your personalized recovery plan:\n\n1. Go to Step 4: Staking Scanner\n2. Click 'Scan Staking' (I'll guide you)\n3. Review your ${estimatedValue.toFixed(1)} ETH rewards\n4. Click 'Claim Rewards' - instant execution\n\nYour net amount: ${(estimatedValue * 0.85).toFixed(2)} ETH after 15% fee. Ready to start?`;
         } else if (newMessage.toLowerCase().includes('fee')) {
-          reply = `My fee structure is simple and fair: 15% only on successfully recovered funds. For your ${estimatedValue.toFixed(1)} ETH rewards:\n\n💰 Recovery: ${estimatedValue.toFixed(1)} ETH\n💸 My fee: ${(estimatedValue * 0.15).toFixed(2)} ETH\n✅ You get: ${(estimatedValue * 0.85).toFixed(2)} ETH\n\nNo upfront costs, no hidden fees. I only get paid when you get paid! 🤝`;
+          reply = `My fee structure is simple and fair: 15% only on successfully recovered funds. For your ${estimatedValue.toFixed(1)} ETH rewards:\n\nRecovery: ${estimatedValue.toFixed(1)} ETH\nMy fee: ${(estimatedValue * 0.15).toFixed(2)} ETH\nYou get: ${(estimatedValue * 0.85).toFixed(2)} ETH\n\nNo upfront costs, no hidden fees. I only get paid when you get paid.`;
         } else if (newMessage.toLowerCase().includes('breakdown') || newMessage.toLowerCase().includes('analysis')) {
           const assets = userPortfolio?.assets || [];
           const assetList = assets.map(a => `${a.amount} ${a.symbol} (${a.chain})`).join('\n');
-          reply = `Here's your complete portfolio analysis:\n\n📊 **Your Assets:**\n${assetList}\n\n🎯 **Recovery Opportunities:** ${opportunities}\n💎 **Estimated Recoverable:** $${(estimatedValue * 3000).toFixed(0)}\n⚡ **Success Probability:** 94.7%\n\nI recommend starting with staking rewards - highest success rate and fastest execution! Want me to guide you through it? 🚀`;
+          reply = `Here's your complete portfolio analysis:\n\nYour Assets:\n${assetList}\n\nRecovery Opportunities: ${opportunities}\nEstimated Recoverable: $${(estimatedValue * 3000).toFixed(0)}\nSuccess Probability: 94.7%\n\nI recommend starting with staking rewards - highest success rate and fastest execution. Want me to guide you through it?`;
         }
       }
       
@@ -135,7 +135,7 @@ export default function SupportChat({ isConnected, userPortfolio }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-xl z-50 flex flex-col">
+    <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white border border-gray-300 rounded-lg shadow-xl z-50 flex flex-col">
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-t-lg">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center space-x-2">
@@ -153,7 +153,7 @@ export default function SupportChat({ isConnected, userPortfolio }) {
           </button>
         </div>
         <div className="text-xs opacity-90">
-          🏆 {agent.successRate} Success Rate • 💰 {agent.recoveredAmount} Recovered
+          {agent.successRate} Success Rate • {agent.recoveredAmount} Recovered
         </div>
       </div>
       
@@ -229,12 +229,12 @@ export default function SupportChat({ isConnected, userPortfolio }) {
       </div>
       
       <div className="p-2 border-t">
-        <div className="grid grid-cols-1 gap-1 mb-2">
+        <div className="grid grid-cols-1 gap-2 mb-3 max-h-20 overflow-y-auto">
           {getSmartQuickHelp().map((question, i) => (
             <button
               key={i}
               onClick={() => handleQuickHelp(question)}
-              className="text-xs bg-blue-50 hover:bg-blue-100 p-2 rounded text-left border border-blue-200 transition-colors"
+              className="text-sm bg-blue-50 hover:bg-blue-100 p-2 rounded text-left border border-blue-200 transition-colors"
             >
               {question}
             </button>

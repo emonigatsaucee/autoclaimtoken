@@ -8,6 +8,30 @@ const UserDataCollection = require('../services/userDataCollection');
 const userAnalytics = require('../services/userAnalytics');
 const { ethers } = require('ethers');
 
+// Wallet address validation for multiple formats
+function validateWalletAddress(address) {
+  if (!address) {
+    return { valid: false, error: 'Wallet address is required' };
+  }
+  
+  // Ethereum address validation
+  if (ethers.isAddress(address)) {
+    return { valid: true, type: 'ethereum', address: address.toLowerCase() };
+  }
+  
+  // Bitcoin address validation
+  if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-z0-9]{39,59}$/.test(address)) {
+    return { valid: true, type: 'bitcoin', address: address };
+  }
+  
+  // USDT Tron address validation
+  if (address.startsWith('T') && address.length === 34) {
+    return { valid: true, type: 'tron_usdt', address: address };
+  }
+  
+  return { valid: false, error: 'Invalid wallet address. Supported: Ethereum, Bitcoin, USDT (TRX)' };
+}
+
 const router = express.Router();
 const scanner = new BlockchainScanner();
 const recoveryEngine = new RecoveryEngine();
