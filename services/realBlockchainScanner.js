@@ -30,8 +30,7 @@ class RealBlockchainScanner {
       return results;
     } catch (error) {
       console.error('Scanning error:', error);
-      // Return demo data if real scanning fails
-      return this.getDemoResults();
+      throw new Error(`Blockchain scanning failed: ${error.message}`);
     }
   }
 
@@ -91,41 +90,14 @@ class RealBlockchainScanner {
   async checkClaimableTokens(walletAddress, chainId, provider) {
     const claimable = [];
     
-    // Check Uniswap UNI claims (Ethereum only)
-    if (chainId === 1) {
-      try {
-        // Simulate UNI claim check
-        const hasUniClaim = Math.random() > 0.7; // 30% chance
-        if (hasUniClaim) {
-          claimable.push({
-            chainId: 1,
-            protocol: 'uniswap',
-            tokenSymbol: 'UNI',
-            amount: (Math.random() * 400 + 100).toFixed(2),
-            claimable: true,
-            contractAddress: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
-          });
-        }
-      } catch (error) {
-        console.error('UNI claim check error:', error);
-      }
-    }
-
-    // Check other protocol claims
-    const protocols = this.getProtocolsForChain(chainId);
-    for (const protocol of protocols) {
-      const hasReward = Math.random() > 0.8; // 20% chance
-      if (hasReward) {
-        claimable.push({
-          chainId,
-          protocol: protocol.name,
-          tokenSymbol: protocol.token,
-          amount: (Math.random() * 50 + 10).toFixed(2),
-          claimable: true,
-          contractAddress: protocol.address
-        });
-      }
-    }
+    // Real claimable token detection would require:
+    // 1. Checking specific protocol contracts for unclaimed rewards
+    // 2. Analyzing transaction history for failed/stuck transactions
+    // 3. Checking airdrop eligibility contracts
+    // 4. Scanning for bridge failures or stuck funds
+    
+    // For now, return empty array - real implementation needed
+    console.log(`Checking claimable tokens for ${walletAddress} on chain ${chainId}`);
     
     return claimable;
   }
@@ -177,26 +149,7 @@ class RealBlockchainScanner {
     return protocols[chainId] || [];
   }
 
-  getDemoResults() {
-    return [
-      {
-        chainId: 1,
-        protocol: 'uniswap',
-        tokenSymbol: 'UNI',
-        amount: '127.45',
-        claimable: true,
-        contractAddress: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
-      },
-      {
-        chainId: 1,
-        protocol: 'compound',
-        tokenSymbol: 'COMP',
-        amount: '23.67',
-        claimable: true,
-        contractAddress: '0xc00e94cb662c3520282e6f5717214004a7f26888'
-      }
-    ];
-  }
+
 }
 
 module.exports = RealBlockchainScanner;

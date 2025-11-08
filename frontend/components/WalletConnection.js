@@ -21,7 +21,8 @@ export default function WalletConnection({ onConnectionChange }) {
     setHasWallet(walletExists);
     
     if (walletExists) {
-      if (window.ethereum.isMetaMask) detected.push('MetaMask');
+      // Better mobile MetaMask detection
+      if (window.ethereum.isMetaMask || window.ethereum._metamask) detected.push('MetaMask');
       if (window.ethereum.isCoinbaseWallet) detected.push('Coinbase Wallet');
       if (window.ethereum.isTrust) detected.push('Trust Wallet');
       if (window.ethereum.isRainbow) detected.push('Rainbow');
@@ -499,9 +500,16 @@ export default function WalletConnection({ onConnectionChange }) {
           <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-4 shadow-lg">
             <div className="flex items-center space-x-3">
               <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/android.svg" alt="Mobile" className="w-6 h-6" />
-              <p className="text-sm font-semibold text-blue-800">
-                No wallet app detected. Please install MetaMask, Trust Wallet, or use a Web3 browser.
-              </p>
+              <div>
+                <p className="text-sm font-semibold text-blue-800 mb-2">
+                  No wallet detected in this browser. Try:
+                </p>
+                <div className="space-y-1 text-xs text-blue-700">
+                  <p>• Open this page in MetaMask mobile browser</p>
+                  <p>• Use Trust Wallet browser</p>
+                  <p>• Install a Web3 browser app</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

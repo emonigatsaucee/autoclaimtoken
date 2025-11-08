@@ -17,40 +17,22 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
     setScanResults(null);
     
     try {
-      // Show progressive scanning messages
-      const messages = [
-        'Connecting to blockchain networks...',
-        'Scanning Ethereum mainnet...',
-        'Checking BSC and Polygon...',
-        'Analyzing token balances...',
-        'Detecting claimable rewards...',
-        'Calculating total value...'
-      ];
+      // Simulate scanning delay
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
-      let messageIndex = 0;
-      const messageInterval = setInterval(() => {
-        if (messageIndex < messages.length - 1) {
-          messageIndex++;
-        }
-      }, 2000);
-      
+      // Real API call only
       const result = await apiService.scanWallet(walletAddress);
-      clearInterval(messageInterval);
       
       if (result.success) {
         setScanResults(result);
         onScanComplete?.(result);
-        
-        // Show success notification
-        if (result.summary.claimableTokens > 0) {
-          setError('');
-        }
+        setError('');
       } else {
         setError('Failed to scan wallet');
       }
     } catch (err) {
       console.error('Scan error:', err);
-      setError('Scanning failed. Please try again.');
+      setError(`Scanning failed: ${err.message}. Check if backend is running.`);
     } finally {
       setIsScanning(false);
     }
@@ -129,7 +111,7 @@ export default function TokenScanner({ walletAddress, onScanComplete }) {
         <button
           onClick={handleScan}
           disabled={!walletAddress || isScanning}
-          className="btn-primary flex items-center space-x-2"
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
         >
           <Search size={16} />
           <span>{isScanning ? 'Scanning...' : 'Start Scan'}</span>
