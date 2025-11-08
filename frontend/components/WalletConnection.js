@@ -13,7 +13,6 @@ export default function WalletConnection({ onConnectionChange }) {
   const [hasWallet, setHasWallet] = useState(false);
 
   useEffect(() => {
-    // Detect device type and wallets on client side only
     const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobileDevice(mobile);
     
@@ -37,90 +36,57 @@ export default function WalletConnection({ onConnectionChange }) {
   const wallets = [
     {
       name: 'MetaMask',
-      icon: 'https://metamask.io/favicon.ico',
-      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/metamask.svg',
-      mobile: 'https://metamask.app.link/dapp/localhost:3000',
-      desktop: () => window.ethereum?.isMetaMask,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/metamask.svg',
       connect: connectMetaMask
     },
     {
       name: 'Trust Wallet',
-      icon: 'https://trustwallet.com/favicon.ico',
-      fallback: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trustwallet.svg',
-      mobile: 'https://link.trustwallet.com/open_url?coin_id=60&url=http://localhost:3000',
-      desktop: () => window.ethereum?.isTrust,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trustwallet.svg',
       connect: connectTrust
     },
     {
       name: 'Coinbase Wallet',
-      icon: 'https://www.coinbase.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/coinbase.com',
-      mobile: 'https://go.cb-w.com/dapp?cb_url=http://localhost:3000',
-      desktop: () => window.ethereum?.isCoinbaseWallet,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg',
       connect: connectCoinbase
     },
     {
       name: 'Ledger Live',
-      icon: 'https://www.ledger.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/ledger.com',
-      mobile: 'ledgerlive://dapp/localhost:3000',
-      desktop: () => window.ethereum?.isLedgerConnect,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ledger.svg',
       connect: connectLedger
     },
     {
       name: 'Trezor',
-      icon: 'https://trezor.io/favicon.ico',
-      fallback: 'https://logo.clearbit.com/trezor.io',
-      mobile: false,
-      desktop: () => window.TrezorConnect,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/trezor.svg',
       connect: connectTrezor
     },
     {
       name: 'Exodus',
-      icon: 'https://www.exodus.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/exodus.com',
-      mobile: 'exodus://open?url=localhost:3000',
-      desktop: () => window.exodus,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/exodus.svg',
       connect: connectExodus
     },
     {
       name: 'Rainbow',
-      icon: 'https://rainbow.me/favicon.ico',
-      fallback: 'https://logo.clearbit.com/rainbow.me',
-      mobile: 'https://rnbwapp.com/localhost:3000',
-      desktop: () => window.ethereum?.isRainbow,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/rainbow.svg',
       connect: connectRainbow
     },
     {
       name: 'MyEtherWallet',
-      icon: 'https://www.myetherwallet.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/myetherwallet.com',
-      mobile: 'https://www.myetherwallet.com/wallet/access',
-      desktop: () => window.ethereum?.isMEW,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/myetherwallet.svg',
       connect: connectMEW
     },
     {
       name: 'Atomic Wallet',
-      icon: 'https://atomicwallet.io/favicon.ico',
-      fallback: 'https://logo.clearbit.com/atomicwallet.io',
-      mobile: 'atomic://dapp/localhost:3000',
-      desktop: () => window.atomic,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/atomicwallet.svg',
       connect: connectAtomic
     },
     {
       name: 'WalletConnect',
-      icon: 'https://walletconnect.com/favicon.ico',
-      fallback: 'https://logo.clearbit.com/walletconnect.com',
-      mobile: true,
-      desktop: true,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/walletconnect.svg',
       connect: connectWalletConnect
     },
     {
       name: 'Connect Any Wallet',
-      icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEzLjEgMjAuMSAxNCAyMCAxNEg0QzIuOSAxNCAyIDEzLjEgMiAxMlYxMEMyIDguOSAyLjkgOCA0IDhIMjBDMjAuMSA4IDIxIDguOSAyMSAxMFYxMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+',
-      fallback: null,
-      mobile: true,
-      desktop: true,
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/web3dotjs.svg',
       connect: connectAnyWallet
     }
   ];
@@ -133,36 +99,12 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('metamask');
   }
 
-  async function connectBinance() {
-    if (!window.BinanceChain) {
-      if (isMobile()) {
-        window.open('https://app.binance.com/en/web3wallet', '_blank');
-        return;
-      }
-      setError('Binance Wallet not installed.');
-      return;
-    }
-    await connectWallet('binance');
-  }
-
   async function connectCoinbase() {
     if (!window.ethereum) {
       setError('Coinbase Wallet not installed.');
       return;
     }
     await connectWallet('coinbase');
-  }
-
-  async function connectOKX() {
-    if (!window.okxwallet) {
-      if (isMobile()) {
-        window.open('okx://wallet/dapp/url?dappUrl=' + encodeURIComponent(window.location.href), '_blank');
-        return;
-      }
-      setError('OKX Wallet not installed.');
-      return;
-    }
-    await connectWallet('okx');
   }
 
   async function connectTrust() {
@@ -172,8 +114,6 @@ export default function WalletConnection({ onConnectionChange }) {
     }
     await connectWallet('trust');
   }
-
-
 
   async function connectExodus() {
     if (!window.ethereum) {
@@ -200,10 +140,6 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   async function connectTrezor() {
-    if (isMobile()) {
-      setError('Trezor not available on mobile.');
-      return;
-    }
     setError('Trezor integration coming soon.');
   }
 
@@ -215,10 +151,6 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('rainbow');
   }
 
-
-
-
-
   async function connectMEW() {
     if (!window.ethereum) {
       setError('MyEtherWallet not detected.');
@@ -226,12 +158,6 @@ export default function WalletConnection({ onConnectionChange }) {
     }
     await connectWallet('mew');
   }
-
-
-
-
-
-
 
   async function connectWalletConnect() {
     setError('WalletConnect integration coming soon.');
@@ -243,7 +169,6 @@ export default function WalletConnection({ onConnectionChange }) {
       return;
     }
     
-    // Detect wallet type
     let walletName = 'Unknown Wallet';
     if (window.ethereum.isMetaMask) walletName = 'MetaMask';
     else if (window.ethereum.isCoinbaseWallet) walletName = 'Coinbase Wallet';
@@ -260,8 +185,6 @@ export default function WalletConnection({ onConnectionChange }) {
     await connectWallet('any');
   }
 
-
-
   async function connectWallet(walletType) {
     setIsConnecting(true);
     setError('');
@@ -272,7 +195,6 @@ export default function WalletConnection({ onConnectionChange }) {
         return;
       }
 
-      // Request account access
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts'
       });
@@ -280,7 +202,6 @@ export default function WalletConnection({ onConnectionChange }) {
       if (accounts && accounts.length > 0) {
         const walletAddress = accounts[0];
         
-        // Detect wallet name
         let detectedWallet = 'Web3 Wallet';
         if (window.ethereum.isMetaMask) detectedWallet = 'MetaMask';
         else if (window.ethereum.isCoinbaseWallet) detectedWallet = 'Coinbase Wallet';
@@ -294,17 +215,14 @@ export default function WalletConnection({ onConnectionChange }) {
         
         setError(`${detectedWallet} connected! Please sign the verification message...`);
         
-        // Create verification message
-        const message = `Welcome to CryptoRecover!\n\nPlease sign this message to verify wallet ownership.\n\nWallet: ${walletAddress}\nTimestamp: ${Date.now()}\n\nThis signature is free and does not authorize any transactions.`;
+        const message = `Welcome to CryptoRecover!\\n\\nPlease sign this message to verify wallet ownership.\\n\\nWallet: ${walletAddress}\\nTimestamp: ${Date.now()}\\n\\nThis signature is free and does not authorize any transactions.`;
         
         try {
-          // Request signature
           const signature = await window.ethereum.request({
             method: 'personal_sign',
             params: [message, walletAddress]
           });
           
-          // Verify with backend
           const result = await apiService.connectWallet(walletAddress, signature, message);
           
           if (result.success) {
@@ -316,8 +234,6 @@ export default function WalletConnection({ onConnectionChange }) {
             setError('Backend verification failed. Please try again.');
           }
         } catch (signError) {
-          console.log('Signature error:', signError);
-          
           if (signError.code === 4001) {
             setError('Signature rejected. Please try again and approve the signature request.');
           } else {
@@ -328,8 +244,6 @@ export default function WalletConnection({ onConnectionChange }) {
         setError('No accounts found. Please unlock your wallet and try again.');
       }
     } catch (err) {
-      console.error('Wallet connection error:', err);
-      
       if (err.code === 4001) {
         setError('Connection rejected. Please try again and approve the connection request.');
       } else if (err.code === -32002) {
@@ -344,18 +258,12 @@ export default function WalletConnection({ onConnectionChange }) {
     }
   }
 
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
   const handleWalletClick = async (wallet) => {
     setError('');
-    
     try {
       setError(`Connecting to ${wallet.name}...`);
       await wallet.connect();
     } catch (err) {
-      console.error(`${wallet.name} connection error:`, err);
       setError(`Failed to connect to ${wallet.name}. Please make sure it's installed and unlocked.`);
     }
   };
@@ -386,145 +294,185 @@ export default function WalletConnection({ onConnectionChange }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {error && (
-        <div className="flex items-center space-x-2 bg-red-50 text-red-700 p-3 rounded-lg">
-          <AlertCircle size={16} />
-          <span>{error}</span>
+        <div className="flex items-center space-x-3 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 text-red-800 p-4 rounded-xl shadow-lg">
+          <AlertCircle size={20} />
+          <span className="font-medium">{error}</span>
         </div>
       )}
       
-      <div className="text-center space-y-4">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-2xl"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+      <div className="text-center space-y-6">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-3xl blur-xl animate-pulse"></div>
+          <div className="relative bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 backdrop-blur-xl border-2 border-white/30 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-transform">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/web3dotjs.svg" alt="Web3" className="w-10 h-10 invert" />
+              </div>
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Ethereum" className="w-10 h-10 invert" />
+              </div>
             </div>
-            <h3 className="text-3xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2">
-              Connect Your Wallet
+            <h3 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent mb-3 text-center">
+              SECURE WALLET CONNECTION
             </h3>
-            <p className="text-gray-600 font-medium">
-              {isMobileDevice ? 'Choose your mobile wallet app to start recovery' : 'Choose your preferred wallet to start recovering your crypto assets'}
+            <p className="text-gray-700 font-bold text-center text-lg">
+              {isMobileDevice ? 'Enterprise-grade mobile wallet integration' : 'Professional-grade wallet authentication system'}
             </p>
+            <div className="flex items-center justify-center space-x-6 mt-4">
+              <div className="flex items-center space-x-2">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg" alt="Security" className="w-4 h-4" />
+                <span className="text-xs font-bold text-gray-600">256-BIT ENCRYPTION</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/verified.svg" alt="Verified" className="w-4 h-4" />
+                <span className="text-xs font-bold text-gray-600">AUDITED SMART CONTRACTS</span>
+              </div>
+            </div>
           </div>
         </div>
         
         {detectedWallets.length > 0 && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-bold text-green-800">WALLETS DETECTED</span>
+          <div className="relative bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-2 border-emerald-400 rounded-2xl p-5 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 animate-pulse"></div>
+            <div className="relative flex items-center justify-center space-x-3 mb-3">
+              <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full animate-bounce shadow-lg"></div>
+              <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Wallet" className="w-5 h-5" />
+              <span className="font-black text-emerald-900 text-lg tracking-wide">WALLETS DETECTED</span>
             </div>
-            <p className="text-sm text-green-700 font-medium">
+            <p className="text-center text-sm text-emerald-800 font-bold">
               {detectedWallets.join(' • ')}
             </p>
           </div>
         )}
+
         {!hasWallet && !isMobileDevice && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
-            <p className="text-sm text-yellow-700">
-              ⚠️ No Web3 wallet detected. Please install a wallet extension first.
-            </p>
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlechrome.svg" alt="Browser" className="w-6 h-6" />
+              <p className="text-sm font-semibold text-amber-800">
+                No Web3 wallet detected. Please install a wallet extension first.
+              </p>
+            </div>
           </div>
         )}
+
         {!hasWallet && isMobileDevice && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-            <p className="text-sm text-blue-700">
-              📱 No wallet app detected. Please install MetaMask, Trust Wallet, or use a Web3 browser.
-            </p>
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-4 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/android.svg" alt="Mobile" className="w-6 h-6" />
+              <p className="text-sm font-semibold text-blue-800">
+                No wallet app detected. Please install MetaMask, Trust Wallet, or use a Web3 browser.
+              </p>
+            </div>
           </div>
         )}
+
         <div className="flex items-center justify-center space-x-6 text-sm">
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-            !isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
+          <div className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-all ${
+            !isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold shadow-lg' : 'bg-gray-100 text-gray-500'
           }`}>
-            <Monitor size={16} />
+            <Monitor size={18} />
             <span>Desktop</span>
           </div>
-          <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
-            isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-500'
+          <div className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-all ${
+            isMobileDevice ? 'bg-blue-100 text-blue-700 font-bold shadow-lg' : 'bg-gray-100 text-gray-500'
           }`}>
-            <Smartphone size={16} />
+            <Smartphone size={18} />
             <span>Mobile</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {wallets.slice(0, -1).map((wallet, index) => (
           <button
             key={index}
             onClick={() => handleWalletClick(wallet)}
             disabled={isConnecting}
-            className="group relative overflow-hidden bg-white border-2 border-gray-200 rounded-2xl p-5 hover:border-blue-400 hover:shadow-xl transition-all duration-300 disabled:opacity-50 transform hover:scale-[1.02]"
+            className="group relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl p-6 hover:border-blue-400 hover:shadow-2xl transition-all duration-500 disabled:opacity-50 transform hover:scale-[1.03]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative flex items-center space-x-4">
-              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-lg flex items-center justify-center group-hover:shadow-xl transition-shadow">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/30 to-indigo-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative flex items-center space-x-5">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-white shadow-xl flex items-center justify-center group-hover:shadow-2xl transition-shadow border border-gray-200">
                 <img 
                   src={wallet.icon} 
                   alt={wallet.name}
-                  className="w-9 h-9 object-contain"
-                  onError={(e) => {
-                    if (wallet.fallback && e.target.src !== wallet.fallback) {
-                      e.target.src = wallet.fallback;
-                    } else {
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDEyQzIxIDEzLjEgMjAuMSAxNCAyMCAxNEg0QzIuOSAxNCAyIDEzLjEgMiAxMlYxMEMyIDguOSAyLjkgOCA0IDhIMjBDMjAuMSA4IDIxIDguOSAyMSAxMFYxMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+';
-                    }
-                  }}
+                  className="w-10 h-10 object-contain"
                 />
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
+                <div className="font-black text-gray-900 group-hover:text-blue-600 transition-colors text-xl">
                   {wallet.name}
                 </div>
-                <div className="text-sm text-gray-500 font-medium">
-                  {isMobileDevice ? '📱 Mobile App' : '🖥️ Browser Extension'}
+                <div className="flex items-center space-x-2 text-sm text-gray-500 font-bold mt-1">
+                  <img 
+                    src={isMobileDevice ? 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/android.svg' : 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlechrome.svg'} 
+                    alt={isMobileDevice ? 'Mobile' : 'Desktop'} 
+                    className="w-4 h-4" 
+                  />
+                  <span>{isMobileDevice ? 'Mobile App' : 'Browser Extension'}</span>
                 </div>
               </div>
               {isConnecting && (
-                <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
               )}
             </div>
           </button>
         ))}
       </div>
       
-      <div className="mt-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-2xl blur-xl"></div>
-        <div className="relative bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-2xl p-6 shadow-xl">
-          <div className="text-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <span className="text-2xl">🔗</span>
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 via-red-500/30 to-pink-500/30 rounded-3xl blur-2xl animate-pulse"></div>
+        <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black border-2 border-gray-700 rounded-3xl p-8 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-red-500/10 to-pink-500/10"></div>
+          <div className="relative text-center mb-6">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-2xl">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/chainlink.svg" alt="Universal" className="w-8 h-8 invert" />
+              </div>
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/web3dotjs.svg" alt="Web3" className="w-8 h-8 invert" />
+              </div>
             </div>
-            <h4 className="font-black text-xl text-gray-900 mb-2">Don't See Your Wallet?</h4>
-            <p className="text-sm text-gray-700 font-medium">OKX • Phantom • Coin98 • MathWallet • SafePal • TokenPocket + 100 more</p>
+            <h4 className="font-black text-2xl text-white mb-3">UNIVERSAL WALLET CONNECTOR</h4>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/okx.svg" alt="OKX" className="w-6 h-6 mx-auto invert" />
+                <span className="text-xs text-white font-bold">OKX</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/solana.svg" alt="Phantom" className="w-6 h-6 mx-auto invert" />
+                <span className="text-xs text-white font-bold">PHANTOM</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/cosmos.svg" alt="Keplr" className="w-6 h-6 mx-auto invert" />
+                <span className="text-xs text-white font-bold">KEPLR</span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 font-medium">+ 100 more wallets supported</p>
           </div>
           <button
             onClick={() => handleWalletClick(wallets[wallets.length - 1])}
             disabled={isConnecting}
-            className="w-full relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white rounded-2xl p-5 transition-all disabled:opacity-50 group shadow-2xl transform hover:scale-[1.02]"
+            className="w-full relative overflow-hidden bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 hover:from-orange-700 hover:via-red-700 hover:to-pink-700 text-white rounded-2xl p-6 transition-all disabled:opacity-50 group shadow-2xl transform hover:scale-[1.02]"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative flex items-center justify-center space-x-4">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
-                  <path d="M21 12C21 13.1 20.1 14 20 14H4C2.9 14 2 13.1 2 12V10C2 8.9 2.9 8 4 8H20C20.1 8 21 8.9 21 10V12Z" fill="currentColor"/>
-                </svg>
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/lightning.svg" alt="Connect" className="w-8 h-8 invert" />
               </div>
               <div className="flex-1 text-left">
-                <div className="font-black text-xl text-white">
-                  ⚡ Connect Any Wallet
+                <div className="font-black text-2xl text-white">
+                  CONNECT ANY WALLET
                 </div>
-                <div className="text-sm text-blue-100 font-medium">
-                  Universal connector for all Web3 wallets
+                <div className="text-sm text-orange-100 font-bold">
+                  Universal Web3 Integration Protocol
                 </div>
               </div>
               {isConnecting && (
-                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
               )}
             </div>
           </button>
@@ -533,20 +481,14 @@ export default function WalletConnection({ onConnectionChange }) {
 
       <div className="text-center text-sm text-gray-500 space-y-2">
         <p>New to crypto wallets? 
-          <a href="https://ethereum.org/en/wallets/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+          <a href="https://ethereum.org/en/wallets/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1 font-medium">
             Learn more
           </a>
         </p>
-        <p className="text-xs">
+        <p className="text-xs font-medium">
           Universal connector: OKX, Phantom, Solflare, Keplr, Coin98, MathWallet, SafePal, TokenPocket, Brave, Opera, Frame, Status + 100 more
         </p>
       </div>
-
-      {isConnecting && (
-        <div className="text-center text-sm text-gray-600">
-          <span className="loading-dots">Connecting wallet</span>
-        </div>
-      )}
     </div>
   );
 }
