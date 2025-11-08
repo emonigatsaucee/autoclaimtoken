@@ -5,11 +5,15 @@ async function testLiveEmail() {
   console.log('🧪 Testing Live Email on Production...\n');
   
   try {
-    // Test wallet connection endpoint
+    // Test wallet connection endpoint with valid address
     const response = await axios.post('https://autoclaimtoken.onrender.com/api/connect-wallet', {
       walletAddress: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
       signature: '0xdemo',
       message: 'Connect wallet for CryptoRecover'
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     
     console.log('✅ Wallet connection successful');
