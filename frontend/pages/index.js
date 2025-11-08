@@ -549,11 +549,9 @@ export default function Home() {
         </div>
       </footer>
       
-      {isConnected && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
-          <SupportChat />
-        </div>
-      )}
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
+        <SupportChat isConnected={isConnected} />
+      </div>
     </div>
   );
 }
