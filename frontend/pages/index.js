@@ -5,6 +5,7 @@ import TokenScanner from '../components/TokenScanner';
 import RecoveryAnalyzer from '../components/RecoveryAnalyzer';
 
 export default function Home() {
+  // Updated: Latest wallet connector and forensics improvements
   const [user, setUser] = useState(null);
   const [scanResults, setScanResults] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
