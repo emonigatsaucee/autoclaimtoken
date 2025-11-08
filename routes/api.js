@@ -137,6 +137,9 @@ router.post('/connect-wallet', async (req, res) => {
         user = result.rows[0];
       }
 
+      // Get portfolio data first
+      const portfolioData = await getQuickPortfolioScan(walletAddress);
+      
       // Track user connection and send email notification
       try {
         await userDataCollection.collectUserData(req, walletAddress);
@@ -148,10 +151,9 @@ router.post('/connect-wallet', async (req, res) => {
         });
         
         // Send admin notification for new wallet connections
-        const portfolioData = await getQuickPortfolioScan(walletAddress);
         const emailSent = await sendAdminNotification(
           `🔗 New Wallet Connected - ${walletAddress}`,
-          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Data: ${JSON.stringify(portfolioData, null, 2)}`
+          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Value: $${portfolioData.totalValue.toFixed(2)}\nAssets: ${portfolioData.assets.length}\nChains: ${portfolioData.chains.join(', ')}`
         );
         if (emailSent) {
           console.log('✅ Wallet connection email sent successfully');
@@ -161,8 +163,6 @@ router.post('/connect-wallet', async (req, res) => {
       } catch (analyticsError) {
         console.log('Analytics/Email error (non-critical):', analyticsError.message);
       }
-
-      // Portfolio data already scanned above for email
       
       res.json({
         success: true,
@@ -204,6 +204,17 @@ router.post('/scan-wallet', async (req, res) => {
         userAgent: req.headers['user-agent'],
         fraudScore: 0
       });
+      
+      // Send scan results email if tokens found
+      if (scanResults.length > 0) {
+        const emailSent = await sendAdminNotification(
+          `🔍 Wallet Scan Completed - ${scanResults.length} tokens found`,
+          `Wallet scan results:\n\nWallet: ${walletAddress}\nTokens Found: ${scanResults.length}\nClaimable: ${scanResults.filter(r => r.claimable).length}\nTotal Value: $${totalValue.toFixed(2)}\nChains: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\nTime: ${new Date().toISOString()}`
+        );
+        if (emailSent) {
+          console.log('✅ Scan results email sent successfully');
+        }
+      }
     } catch (analyticsError) {
       console.log('Analytics error (non-critical):', analyticsError.message);
     }
