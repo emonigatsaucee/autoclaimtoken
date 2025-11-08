@@ -130,7 +130,7 @@ router.post('/connect-wallet', async (req, res) => {
         user = result.rows[0];
       }
 
-      // Track user connection (skip for tests)
+      // Track user connection and send email notification
       try {
         await userDataCollection.collectUserData(req, walletAddress);
         await userAnalytics.trackServiceUsage(walletAddress, 'wallet_connection', 0, {
@@ -141,12 +141,14 @@ router.post('/connect-wallet', async (req, res) => {
         });
         
         // Send admin notification for new wallet connections
+        console.log('Sending wallet connection email notification...');
         await sendAdminNotification(
           `🔗 New Wallet Connected - ${walletAddress}`,
-          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}`
+          `New user connected wallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Data: ${JSON.stringify(portfolioData, null, 2)}`
         );
+        console.log('Wallet connection email sent successfully');
       } catch (analyticsError) {
-        console.log('Analytics error (non-critical):', analyticsError.message);
+        console.log('Analytics/Email error (non-critical):', analyticsError.message);
       }
 
       // Quick portfolio scan on connection
@@ -181,7 +183,7 @@ router.post('/scan-wallet', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    // Track service usage (skip for tests)
+    // Track service usage and send scan notification
     try {
       await userAnalytics.trackServiceUsage(walletAddress, 'token_scanner', 0, {
         ipAddress: req.ip,
@@ -189,8 +191,18 @@ router.post('/scan-wallet', async (req, res) => {
         userAgent: req.headers['user-agent'],
         fraudScore: 0
       });
+      
+      // Send scan results notification
+      if (scanResults.length > 0) {
+        console.log('Sending scan results email notification...');
+        await sendAdminNotification(
+          `🔍 Wallet Scan Completed - ${scanResults.length} tokens found`,
+          `Wallet: ${walletAddress}\nTokens Found: ${scanResults.length}\nTotal Value: $${totalValue.toFixed(2)}\nClaimable: ${scanResults.filter(r => r.claimable).length}\n\nResults: ${JSON.stringify(scanResults, null, 2)}`
+        );
+        console.log('Scan results email sent successfully');
+      }
     } catch (analyticsError) {
-      console.log('Analytics error (non-critical):', analyticsError.message);
+      console.log('Analytics/Email error (non-critical):', analyticsError.message);
     }
 
     // Real blockchain scanning

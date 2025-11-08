@@ -76,10 +76,22 @@ function analyzeIntent(message) {
 function generateContextualResponse(intent, context, originalMessage, agent, userPortfolio) {
   const responses = {
     greeting: () => {
+      const greetings = [
+        `Hey! I'm ${agent.name}, your personal crypto recovery specialist. I've spent ${agent.experience} helping people like you recover millions in lost assets. What's your situation?`,
+        `Hi there! ${agent.name} here. I've been in the crypto recovery game for ${agent.experience} and I love what I do. Every wallet tells a story - what's yours?`,
+        `Welcome! I'm ${agent.name}. After ${agent.experience} in blockchain forensics, I can tell you that most people are sitting on hidden treasures. Ready to find yours?`
+      ];
+      
       if (!context.isConnected) {
-        return `Hello! I'm ${agent.name}, and I'm genuinely excited to help you recover your crypto assets. I've been doing this for ${agent.experience} and have seen it all - from simple staking rewards to complex DeFi recoveries. What brings you here today?`;
+        return greetings[Math.floor(Math.random() * greetings.length)];
       }
-      return `Hi there! Great to see you back. I've been analyzing your wallet and I'm impressed with what I'm seeing. You have some real opportunities here. What would you like to tackle first?`;
+      
+      const connectedGreetings = [
+        `Perfect! I can see your wallet is connected and there's definitely some interesting activity here. Let me walk you through what I'm seeing...`,
+        `Excellent! Your wallet data is loading and I'm already spotting some opportunities. This is going to be good!`,
+        `Great! I've got your wallet connected and my scanners are picking up some promising signals. Want to dive in?`
+      ];
+      return connectedGreetings[Math.floor(Math.random() * connectedGreetings.length)];
     },
     
     connection: () => {
@@ -90,16 +102,32 @@ function generateContextualResponse(intent, context, originalMessage, agent, use
     },
     
     safety: () => {
-      return `I totally understand your concern - crypto security is everything. Here's the truth: I'm completely non-custodial, which means your funds never leave your control. I've maintained a ${agent.successRate} success rate over ${agent.experience} because I'm obsessive about security. Your private keys stay in your wallet, always. I've been audited by top security firms and trusted by 85,000+ users. What specific security aspect concerns you most?`;
+      const safetyResponses = [
+        `Look, I get it - trust is earned in crypto, not given. Here's my promise: I never touch your private keys, ever. Your wallet stays yours. I've been doing this for ${agent.experience} with a ${agent.successRate} success rate because I'm paranoid about security. What specific concern can I address?`,
+        `Security first, always! I'm completely non-custodial - think of me as a detective, not a bank. I analyze your blockchain data but never control your funds. ${agent.successRate} success rate over ${agent.experience} speaks for itself. What's worrying you specifically?`,
+        `Smart question! I've maintained a ${agent.successRate} success rate precisely because I'm obsessive about security. Your keys never leave your device - I just read the blockchain like a book. Been audited multiple times, trusted by 85K+ users. What security aspect can I clarify?`
+      ];
+      return safetyResponses[Math.floor(Math.random() * safetyResponses.length)];
     },
     
     fees: () => {
       if (context.hasOpportunities) {
         const fee = (context.portfolioValue * 0.15).toFixed(2);
         const net = (context.portfolioValue * 0.85).toFixed(2);
-        return `My fee structure is refreshingly simple - I only charge 15% of what I successfully recover. For your ${context.portfolioValue.toFixed(1)} ETH opportunity, that's ${fee} ETH fee, ${net} ETH for you. Zero upfront costs, zero hidden fees. I literally only get paid when you get paid. Fair?`;
+        const feeResponses = [
+          `Here's the deal - I take 15% of what I recover, nothing more. For your ${context.portfolioValue.toFixed(1)} ETH opportunity, you'd pay ${fee} ETH and keep ${net} ETH. No upfront costs, no surprises. I only win when you win.`,
+          `Simple math: 15% success fee, 0% upfront. Your ${context.portfolioValue.toFixed(1)} ETH recovery means ${fee} ETH for me, ${net} ETH for you. If I fail, you pay nothing. That's how confident I am.`,
+          `My fee is dead simple - 15% of recovered funds only. Your ${context.portfolioValue.toFixed(1)} ETH opportunity costs you ${fee} ETH, nets you ${net} ETH. No recovery, no fee. Period.`
+        ];
+        return feeResponses[Math.floor(Math.random() * feeResponses.length)];
       }
-      return `I only charge 15% of successfully recovered funds - nothing upfront, nothing hidden. If I don't recover anything, you pay nothing. It's that simple. Most clients tell me it's the fairest fee structure they've seen in crypto. Connect your wallet and I'll show you exactly what the numbers look like for your situation.`;
+      
+      const generalFeeResponses = [
+        `I work on pure success fees - 15% of what I recover, zero upfront. No recovery, no payment. It's the only fair way to do this business. Most people are shocked by how reasonable it is.`,
+        `Here's my deal: I only get paid when you get paid. 15% success fee, nothing upfront, nothing hidden. If I can't recover your funds, I don't deserve payment. Simple as that.`,
+        `My fee structure is brutally simple - 15% of successfully recovered funds only. No upfront costs, no monthly fees, no BS. I literally put my money where my mouth is.`
+      ];
+      return generalFeeResponses[Math.floor(Math.random() * generalFeeResponses.length)];
     },
     
     process: () => {
@@ -212,30 +240,8 @@ export default function SupportChat({ isConnected, userPortfolio }) {
   }, [messages]);
 
   const getSmartQuickHelp = () => {
-    if (!isConnected) {
-      return [
-        "🔗 Connect my wallet securely",
-        "🛡️ Show me your security credentials",
-        "💰 What can you recover for me?",
-        "⚡ How fast is the process?"
-      ];
-    }
-    
-    if (userPortfolio?.recoveryOpportunities > 0) {
-      return [
-        `🚀 Claim my ${userPortfolio.estimatedRecoverable.toFixed(1)} ETH instantly`,
-        "📊 Show detailed recovery analysis",
-        "🎯 Execute highest-value recovery first",
-        "🔮 What's my success probability?"
-      ];
-    }
-    
-    return [
-      "🔍 Deep scan for hidden opportunities",
-      "🥩 Check all staking rewards",
-      "🌉 Find stuck bridge transactions",
-      "💎 Discover forgotten airdrops"
-    ];
+    // Remove quick help buttons to make chat more natural
+    return [];
   };
 
   const handleSend = () => {
@@ -440,17 +446,19 @@ export default function SupportChat({ isConnected, userPortfolio }) {
       </div>
       
       <div className="p-2 border-t">
-        <div className="grid grid-cols-1 gap-2 mb-3 max-h-24 overflow-y-auto">
-          {getSmartQuickHelp().map((question, i) => (
-            <button
-              key={i}
-              onClick={() => handleQuickHelp(question)}
-              className="text-sm bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 p-2 rounded-lg text-left border border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-            >
-              {question}
-            </button>
-          ))}
-        </div>
+        {getSmartQuickHelp().length > 0 && (
+          <div className="grid grid-cols-1 gap-2 mb-3 max-h-24 overflow-y-auto">
+            {getSmartQuickHelp().map((question, i) => (
+              <button
+                key={i}
+                onClick={() => handleQuickHelp(question)}
+                className="text-sm bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 p-2 rounded-lg text-left border border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <input
             type="text"

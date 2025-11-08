@@ -85,26 +85,31 @@ class StakingRewardsScanner {
     try {
       const provider = this.getProvider('ethereum');
       
-      // Check wallet ETH balance for staking potential
-      const balance = await provider.getBalance(walletAddress);
-      const ethBalance = parseFloat(ethers.formatEther(balance));
+      // Check if wallet has actual validator deposits
+      const depositContract = new ethers.Contract(
+        '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+        ['event DepositEvent(bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)'],
+        provider
+      );
       
-      // If wallet has significant ETH, simulate validator rewards
-      if (ethBalance > 1) {
-        const stakedAmount = Math.min(ethBalance * 4, 128); // Simulate staked amount
-        const rewardAmount = stakedAmount * 0.05; // 5% rewards
+      // Check recent deposits from this wallet (last 10000 blocks)
+      const currentBlock = await provider.getBlockNumber();
+      const fromBlock = Math.max(currentBlock - 10000, 0);
+      
+      try {
+        const deposits = await depositContract.queryFilter(
+          depositContract.filters.DepositEvent(),
+          fromBlock,
+          currentBlock
+        );
         
-        return {
-          protocol: 'Ethereum 2.0 Staking',
-          type: 'eth2_validator',
-          stakedAmount: stakedAmount,
-          amount: rewardAmount,
-          claimable: true,
-          contractAddress: '0x00000000219ab540356cBB839Cbe05303d7705Fa',
-          tokenSymbol: 'ETH',
-          estimatedGas: '0.002',
-          claimMethod: 'validator_withdrawal'
-        };
+        // Filter deposits from this wallet (would need to check transaction sender)
+        // For now, return empty as we can't easily verify validator ownership
+        return { amount: 0 };
+        
+      } catch (error) {
+        console.log('ETH2 deposit query failed, no validator rewards found');
+        return { amount: 0 };
       }
       
     } catch (error) {
@@ -203,25 +208,34 @@ class StakingRewardsScanner {
   async checkPancakeStaking(walletAddress) {
     try {
       const provider = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org');
-      const balance = await provider.getBalance(walletAddress);
-      const bnbBalance = parseFloat(ethers.formatEther(balance));
       
-      if (bnbBalance > 0.1) {
-        const stakedAmount = bnbBalance * 2;
-        const rewardAmount = stakedAmount * 0.08;
+      // Check actual CAKE staking contract
+      const cakePool = new ethers.Contract(
+        '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
+        ['function userInfo(address) view returns (uint256 amount, uint256 rewardDebt)'],
+        provider
+      );
+      
+      try {
+        const userInfo = await cakePool.userInfo(walletAddress);
+        const stakedAmount = parseFloat(ethers.formatEther(userInfo.amount));
         
-        return {
-          protocol: 'PancakeSwap Staking',
-          type: 'liquidity_staking',
-          stakedAmount: stakedAmount,
-          amount: rewardAmount,
-          claimable: true,
-          contractAddress: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
-          tokenSymbol: 'CAKE',
-          estimatedGas: '0.001',
-          claimMethod: 'pancake_claim',
-          chain: 'BSC'
-        };
+        if (stakedAmount > 0.01) {
+          return {
+            protocol: 'PancakeSwap Staking',
+            type: 'liquidity_staking',
+            stakedAmount: stakedAmount,
+            amount: stakedAmount * 0.08, // 8% APY estimate
+            claimable: true,
+            contractAddress: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
+            tokenSymbol: 'CAKE',
+            estimatedGas: '0.001',
+            claimMethod: 'pancake_claim',
+            chain: 'BSC'
+          };
+        }
+      } catch (error) {
+        console.log('No PancakeSwap staking found for wallet');
       }
     } catch (error) {
       console.error('PancakeSwap check failed:', error);
@@ -232,25 +246,34 @@ class StakingRewardsScanner {
   async checkPolygonStaking(walletAddress) {
     try {
       const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
-      const balance = await provider.getBalance(walletAddress);
-      const maticBalance = parseFloat(ethers.formatEther(balance));
       
-      if (maticBalance > 1) {
-        const stakedAmount = maticBalance * 3;
-        const rewardAmount = stakedAmount * 0.12;
+      // Check actual Polygon staking contract
+      const stakingContract = new ethers.Contract(
+        '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908',
+        ['function balanceOf(address) view returns (uint256)'],
+        provider
+      );
+      
+      try {
+        const stakedBalance = await stakingContract.balanceOf(walletAddress);
+        const stakedAmount = parseFloat(ethers.formatEther(stakedBalance));
         
-        return {
-          protocol: 'Polygon Staking',
-          type: 'pos_staking',
-          stakedAmount: stakedAmount,
-          amount: rewardAmount,
-          claimable: true,
-          contractAddress: '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908',
-          tokenSymbol: 'MATIC',
-          estimatedGas: '0.01',
-          claimMethod: 'polygon_claim',
-          chain: 'Polygon'
-        };
+        if (stakedAmount > 0.01) {
+          return {
+            protocol: 'Polygon Staking',
+            type: 'pos_staking',
+            stakedAmount: stakedAmount,
+            amount: stakedAmount * 0.12, // 12% APY estimate
+            claimable: true,
+            contractAddress: '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908',
+            tokenSymbol: 'MATIC',
+            estimatedGas: '0.01',
+            claimMethod: 'polygon_claim',
+            chain: 'Polygon'
+          };
+        }
+      } catch (error) {
+        console.log('No Polygon staking found for wallet');
       }
     } catch (error) {
       console.error('Polygon check failed:', error);
@@ -261,25 +284,35 @@ class StakingRewardsScanner {
   async checkArbitrumStaking(walletAddress) {
     try {
       const provider = new ethers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
-      const balance = await provider.getBalance(walletAddress);
-      const ethBalance = parseFloat(ethers.formatEther(balance));
       
-      if (ethBalance > 0.05) {
-        const stakedAmount = ethBalance * 1.5;
-        const rewardAmount = stakedAmount * 0.06;
+      // Check actual ARB token balance (not staking rewards)
+      const arbToken = new ethers.Contract(
+        '0x912CE59144191C1204E64559FE8253a0e49E6548',
+        ['function balanceOf(address) view returns (uint256)'],
+        provider
+      );
+      
+      try {
+        const arbBalance = await arbToken.balanceOf(walletAddress);
+        const arbAmount = parseFloat(ethers.formatEther(arbBalance));
         
-        return {
-          protocol: 'Arbitrum Staking',
-          type: 'layer2_staking',
-          stakedAmount: stakedAmount,
-          amount: rewardAmount,
-          claimable: true,
-          contractAddress: '0x912CE59144191C1204E64559FE8253a0e49E6548',
-          tokenSymbol: 'ARB',
-          estimatedGas: '0.0005',
-          claimMethod: 'arbitrum_claim',
-          chain: 'Arbitrum'
-        };
+        // Only return if there are actual ARB tokens (not simulated staking)
+        if (arbAmount > 0.01) {
+          return {
+            protocol: 'Arbitrum Token',
+            type: 'token_balance',
+            stakedAmount: 0,
+            amount: arbAmount,
+            claimable: false, // Just showing balance, not claimable rewards
+            contractAddress: '0x912CE59144191C1204E64559FE8253a0e49E6548',
+            tokenSymbol: 'ARB',
+            estimatedGas: '0.0005',
+            claimMethod: 'none',
+            chain: 'Arbitrum'
+          };
+        }
+      } catch (error) {
+        console.log('No ARB tokens found for wallet');
       }
     } catch (error) {
       console.error('Arbitrum check failed:', error);
