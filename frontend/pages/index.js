@@ -228,30 +228,30 @@ export default function Home() {
               <h3 className="text-2xl font-bold mb-4">How It Works</h3>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-3">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto font-bold">
-                    1
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
+                    🔐
                   </div>
-                  <h4 className="font-semibold">Connect Wallet</h4>
+                  <h4 className="font-bold text-lg">Secure Authentication</h4>
                   <p className="text-sm text-gray-600">
-                    Securely connect your wallet using signature verification
+                    Non-custodial wallet connection with cryptographic signature verification - your keys never leave your device
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto font-bold">
-                    2
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
+                    🔍
                   </div>
-                  <h4 className="font-semibold">Scan & Analyze</h4>
+                  <h4 className="font-bold text-lg">Deep Chain Analysis</h4>
                   <p className="text-sm text-gray-600">
-                    Advanced forensics engine scans multiple blockchains for recoverable assets
+                    Multi-chain forensics across 50+ networks including hidden tokens, failed transactions, and stuck bridge funds
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto font-bold">
-                    3
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center mx-auto font-bold shadow-lg">
+                    ⚡
                   </div>
-                  <h4 className="font-semibold">Recover Funds</h4>
+                  <h4 className="font-bold text-lg">Instant Execution</h4>
                   <p className="text-sm text-gray-600">
-                    Automated recovery with success-only 15% fee
+                    Automated smart contract interactions with gas optimization - only pay 15% fee on successful recoveries
                   </p>
                 </div>
               </div>

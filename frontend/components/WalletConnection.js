@@ -313,22 +313,7 @@ export default function WalletConnection({ onConnectionChange }) {
           if (signError.code === 4001) {
             setError('Signature rejected. Please try again and approve the signature request.');
           } else {
-            // Try demo mode as fallback
-            console.log('Trying demo mode...');
-            try {
-              const result = await apiService.connectWallet(walletAddress, '0xdemo', message);
-              
-              if (result.success) {
-                setIsConnected(true);
-                setAddress(walletAddress);
-                onConnectionChange?.(result.user);
-                setError('');
-              } else {
-                setError('Connection failed. Please refresh and try again.');
-              }
-            } catch (demoError) {
-              setError('Connection failed. Please refresh the page and try again.');
-            }
+            setError(`Signature failed: ${signError.message || 'Unknown error'}. Please try again.`);
           }
         }
       } else {
@@ -469,30 +454,31 @@ export default function WalletConnection({ onConnectionChange }) {
         ))}
       </div>
       
-      <div className="mt-6">
-        <div className="text-center text-sm text-gray-500 mb-3">
-          Don't see your wallet? Try our universal connector:
+      <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl">
+        <div className="text-center mb-3">
+          <h4 className="font-bold text-gray-800 mb-1">🔗 Don't See Your Wallet?</h4>
+          <p className="text-sm text-gray-600">OKX, Phantom, Coin98, MathWallet, SafePal & 100+ more supported</p>
         </div>
         <button
           onClick={() => handleWalletClick(wallets[wallets.length - 1])}
           disabled={isConnecting}
-          className="w-full flex items-center justify-center space-x-4 p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50 group"
+          className="w-full flex items-center justify-center space-x-4 p-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all disabled:opacity-50 group shadow-lg transform hover:scale-105"
         >
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M21 12C21 13.1 20.1 14 20 14H4C2.9 14 2 13.1 2 12V10C2 8.9 2.9 8 4 8H20C20.1 8 21 8.9 21 10V12Z" fill="currentColor"/>
             </svg>
           </div>
           <div className="flex-1 text-left">
-            <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+            <div className="font-bold text-white">
               Connect Any Wallet
             </div>
-            <div className="text-sm text-gray-500">
-              Auto-detect and connect any Web3 wallet
+            <div className="text-sm text-blue-100">
+              Universal connector for all Web3 wallets
             </div>
           </div>
           {isConnecting && (
-            <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           )}
         </button>
       </div>
@@ -504,7 +490,7 @@ export default function WalletConnection({ onConnectionChange }) {
           </a>
         </p>
         <p className="text-xs">
-          Universal connector supports: Phantom, Solflare, Keplr, Coin98, MathWallet, SafePal, TokenPocket, Brave Wallet, Opera, Frame, Status, and 100+ more
+          Universal connector: OKX, Phantom, Solflare, Keplr, Coin98, MathWallet, SafePal, TokenPocket, Brave, Opera, Frame, Status + 100 more
         </p>
       </div>
 
