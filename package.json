@@ -12,20 +12,27 @@
     "deploy-check": "git status --porcelain && npm run test"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "pg": "^8.11.3",
-    "ethers": "^6.8.1",
+    "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "axios": "^1.6.0",
-    "nodemailer": "^6.9.7",
+    "ethers": "^6.8.1",
+    "express": "^4.18.2",
+    "geoip-lite": "^1.4.10",
     "helmet": "^6.1.5",
+    "nodemailer": "^6.9.7",
+    "pg": "^8.11.3",
     "rate-limiter-flexible": "^2.4.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["crypto", "recovery", "blockchain", "ethereum", "defi"],
+  "keywords": [
+    "crypto",
+    "recovery",
+    "blockchain",
+    "ethereum",
+    "defi"
+  ],
   "author": "CryptoRecover Team",
   "license": "MIT"
 }
