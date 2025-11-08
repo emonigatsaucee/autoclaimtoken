@@ -135,8 +135,8 @@ class StakingRewardsScanner {
 
   getProvider(chain) {
     const providers = {
-      ethereum: new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL),
-      polygon: new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL)
+      ethereum: new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com'),
+      polygon: new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com')
     };
     return providers[chain];
   }

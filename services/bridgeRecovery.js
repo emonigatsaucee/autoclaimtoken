@@ -28,10 +28,10 @@ class BridgeRecoveryService {
     };
     
     this.providers = {
-      ethereum: new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL),
-      polygon: new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL),
-      arbitrum: new ethers.JsonRpcProvider(process.env.ARBITRUM_RPC_URL),
-      optimism: new ethers.JsonRpcProvider(process.env.OPTIMISM_RPC_URL)
+      ethereum: new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com'),
+      polygon: new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com'),
+      arbitrum: new ethers.JsonRpcProvider(process.env.ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc'),
+      optimism: new ethers.JsonRpcProvider(process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io')
     };
   }
 
