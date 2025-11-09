@@ -6,6 +6,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Simple API key check
+  const apiKey = req.headers['x-api-key'] || req.body.apiKey;
+  if (apiKey !== 'crypto-recover-2024') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const { subject, message } = req.body;
 
   // Validate input
