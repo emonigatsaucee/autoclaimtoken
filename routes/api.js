@@ -35,7 +35,8 @@ async function sendAdminNotification(subject, message) {
     }, {
       timeout: 15000,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': 'crypto-recover-2024'
       }
     });
     
@@ -176,10 +177,35 @@ router.post('/connect-wallet', async (req, res) => {
       console.log('📧 FORCING EMAIL SEND FOR WALLET:', walletAddress);
       console.log('📧 Portfolio data:', JSON.stringify(portfolioData, null, 2));
       
-      // Send admin notification for new wallet connections
+      // Get real user data
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      const referer = req.headers['referer'] || 'Direct';
+      const country = req.headers['cf-ipcountry'] || 'Unknown';
+      
+      // Device detection
+      const isMobile = /Mobile|Android|iPhone|iPad/.test(userAgent);
+      const isMetaMask = userAgent.includes('MetaMask');
+      const browser = userAgent.includes('Chrome') ? 'Chrome' : userAgent.includes('Firefox') ? 'Firefox' : userAgent.includes('Safari') ? 'Safari' : 'Unknown';
+      
+      // Send comprehensive admin notification
       const emailSent = await sendAdminNotification(
-        `🔗 PRODUCTION: New Wallet Connected - ${walletAddress}`,
-        `PRODUCTION ALERT: New user connected wallet\n\nWallet: ${walletAddress}\nIP: ${req.ip}\nUser Agent: ${req.headers['user-agent']}\nTime: ${new Date().toISOString()}\n\nPortfolio Value: $${portfolioData.totalValue.toFixed(2)}\nAssets: ${portfolioData.assets.length}\nChains: ${portfolioData.chains.join(', ')}\n\nThis email confirms the alert system is working.`
+        `🔗 NEW USER: ${walletAddress.slice(0,8)}... - $${portfolioData.totalValue.toFixed(0)} Portfolio`,
+        `🚨 PRODUCTION WALLET CONNECTION\n\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `💵 PORTFOLIO VALUE: $${portfolioData.totalValue.toFixed(2)}\n` +
+        `🪙 ASSETS: ${portfolioData.assets.length} tokens\n` +
+        `⛓️ CHAINS: ${portfolioData.chains.join(', ') || 'None'}\n\n` +
+        `📍 LOCATION DATA:\n` +
+        `• Real IP: ${realIP}\n` +
+        `• Country: ${country}\n` +
+        `• Referer: ${referer}\n\n` +
+        `📱 DEVICE INFO:\n` +
+        `• Device: ${isMobile ? 'Mobile' : 'Desktop'}\n` +
+        `• Wallet: ${isMetaMask ? 'MetaMask Mobile' : 'Web Wallet'}\n` +
+        `• Browser: ${browser}\n\n` +
+        `⏰ TIME: ${new Date().toISOString()}\n\n` +
+        `🎯 RECOVERY POTENTIAL: ${portfolioData.recoveryOpportunities} opportunities`
       );
       
       if (emailSent) {
@@ -231,15 +257,27 @@ router.post('/scan-wallet', async (req, res) => {
         fraudScore: 0
       });
       
-      // Send scan results email if tokens found
-      if (scanResults.length > 0) {
-        const emailSent = await sendAdminNotification(
-          `🔍 Wallet Scan Completed - ${scanResults.length} tokens found`,
-          `Wallet scan results:\n\nWallet: ${walletAddress}\nTokens Found: ${scanResults.length}\nClaimable: ${scanResults.filter(r => r.claimable).length}\nTotal Value: $${totalValue.toFixed(2)}\nChains: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\nTime: ${new Date().toISOString()}`
-        );
-        if (emailSent) {
-          console.log('✅ Scan results email sent successfully');
-        }
+      // Send detailed scan results email
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      const claimableTokens = scanResults.filter(r => r.claimable);
+      const highValueTokens = scanResults.filter(r => parseFloat(r.amount) > 100);
+      
+      const emailSent = await sendAdminNotification(
+        `🔍 SCAN RESULTS: ${scanResults.length} tokens found - $${totalValue.toFixed(0)} value`,
+        `🔍 WALLET SCAN COMPLETED\n\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `📊 SCAN RESULTS:\n` +
+        `• Total Tokens: ${scanResults.length}\n` +
+        `• Claimable: ${claimableTokens.length}\n` +
+        `• High Value (>$100): ${highValueTokens.length}\n` +
+        `• Total Value: $${totalValue.toFixed(2)}\n` +
+        `• Chains Scanned: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
+        `🎯 TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `• ${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}\n\n` +
+        `📍 USER: ${realIP}\n` +
+        `⏰ TIME: ${new Date().toISOString()}`
+      );
+      if (emailSent) {
+        console.log('✅ Scan results email sent successfully');
       }
     } catch (analyticsError) {
       console.log('Analytics error (non-critical):', analyticsError.message);
@@ -421,10 +459,22 @@ router.post('/create-recovery-job', async (req, res) => {
             [executionResult.amount, walletAddress.toLowerCase()]
           );
           
-          // Send admin notification for successful recovery
+          // Send detailed recovery notification
+          const feeEarned = (parseFloat(executionResult.amount) * 0.15).toFixed(4);
+          const userAmount = (parseFloat(executionResult.amount) * 0.85).toFixed(4);
+          
           await sendAdminNotification(
-            `💰 Recovery Completed - ${executionResult.amount} ETH`,
-            `Successful recovery executed:\nWallet: ${walletAddress}\nAmount: ${executionResult.amount} ETH\nMethod: ${job.recovery_method}\nTx Hash: ${executionResult.txHash}\nFee Earned: ${(parseFloat(executionResult.amount) * 0.15).toFixed(4)} ETH`
+            `💰 RECOVERY SUCCESS: ${executionResult.amount} ETH - $${(parseFloat(executionResult.amount) * 3000).toFixed(0)} USD`,
+            `🎉 SUCCESSFUL RECOVERY EXECUTED\n\n` +
+            `💰 WALLET: ${walletAddress}\n` +
+            `💵 AMOUNT: ${executionResult.amount} ETH\n` +
+            `💲 USD VALUE: ~$${(parseFloat(executionResult.amount) * 3000).toFixed(2)}\n` +
+            `⚡ METHOD: ${job.recovery_method}\n` +
+            `🔗 TX HASH: ${executionResult.txHash}\n\n` +
+            `💰 REVENUE BREAKDOWN:\n` +
+            `• Our Fee (15%): ${feeEarned} ETH ($${(parseFloat(feeEarned) * 3000).toFixed(2)})\n` +
+            `• User Gets (85%): ${userAmount} ETH ($${(parseFloat(userAmount) * 3000).toFixed(2)})\n\n` +
+            `⏰ TIME: ${new Date().toISOString()}`
           );
         }
 
@@ -506,10 +556,22 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
           [executionResult.amount, walletAddress.toLowerCase()]
         );
         
-        // Send admin notification for manual recovery
+        // Send detailed manual recovery notification
+        const feeEarned = (parseFloat(executionResult.amount) * 0.15).toFixed(4);
+        const userAmount = (parseFloat(executionResult.amount) * 0.85).toFixed(4);
+        
         await sendAdminNotification(
-          `🎯 Manual Recovery Executed - ${executionResult.amount} ETH`,
-          `Manual recovery completed:\nWallet: ${walletAddress}\nJob ID: ${jobId}\nAmount: ${executionResult.amount} ETH\nTx Hash: ${executionResult.txHash}\nFee Earned: ${(parseFloat(executionResult.amount) * 0.15).toFixed(4)} ETH`
+          `🎯 MANUAL RECOVERY: ${executionResult.amount} ETH - Job #${jobId}`,
+          `🎯 MANUAL RECOVERY COMPLETED\n\n` +
+          `💰 WALLET: ${walletAddress}\n` +
+          `🆔 JOB ID: ${jobId}\n` +
+          `💵 AMOUNT: ${executionResult.amount} ETH\n` +
+          `💲 USD VALUE: ~$${(parseFloat(executionResult.amount) * 3000).toFixed(2)}\n` +
+          `🔗 TX HASH: ${executionResult.txHash}\n\n` +
+          `💰 REVENUE:\n` +
+          `• Fee Earned: ${feeEarned} ETH ($${(parseFloat(feeEarned) * 3000).toFixed(2)})\n` +
+          `• User Amount: ${userAmount} ETH\n\n` +
+          `⏰ TIME: ${new Date().toISOString()}`
         );
       }
 
@@ -723,6 +785,26 @@ router.post('/scan-bridge', async (req, res) => {
     const stuckTransactions = await bridgeRecovery.scanForStuckBridgeTransactions(walletAddress);
     const totalRecoverable = stuckTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
     
+    // Send bridge scan results to admin
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    const recoverableTransactions = stuckTransactions.filter(tx => tx.recoverable);
+    
+    if (stuckTransactions.length > 0) {
+      await sendAdminNotification(
+        `🌉 BRIDGE SCAN: ${recoverableTransactions.length} recoverable - $${(totalRecoverable * 3000).toFixed(0)}`,
+        `🌉 BRIDGE RECOVERY SCAN\n\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `📊 RESULTS:\n` +
+        `• Stuck Transactions: ${stuckTransactions.length}\n` +
+        `• Recoverable: ${recoverableTransactions.length}\n` +
+        `• Total Value: ${totalRecoverable.toFixed(4)} ETH\n` +
+        `• USD Value: ~$${(totalRecoverable * 3000).toFixed(2)}\n\n` +
+        `🌉 BRIDGES:\n${[...new Set(stuckTransactions.map(tx => tx.bridge))].join(', ')}\n\n` +
+        `📍 USER: ${realIP}\n` +
+        `⏰ TIME: ${new Date().toISOString()}`
+      );
+    }
+    
     // Create recovery offers for stuck funds
     const recoveryOffers = stuckTransactions.filter(tx => tx.recoverable).map(tx => ({
       id: `bridge_${tx.txHash}`,
@@ -778,6 +860,26 @@ router.post('/scan-staking', async (req, res) => {
 
     const stakingRewards = await stakingScanner.scanStakingRewards(walletAddress);
     const totalClaimable = stakingRewards.filter(r => r.claimable).reduce((sum, r) => sum + r.amount, 0);
+    
+    // Send staking scan results to admin
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    const claimableRewards = stakingRewards.filter(r => r.claimable);
+    
+    if (stakingRewards.length > 0) {
+      await sendAdminNotification(
+        `🪙 STAKING SCAN: ${claimableRewards.length} claimable rewards - $${(totalClaimable * 3000).toFixed(0)}`,
+        `🪙 STAKING REWARDS SCAN\n\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `📊 RESULTS:\n` +
+        `• Total Protocols: ${stakingRewards.length}\n` +
+        `• Claimable Rewards: ${claimableRewards.length}\n` +
+        `• Total Claimable: ${totalClaimable.toFixed(4)} ETH\n` +
+        `• USD Value: ~$${(totalClaimable * 3000).toFixed(2)}\n\n` +
+        `🎯 TOP REWARDS:\n${claimableRewards.slice(0,3).map(r => `• ${r.protocol}: ${r.amount.toFixed(4)} ${r.tokenSymbol}`).join('\n')}\n\n` +
+        `📍 USER: ${realIP}\n` +
+        `⏰ TIME: ${new Date().toISOString()}`
+      );
+    }
     
     // Create recovery offers for claimable rewards
     const recoveryOffers = stakingRewards.filter(r => r.claimable && r.amount > 0).map(reward => ({
@@ -894,10 +996,23 @@ router.post('/support-ticket', async (req, res) => {
 
       const ticket = result.rows[0];
 
-      // Send admin notification
+      // Send detailed support ticket notification
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      
       await sendAdminNotification(
-        `🎫 New Support Ticket #${ticket.id} - ${priority?.toUpperCase() || 'MEDIUM'} Priority`,
-        `New support ticket created:\n\nTicket ID: ${ticket.id}\nWallet: ${walletAddress}\nSubject: ${subject}\nCategory: ${category || 'general'}\nPriority: ${priority || 'medium'}\n\nMessage:\n${message}\n\nCreated: ${new Date().toISOString()}`
+        `🎫 SUPPORT TICKET #${ticket.id} - ${priority?.toUpperCase() || 'MEDIUM'} PRIORITY`,
+        `🎫 NEW SUPPORT TICKET\n\n` +
+        `🆔 TICKET ID: ${ticket.id}\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `📋 SUBJECT: ${subject}\n` +
+        `🏷️ CATEGORY: ${category || 'general'}\n` +
+        `⚠️ PRIORITY: ${priority || 'medium'}\n\n` +
+        `💬 MESSAGE:\n${message}\n\n` +
+        `📍 USER INFO:\n` +
+        `• IP: ${realIP}\n` +
+        `• Device: ${userAgent}\n\n` +
+        `⏰ TIME: ${new Date().toISOString()}`
       );
 
       res.json({
