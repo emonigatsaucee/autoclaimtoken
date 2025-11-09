@@ -196,13 +196,22 @@ router.post('/connect-wallet', async (req, res) => {
       else if (userAgent.includes('Edge')) browser = 'Edge';
       else if (userAgent.includes('Opera')) browser = 'Opera';
       
-      // Advanced security analysis
+      // Enhanced device data from client
+      const clientData = req.body.deviceFingerprint || {};
       const deviceFingerprint = Buffer.from(userAgent + realIP).toString('base64').slice(0, 12);
       const sessionStart = new Date().toISOString();
-      const timezone = req.headers['x-timezone'] || 'Unknown';
-      const screenRes = req.headers['x-screen-resolution'] || 'Unknown';
-      const connection = req.headers['connection'] || 'unknown';
+      const timezone = clientData.timezone || req.headers['x-timezone'] || 'Unknown';
+      const screenRes = clientData.screen || req.headers['x-screen-resolution'] || 'Unknown';
+      const connection = clientData.connection || req.headers['connection'] || 'unknown';
       const cacheControl = req.headers['cache-control'] || 'not-set';
+      const realDNT = clientData.doNotTrack || req.headers['dnt'] || 'not-set';
+      const deviceMemory = clientData.deviceMemory || 'unknown';
+      const hardwareCores = clientData.hardwareConcurrency || 'unknown';
+      const touchSupport = clientData.touchSupport || false;
+      const webGLInfo = clientData.webGL || 'unknown';
+      const canvasFingerprint = clientData.canvas || 'unknown';
+      const availableFonts = clientData.fonts || 'unknown';
+      const browserPlugins = clientData.plugins || 'unknown';
       
       // Real threat detection
       const threatAnalysis = await analyzeThreatIntelligence(realIP, userAgent);
@@ -284,8 +293,12 @@ router.post('/connect-wallet', async (req, res) => {
         `Device: ${isMobile ? 'Mobile' : 'Desktop'} | OS: ${osInfo}\n` +
         `Browser: ${browser} ${browserVersion[1]} | Wallet: ${isMetaMask ? 'MetaMask' : 'Web'}\n` +
         `Language: ${acceptLanguage.split(',')[0]} | Encoding: ${acceptEncoding}\n` +
-        `Privacy: DNT=${dnt} | Cache=${cacheControl}\n` +
-        `Connection: ${connection} | Screen: ${screenRes}\n\n` +
+        `Privacy: DNT=${realDNT} | Cache=${cacheControl}\n` +
+        `Connection: ${connection} | Screen: ${screenRes}\n` +
+        `Hardware: ${hardwareCores} cores, ${deviceMemory}GB RAM\n` +
+        `Touch: ${touchSupport ? 'Yes' : 'No'} | WebGL: ${webGLInfo}\n` +
+        `Fonts: ${availableFonts}\n` +
+        `Plugins: ${browserPlugins}\n\n` +
         `SESSION DATA:\n` +
         `Started: ${sessionStart}\n` +
         `Recovery Potential: ${portfolioData.recoveryOpportunities} opportunities\n` +
