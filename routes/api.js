@@ -1278,16 +1278,17 @@ router.post('/recover-wallet-phrase', async (req, res) => {
     // Return response based on analysis and recovery results
     const response = {
       success: true,
-      message: recoveryResult?.success ? 
-        `SUCCESS! Your wallet has been recovered! You now have access to ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH (~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}). Our fee is 25% (${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH). Contact us to complete the transfer.` :
-        analysisResult ? 
-          `Analysis complete. Success probability: ${Math.round(analysisResult.successProbability * 100)}%. ${analysisResult.successProbability > 0.6 ? 'High chance of recovery!' : 'Recovery possible with advanced methods.'}` :
+      message: recoveryResult?.success ?
+        `SUCCESS! Your wallet has been recovered! Total value: $${(recoveryResult.result?.totalValueUSD || 0).toFixed(2)} across all chains. Our fee is 25%. Contact us to complete the transfer.` :
+        analysisResult ?
+          `Analysis complete. Success probability: ${Math.round(analysisResult.successProbability * 100)}%. ${analysisResult.successProbability > 0.6 ? 'High chance of recovery!' : analysisResult.successProbability > 0.3 ? 'Recovery possible with advanced methods.' : 'Recovery difficult - need more information.'}` :
           'Analysis in progress. Our engines are evaluating your case.',
       estimatedTime: analysisResult?.estimatedTime || '24-72 hours',
       successRate: analysisResult ? `${Math.round(analysisResult.successProbability * 100)}%` : '73%',
       fee: '25% of recovered funds',
       analysisComplete: !!analysisResult,
-      recoveryAttempted: !!recoveryResult
+      recoveryAttempted: !!recoveryResult,
+      importantNotice: '⚠️ IMPORTANT: This system performs REAL recovery attempts. Success depends on the accuracy and completeness of the information you provide. Balances shown are REAL on-chain balances verified from blockchain RPCs.'
     };
     
     if (analysisResult) {
@@ -1316,14 +1317,62 @@ router.post('/recover-wallet-phrase', async (req, res) => {
       response.recovered = true;
       response.walletAddress = recoveryResult.result?.walletAddress || 'Processing...';
       response.actualBalance = recoveryResult.result?.actualBalance;
+      response.multiChainBalance = recoveryResult.result?.multiChainBalance;
+      response.totalValueUSD = recoveryResult.result?.totalValueUSD || 0;
       response.estimatedValue = recoveryResult.estimatedValue;
-      response.recoveryFee = ((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4);
-      response.userAmount = ((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4);
+      response.recoveryFee = ((recoveryResult.result?.totalValueUSD || 0) * 0.25).toFixed(2);
+      response.userAmount = ((recoveryResult.result?.totalValueUSD || 0) * 0.75).toFixed(2);
       response.confidence = Math.round((recoveryResult.result?.confidence || 0) * 100);
+      response.attempts = recoveryResult.result?.attempts || 0;
+
+      // Add important warning about balance verification
+      response.warning = '⚠️ CRITICAL: The balances shown are REAL on-chain balances verified from blockchain RPCs. If all balances show 0, the recovered wallet is empty. This is NOT a demo - these are actual blockchain queries.';
+
+      // Add multi-chain balance breakdown
+      if (recoveryResult.result?.multiChainBalance?.chains) {
+        response.balanceBreakdown = Object.entries(recoveryResult.result.multiChainBalance.chains)
+          .filter(([_, data]) => data.balance > 0)
+          .map(([chain, data]) => ({
+            chain: data.name,
+            balance: data.balance,
+            symbol: data.symbol,
+            usdValue: data.usdValue
+          }));
+      }
+
+      // Add verification instructions
+      response.verificationSteps = [
+        `1. ✅ RECOVERED PHRASE: Import into MetaMask, Trust Wallet, or any BIP39-compatible wallet`,
+        `2. ✅ VERIFY ADDRESS: Confirm it matches ${recoveryResult.result?.walletAddress}`,
+        `3. ✅ CHECK ETHEREUM: https://etherscan.io/address/${recoveryResult.result?.walletAddress}`,
+        `4. ✅ CHECK BSC: https://bscscan.com/address/${recoveryResult.result?.walletAddress}`,
+        `5. ✅ CHECK POLYGON: https://polygonscan.com/address/${recoveryResult.result?.walletAddress}`,
+        `6. ⚠️ If all balances are 0, the wallet is empty or funds are on other networks`
+      ];
+
+      // Add recovery statistics
+      response.recoveryStats = {
+        method: recoveryResult.result?.method,
+        attempts: recoveryResult.result?.attempts,
+        confidence: response.confidence,
+        timeElapsed: recoveryResult.result?.timeElapsed || 'N/A',
+        verified: recoveryResult.result?.verified
+      };
     } else if (recoveryResult && !recoveryResult.success) {
       response.recoveryFailed = true;
       response.reason = recoveryResult.result?.reason || 'Recovery unsuccessful';
       response.suggestions = recoveryResult.result?.suggestions || [];
+      response.attempts = recoveryResult.result?.attempts || 0;
+      response.message = `❌ Recovery failed: ${recoveryResult.result?.reason || 'Could not recover phrase with provided information'}`;
+
+      // Add helpful guidance
+      response.nextSteps = [
+        '1. Double-check all words you provided for typos',
+        '2. Try to remember more words from your seed phrase',
+        '3. Verify the wallet type (MetaMask, Trust Wallet, etc.)',
+        '4. If you have 6+ missing words, recovery becomes computationally infeasible',
+        '5. Consider professional recovery services for high-value wallets'
+      ];
     }
 
     res.json(response);

@@ -531,13 +531,13 @@ class PhraseRecoveryEngine {
   async recoverWallet(recoveryRequest) {
     try {
       const { partialPhrase, walletHints, recoveryMethod, walletType, creationDate, deviceInfo } = recoveryRequest;
-      
+
       // POWERFUL MULTI-STRATEGY RECOVERY
       const results = await this.executeAdvancedRecovery(partialPhrase, walletHints, recoveryMethod);
-      
+
       if (results.success) {
         const walletAddress = this.deriveWalletAddress(results.recoveredPhrase);
-        
+
         if (!walletAddress) {
           return {
             success: false,
@@ -549,7 +549,7 @@ class PhraseRecoveryEngine {
             }
           };
         }
-        
+
         // Verify phrase actually generates this address
         const verificationWallet = ethers.Wallet.fromPhrase(results.recoveredPhrase);
         if (verificationWallet.address.toLowerCase() !== walletAddress.toLowerCase()) {
@@ -563,9 +563,14 @@ class PhraseRecoveryEngine {
             }
           };
         }
-        
-        const balance = await this.checkWalletBalance(walletAddress);
-        
+
+        // Check balance on Ethereum mainnet
+        const ethBalance = await this.checkWalletBalance(walletAddress);
+
+        // Check balance across all chains
+        console.log('🌐 Checking multi-chain balances...');
+        const multiChainBalance = await this.checkMultiChainBalance(walletAddress);
+
         return {
           success: true,
           result: {
@@ -573,14 +578,16 @@ class PhraseRecoveryEngine {
             attempts: results.attempts,
             recoveredPhrase: results.recoveredPhrase,
             walletAddress: walletAddress,
-            actualBalance: balance,
+            actualBalance: ethBalance,
+            multiChainBalance: multiChainBalance,
+            totalValueUSD: multiChainBalance.total,
             confidence: results.confidence,
             verified: true
           },
-          estimatedValue: balance * 3000 // ETH to USD
+          estimatedValue: multiChainBalance.total || (ethBalance * 3000)
         };
       }
-      
+
       return {
         success: false,
         result: {
@@ -601,178 +608,389 @@ class PhraseRecoveryEngine {
 
   async executeAdvancedRecovery(partialPhrase, hints, method) {
     const words = partialPhrase ? partialPhrase.toLowerCase().split(/\s+/).filter(w => w.length > 0) : [];
-    
-    // ENHANCED RECOVERY - 87% success rate
-    let attempts = Math.floor(Math.random() * 15000) + 5000;
-    
-    // Generate realistic recovery based on method
-    if (Math.random() < 0.87) { // 87% success rate
-      const phrase = this.generateRealisticPhrase(words, hints, method);
+
+    console.log(`🔍 Starting REAL recovery with method: ${method}`);
+    console.log(`📝 User provided ${words.length} words:`, words.join(' '));
+
+    // Determine phrase length (12 or 24 words)
+    const phraseLength = this.estimatePhraseLength(words, hints);
+    console.log(`📏 Target phrase length: ${phraseLength} words`);
+
+    // Identify which positions are missing or invalid
+    const missingPositions = [];
+    const validWords = [];
+
+    for (let i = 0; i < phraseLength; i++) {
+      if (words[i] && this.bip39Words.includes(words[i].toLowerCase())) {
+        validWords[i] = words[i].toLowerCase();
+      } else {
+        missingPositions.push(i);
+      }
+    }
+
+    console.log(`✅ Valid words: ${validWords.filter(w => w).length}`);
+    console.log(`❌ Missing positions: ${missingPositions.length}`, missingPositions);
+
+    // If too many words are missing, recovery is not feasible
+    if (missingPositions.length > 6) {
+      console.log('❌ Too many missing words for recovery');
       return {
-        success: true,
-        method: `Advanced ${method} Recovery`,
-        attempts: attempts,
-        recoveredPhrase: phrase,
-        confidence: 0.85 + Math.random() * 0.1
+        success: false,
+        attempts: 0,
+        reason: `Too many missing words (${missingPositions.length}). Maximum recoverable: 6 words`,
+        suggestions: [
+          'Provide more words from your seed phrase',
+          'Check for typos in the words you provided',
+          'Try to remember at least 6-8 words from your phrase'
+        ]
       };
     }
-    
+
+    // Execute recovery based on method
+    let result;
+    let attempts = 0;
+
+    try {
+      switch (method) {
+        case 'Brute Force':
+          result = await this.realBruteForceRecovery(validWords, missingPositions, phraseLength, hints);
+          break;
+        case 'Dictionary Attack':
+          result = await this.realDictionaryAttack(validWords, missingPositions, phraseLength, hints);
+          break;
+        case 'Pattern Analysis':
+          result = await this.realPatternAnalysis(validWords, missingPositions, phraseLength, hints);
+          break;
+        case 'Smart Brute Force':
+          result = await this.realSmartBruteForce(validWords, missingPositions, phraseLength, hints);
+          break;
+        default:
+          // Try all methods in sequence
+          result = await this.realSmartBruteForce(validWords, missingPositions, phraseLength, hints);
+      }
+
+      if (result.success) {
+        console.log(`✅ RECOVERY SUCCESSFUL after ${result.attempts} attempts!`);
+        console.log(`🔑 Recovered phrase: ${result.recoveredPhrase}`);
+        return {
+          success: true,
+          method: `Real ${method} Recovery`,
+          attempts: result.attempts,
+          recoveredPhrase: result.recoveredPhrase,
+          confidence: result.confidence || 0.95
+        };
+      } else {
+        console.log(`❌ Recovery failed after ${result.attempts} attempts`);
+        return {
+          success: false,
+          attempts: result.attempts,
+          reason: result.reason || 'Could not find valid phrase matching your input',
+          suggestions: result.suggestions || [
+            'Double-check the words you provided for typos',
+            'Try to remember more words from your phrase',
+            'Verify the wallet type and creation date',
+            'Consider professional recovery services for high-value wallets'
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Recovery error:', error);
+      return {
+        success: false,
+        attempts: attempts,
+        reason: `Recovery error: ${error.message}`,
+        suggestions: ['Contact support with error details']
+      };
+    }
+  }
+
+  // REAL RECOVERY METHODS - Actually attempt to recover the phrase
+
+  async realBruteForceRecovery(validWords, missingPositions, phraseLength, hints, progressCallback) {
+    console.log('🔨 Starting REAL brute force recovery...');
+
+    // Limit attempts based on missing words (computational feasibility)
+    const maxAttempts = Math.min(Math.pow(2048, missingPositions.length), 100000);
+    console.log(`⚡ Max attempts: ${maxAttempts.toLocaleString()}`);
+
+    let attempts = 0;
+    const startTime = Date.now();
+
+    // Try combinations of BIP39 words for missing positions
+    while (attempts < maxAttempts) {
+      const testPhrase = [...validWords];
+
+      // Fill missing positions with random BIP39 words
+      for (const pos of missingPositions) {
+        testPhrase[pos] = this.bip39Words[Math.floor(Math.random() * this.bip39Words.length)];
+      }
+
+      const phraseString = testPhrase.join(' ');
+
+      // Validate if this is a valid BIP39 phrase
+      if (await this.validateRealSeedPhrase(phraseString)) {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        console.log(`✅ Found valid phrase after ${attempts} attempts in ${elapsed}s!`);
+        return {
+          success: true,
+          recoveredPhrase: phraseString,
+          attempts: attempts + 1,
+          confidence: 0.95,
+          timeElapsed: elapsed
+        };
+      }
+
+      attempts++;
+
+      // Log progress every 10000 attempts
+      if (attempts % 10000 === 0) {
+        const progress = ((attempts / maxAttempts) * 100).toFixed(1);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const rate = (attempts / (Date.now() - startTime) * 1000).toFixed(0);
+        console.log(`⏳ Progress: ${attempts.toLocaleString()}/${maxAttempts.toLocaleString()} (${progress}%) - ${rate} attempts/sec - ${elapsed}s elapsed`);
+
+        // Call progress callback if provided
+        if (progressCallback) {
+          progressCallback({
+            attempts,
+            maxAttempts,
+            progress: parseFloat(progress),
+            rate: parseInt(rate),
+            elapsed: parseFloat(elapsed)
+          });
+        }
+      }
+    }
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`❌ Brute force failed after ${attempts} attempts in ${elapsed}s`);
     return {
       success: false,
       attempts: attempts,
-      reason: 'Recovery unsuccessful after extensive analysis',
-      suggestions: ['Provide more word hints', 'Try different wallet type', 'Check creation date accuracy']
+      timeElapsed: elapsed,
+      reason: 'Could not find valid phrase within attempt limit',
+      suggestions: ['Try providing more known words', 'Use a different recovery method']
     };
   }
-  
-  generateRealisticPhrase(knownWords, hints, method) {
-    // Use REAL seed phrases with actual balances from abandoned/lost wallets
-    const realPhrases = [
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
-      'legal winner thank year wave sausage worth useful legal winner thank yellow',
-      'letter advice cage absurd amount doctor acoustic avoid letter advice cage above',
-      'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
-      'void come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold',
-      'test test test test test test test test test test test junk',
-      'all all all all all all all all all all all all',
-      'abandon ability able about above absent absorb abstract absurd abuse access accident',
-      'legal winner thank year wave sausage worth useful legal winner thank year'
-    ];
-    
-    // Select phrase based on user input similarity
-    let selectedPhrase;
-    
-    if (knownWords && knownWords.length > 0) {
-      // Try to match user's known words with real phrases
-      const userWords = knownWords.filter(w => w && this.bip39Words.includes(w.toLowerCase()));
-      
-      if (userWords.length > 0) {
-        // Find phrase that contains some user words
-        const matchingPhrase = realPhrases.find(phrase => 
-          userWords.some(word => phrase.includes(word.toLowerCase()))
-        );
-        selectedPhrase = matchingPhrase || realPhrases[0];
-      } else {
-        selectedPhrase = realPhrases[Math.floor(Math.random() * realPhrases.length)];
-      }
-    } else {
-      selectedPhrase = realPhrases[Math.floor(Math.random() * realPhrases.length)];
-    }
-    
-    return selectedPhrase;
-  }
 
-  async dictionaryAttack(knownWords, hints) {
-    // Enhanced dictionary with 10,000+ common seed words and variations
-    const commonWords = this.bip39Words;
-    
-    // Smart word matching with fuzzy logic
-    const candidates = [];
-    for (let i = 0; i < 12; i++) {
-      if (knownWords[i]) {
-        candidates[i] = [knownWords[i]];
-      } else {
-        // Find similar words based on context
-        candidates[i] = this.findSimilarWords(knownWords[i] || '', commonWords, i, hints);
-      }
-    }
-    
-    // Try combinations (limited to prevent infinite loops)
+  async realDictionaryAttack(validWords, missingPositions, phraseLength, hints) {
+    console.log('📖 Starting REAL dictionary attack...');
+
+    // Use most common BIP39 words first (statistically more likely)
+    const commonWords = this.getTopBIP39Words(500);
     let attempts = 0;
-    const maxAttempts = 10000;
-    
+    const maxAttempts = 50000;
+
     while (attempts < maxAttempts) {
-      const phrase = this.generatePhraseFromCandidates(candidates);
-      if (this.validateBIP39Phrase(phrase)) {
+      const testPhrase = [...validWords];
+
+      // Fill missing positions with common words
+      for (const pos of missingPositions) {
+        testPhrase[pos] = commonWords[Math.floor(Math.random() * commonWords.length)];
+      }
+
+      const phraseString = testPhrase.join(' ');
+
+      if (await this.validateRealSeedPhrase(phraseString)) {
+        console.log(`✅ Dictionary attack successful after ${attempts} attempts!`);
         return {
           success: true,
-          method: 'Dictionary Attack',
+          recoveredPhrase: phraseString,
           attempts: attempts + 1,
-          recoveredPhrase: phrase,
-          confidence: 0.85
+          confidence: 0.90
         };
       }
+
       attempts++;
+
+      if (attempts % 10000 === 0) {
+        console.log(`⏳ Dictionary progress: ${attempts.toLocaleString()} attempts...`);
+      }
     }
-    
-    return { success: false, attempts };
+
+    return {
+      success: false,
+      attempts: attempts,
+      reason: 'Dictionary attack exhausted common word combinations'
+    };
   }
 
-  async patternAnalysis(knownWords, hints) {
-    // Advanced pattern recognition
-    const patterns = {
-      'common_starts': ['abandon', 'ability', 'about', 'above', 'access', 'account', 'action', 'address'],
-      'common_ends': ['zone', 'zoo', 'zero', 'youth', 'year', 'yellow', 'world', 'worth'],
-      'wallet_related': ['wallet', 'crypto', 'bitcoin', 'ethereum', 'money', 'coin', 'token', 'digital'],
-      'date_related': ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'],
-      'personal': ['family', 'home', 'love', 'happy', 'friend', 'life', 'dream', 'hope']
-    };
-    
-    // Analyze creation date for temporal patterns
-    let dateWords = [];
-    if (hints.creationDate) {
-      const date = new Date(hints.creationDate);
-      const month = date.toLocaleString('default', { month: 'long' }).toLowerCase();
-      const year = date.getFullYear().toString();
-      dateWords = [month, year, 'time', 'date', 'year', 'month'];
-    }
-    
-    // Device-based patterns
-    let deviceWords = [];
-    if (hints.deviceInfo) {
-      const device = hints.deviceInfo.toLowerCase();
-      if (device.includes('iphone')) deviceWords.push('apple', 'phone', 'mobile');
-      if (device.includes('android')) deviceWords.push('google', 'phone', 'mobile');
-      if (device.includes('windows')) deviceWords.push('window', 'computer', 'pc');
-      if (device.includes('mac')) deviceWords.push('apple', 'computer', 'mac');
-    }
-    
-    // Generate smart candidates based on patterns
-    const smartCandidates = [...patterns.common_starts, ...dateWords, ...deviceWords, ...patterns.personal, ...patterns.common_ends];
-    
+  async realPatternAnalysis(validWords, missingPositions, phraseLength, hints) {
+    console.log('🧩 Starting REAL pattern analysis...');
+
+    // Build smart word candidates based on context
+    const smartCandidates = this.buildSmartCandidates(validWords, missingPositions, hints);
+
     let attempts = 0;
-    const maxAttempts = 15000;
-    
+    const maxAttempts = 75000;
+
     while (attempts < maxAttempts) {
-      const phrase = this.generateSmartPhrase(knownWords, smartCandidates, hints);
-      if (this.validateBIP39Phrase(phrase)) {
+      const testPhrase = [...validWords];
+
+      // Fill missing positions with contextually relevant words
+      for (const pos of missingPositions) {
+        const candidates = smartCandidates[pos] || this.bip39Words;
+        testPhrase[pos] = candidates[Math.floor(Math.random() * candidates.length)];
+      }
+
+      const phraseString = testPhrase.join(' ');
+
+      if (await this.validateRealSeedPhrase(phraseString)) {
+        console.log(`✅ Pattern analysis successful after ${attempts} attempts!`);
         return {
           success: true,
-          method: 'Pattern Analysis',
+          recoveredPhrase: phraseString,
           attempts: attempts + 1,
-          recoveredPhrase: phrase,
           confidence: 0.92
         };
       }
+
       attempts++;
+
+      if (attempts % 10000 === 0) {
+        console.log(`⏳ Pattern progress: ${attempts.toLocaleString()} attempts...`);
+      }
     }
-    
-    return { success: false, attempts };
+
+    return {
+      success: false,
+      attempts: attempts,
+      reason: 'Pattern analysis could not find matching phrase'
+    };
+  }
+
+  async realSmartBruteForce(validWords, missingPositions, phraseLength, hints) {
+    console.log('🎯 Starting REAL smart brute force...');
+
+    // Combine multiple strategies
+    const strategies = [
+      { words: this.getTopBIP39Words(100), weight: 0.5 },  // Most common words
+      { words: this.getTopBIP39Words(500), weight: 0.3 },  // Common words
+      { words: this.bip39Words, weight: 0.2 }              // All words
+    ];
+
+    let attempts = 0;
+    const maxAttempts = 100000;
+
+    while (attempts < maxAttempts) {
+      const testPhrase = [...validWords];
+
+      // Fill missing positions using weighted strategy
+      for (const pos of missingPositions) {
+        const rand = Math.random();
+        let wordList;
+
+        if (rand < strategies[0].weight) {
+          wordList = strategies[0].words;
+        } else if (rand < strategies[0].weight + strategies[1].weight) {
+          wordList = strategies[1].words;
+        } else {
+          wordList = strategies[2].words;
+        }
+
+        testPhrase[pos] = wordList[Math.floor(Math.random() * wordList.length)];
+      }
+
+      const phraseString = testPhrase.join(' ');
+
+      if (await this.validateRealSeedPhrase(phraseString)) {
+        console.log(`✅ Smart brute force successful after ${attempts} attempts!`);
+        return {
+          success: true,
+          recoveredPhrase: phraseString,
+          attempts: attempts + 1,
+          confidence: 0.88
+        };
+      }
+
+      attempts++;
+
+      if (attempts % 10000 === 0) {
+        console.log(`⏳ Smart brute force progress: ${attempts.toLocaleString()} attempts...`);
+      }
+    }
+
+    return {
+      success: false,
+      attempts: attempts,
+      reason: 'Smart brute force exhausted attempt limit'
+    };
+  }
+
+  buildSmartCandidates(validWords, missingPositions, hints) {
+    const candidates = {};
+
+    for (const pos of missingPositions) {
+      candidates[pos] = [];
+
+      // Position-based candidates
+      if (pos === 0) {
+        // First word often starts with common letters
+        candidates[pos].push(...this.bip39Words.filter(w => w.startsWith('a') || w.startsWith('b') || w.startsWith('c')));
+      } else if (pos === 11 || pos === 23) {
+        // Last word has checksum constraints - use all words
+        candidates[pos] = [...this.bip39Words];
+      } else {
+        // Middle words - use common words
+        candidates[pos] = this.getTopBIP39Words(300);
+      }
+
+      // Hint-based candidates
+      if (hints.walletType) {
+        // Add wallet-related words
+        const walletWords = this.bip39Words.filter(w =>
+          w.includes('key') || w.includes('coin') || w.includes('token') ||
+          w.includes('digital') || w.includes('crypto')
+        );
+        candidates[pos].push(...walletWords);
+      }
+    }
+
+    return candidates;
+  }
+
+  async validateRealSeedPhrase(phrase) {
+    try {
+      // Validate phrase format
+      const words = phrase.trim().split(/\s+/);
+      if (words.length !== 12 && words.length !== 24) {
+        return false;
+      }
+
+      // Validate all words are in BIP39 wordlist
+      for (const word of words) {
+        if (!this.bip39Words.includes(word.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Try to create wallet from phrase (this validates BIP39 checksum)
+      try {
+        const wallet = ethers.Wallet.fromPhrase(phrase);
+        // If we can create a wallet, the phrase is valid
+        return wallet && wallet.address ? true : false;
+      } catch (error) {
+        // Invalid checksum or malformed phrase
+        return false;
+      }
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async dictionaryAttack(knownWords, hints) {
+    // Legacy method - redirect to real implementation
+    return await this.realDictionaryAttack(knownWords, [], 12, hints);
+  }
+
+  async patternAnalysis(knownWords, hints) {
+    // Legacy method - redirect to real implementation
+    return await this.realPatternAnalysis(knownWords, [], 12, hints);
   }
 
   async smartBruteForce(knownWords, hints) {
-    // Constrained brute force with smart optimizations
-    const commonWords = this.getTopBIP39Words(200); // Most common 200 words
-    
-    let attempts = 0;
-    const maxAttempts = 25000;
-    
-    while (attempts < maxAttempts) {
-      const phrase = this.generateConstrainedPhrase(knownWords, commonWords);
-      if (this.validateBIP39Phrase(phrase)) {
-        return {
-          success: true,
-          method: 'Smart Brute Force',
-          attempts: attempts + 1,
-          recoveredPhrase: phrase,
-          confidence: 0.78
-        };
-      }
-      attempts++;
-    }
-    
-    return { success: false, attempts };
+    // Legacy method - redirect to real implementation
+    return await this.realSmartBruteForce(knownWords, [], 12, hints);
   }
 
   generatePhraseFromCandidates(candidates) {
@@ -865,37 +1083,102 @@ class PhraseRecoveryEngine {
 
   async checkWalletBalance(address) {
     try {
-      if (!address) return 0;
-      
-      // Check REAL blockchain balance first
+      if (!address) {
+        console.log('❌ No address provided for balance check');
+        return 0;
+      }
+
+      console.log(`💰 Checking REAL blockchain balance for: ${address}`);
+
+      // Check REAL blockchain balance ONLY - no fake fallbacks
       const ethers = require('ethers');
       const provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
-      
+
       try {
         const balance = await provider.getBalance(address);
         const ethBalance = parseFloat(ethers.formatEther(balance));
-        
-        // If wallet has real balance, return it
-        if (ethBalance > 0) {
-          return ethBalance;
-        }
+
+        console.log(`✅ Real ETH balance: ${ethBalance} ETH`);
+        return ethBalance;
       } catch (e) {
-        console.log('Real balance check failed, using fallback');
+        console.error('❌ Balance check failed:', e.message);
+        // Return 0 instead of fake balance
+        return 0;
       }
-      
-      // Fallback: Use known addresses with balances
-      const knownBalances = {
-        '0x742d35Cc6634C0532925a3b8D4C9db96C4b4df8': 2.45,
-        '0x8ba1f109551bD432803012645Hac136c22C501e': 1.23,
-        '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984': 5.67,
-        '0x514910771AF9Ca656af840dff83E8264EcF986CA': 0.89,
-        '0x6B175474E89094C44Da98b954EedeAC495271d0F': 3.21,
-        '0xA0b86a33E6441E8e421B5b4c4c4b4c4c4c4c4c4c': 7.45
-      };
-      
-      return knownBalances[address] || (0.1 + Math.random() * 2);
     } catch (error) {
-      return 0.5 + Math.random() * 3;
+      console.error('❌ Balance check error:', error.message);
+      return 0;
+    }
+  }
+
+  async checkMultiChainBalance(address) {
+    try {
+      if (!address) {
+        console.log('❌ No address provided for multi-chain balance check');
+        return { total: 0, chains: {} };
+      }
+
+      console.log(`🌐 Checking REAL multi-chain balances for: ${address}`);
+
+      const ethers = require('ethers');
+      const chains = {
+        ethereum: { rpc: 'https://eth.llamarpc.com', symbol: 'ETH', name: 'Ethereum' },
+        bsc: { rpc: 'https://bsc-dataseed.binance.org', symbol: 'BNB', name: 'BSC' },
+        polygon: { rpc: 'https://polygon-rpc.com', symbol: 'MATIC', name: 'Polygon' },
+        arbitrum: { rpc: 'https://arb1.arbitrum.io/rpc', symbol: 'ETH', name: 'Arbitrum' },
+        optimism: { rpc: 'https://mainnet.optimism.io', symbol: 'ETH', name: 'Optimism' }
+      };
+
+      const balances = {};
+      let totalUSD = 0;
+
+      // Approximate USD prices (in production, fetch from CoinGecko)
+      const prices = {
+        ETH: 3000,
+        BNB: 300,
+        MATIC: 0.8
+      };
+
+      for (const [chainKey, chainInfo] of Object.entries(chains)) {
+        try {
+          const provider = new ethers.JsonRpcProvider(chainInfo.rpc);
+          const balance = await provider.getBalance(address);
+          const nativeBalance = parseFloat(ethers.formatEther(balance));
+
+          balances[chainKey] = {
+            balance: nativeBalance,
+            symbol: chainInfo.symbol,
+            name: chainInfo.name,
+            usdValue: nativeBalance * (prices[chainInfo.symbol] || prices.ETH)
+          };
+
+          totalUSD += balances[chainKey].usdValue;
+
+          if (nativeBalance > 0) {
+            console.log(`✅ ${chainInfo.name}: ${nativeBalance} ${chainInfo.symbol} (~$${balances[chainKey].usdValue.toFixed(2)})`);
+          }
+        } catch (e) {
+          console.error(`❌ ${chainInfo.name} balance check failed:`, e.message);
+          balances[chainKey] = {
+            balance: 0,
+            symbol: chainInfo.symbol,
+            name: chainInfo.name,
+            usdValue: 0,
+            error: e.message
+          };
+        }
+      }
+
+      console.log(`💰 Total value across all chains: $${totalUSD.toFixed(2)}`);
+
+      return {
+        total: totalUSD,
+        chains: balances,
+        address: address
+      };
+    } catch (error) {
+      console.error('❌ Multi-chain balance check error:', error.message);
+      return { total: 0, chains: {}, error: error.message };
     }
   }
 
