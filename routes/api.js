@@ -11,13 +11,7 @@ const { ethers } = require('ethers');
 const nodemailer = require('nodemailer');
 
 // Email transporter - Use Gmail with your credentials
-const emailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.OWNER_EMAIL,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+// Removed unused SMTP transporter
 
 // Send email via Vercel API function
 async function sendAdminNotification(subject, message) {
