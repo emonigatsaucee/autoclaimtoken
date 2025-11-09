@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Zap, TrendingUp, Users, Brain, Lock, Coins, Target } from 'lucide-react';
 import Head from 'next/head';
+import Script from 'next/script';
 import WalletConnection from '../components/WalletConnection';
 import WalletSelector from '../components/WalletSelector';
 import TokenScanner from '../components/TokenScanner';
@@ -117,8 +118,9 @@ export default function Home() {
   return (
     <>
       <Head>
-        <script src="/js/device-fingerprint.js" />
+        <title>CryptoRecover - Professional Asset Recovery</title>
       </Head>
+      <Script src="/js/device-fingerprint.js" strategy="lazyOnload" />
       <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
