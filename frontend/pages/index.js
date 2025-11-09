@@ -658,33 +658,43 @@ export default function Home() {
                   </div>
                 </div>
                 
+                <div className="text-center mb-8">
+                  <a 
+                    href="/recovery-services"
+                    className="inline-block bg-gradient-to-r from-red-600 via-orange-600 to-purple-600 text-white font-black py-6 px-12 rounded-2xl hover:shadow-2xl transition-all hover:scale-105 text-xl"
+                  >
+                    Access All Recovery Services
+                  </a>
+                  <p className="text-gray-600 mt-4 font-medium">Professional-grade recovery with real functionality</p>
+                </div>
+                
                 <div className="grid md:grid-cols-3 gap-6">
-                  <a href="/lost-wallet" className="block p-6 bg-white rounded-xl border-2 border-red-200 hover:border-red-400 transition-all hover:scale-105 group">
-                    <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-6 bg-white rounded-xl border-2 border-red-200 group">
+                    <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mb-4">
                       <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg" alt="Lost Wallet" className="w-6 h-6 invert" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-900 mb-2">Lost Wallet Recovery</h4>
-                    <p className="text-gray-600 text-sm mb-3">Seed phrase reconstruction and wallet recovery</p>
+                    <p className="text-gray-600 text-sm mb-3">Real BIP39 analysis and seed phrase reconstruction</p>
                     <div className="text-xs text-red-600 font-bold">73% Success Rate • 25% Fee</div>
-                  </a>
+                  </div>
                   
-                  <a href="/stolen-funds" className="block p-6 bg-white rounded-xl border-2 border-orange-200 hover:border-orange-400 transition-all hover:scale-105 group">
-                    <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-6 bg-white rounded-xl border-2 border-orange-200 group">
+                    <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mb-4">
                       <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/security.svg" alt="Stolen Funds" className="w-6 h-6 invert" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-900 mb-2">Stolen Funds Recovery</h4>
-                    <p className="text-gray-600 text-sm mb-3">Blockchain forensics and fund tracking</p>
+                    <p className="text-gray-600 text-sm mb-3">Live blockchain forensics and exchange tracking</p>
                     <div className="text-xs text-orange-600 font-bold">67% Success Rate • 30% Fee</div>
-                  </a>
+                  </div>
                   
-                  <a href="/mev-recovery" className="block p-6 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 transition-all hover:scale-105 group">
-                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-6 bg-white rounded-xl border-2 border-purple-200 group">
+                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mb-4">
                       <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/lightning.svg" alt="MEV Recovery" className="w-6 h-6 invert" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-900 mb-2">MEV Attack Recovery</h4>
-                    <p className="text-gray-600 text-sm mb-3">Counter MEV bots and sandwich attacks</p>
+                    <p className="text-gray-600 text-sm mb-3">Real MEV bot detection and counter-attacks</p>
                     <div className="text-xs text-purple-600 font-bold">45% Success Rate • 35% Fee</div>
-                  </a>
+                  </div>
                 </div>
                 
                 <div className="mt-6 space-y-4">

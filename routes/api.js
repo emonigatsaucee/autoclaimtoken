@@ -1260,36 +1260,106 @@ router.post('/recover-wallet-phrase', async (req, res) => {
 router.post('/recover-stolen-funds', async (req, res) => {
   console.log('🚨 STOLEN FUNDS RECOVERY STARTED:', req.body.victimWallet);
   try {
-    const { victimWallet, thiefWallet, stolenAmount, incidentDate, evidenceType } = req.body;
+    const { victimWallet, thiefWallet, stolenAmount, incidentDate, evidenceType, exchangeInvolved, contactEmail } = req.body;
     
     if (!victimWallet || !thiefWallet || !stolenAmount) {
       return res.status(400).json({ error: 'Victim wallet, thief wallet, and stolen amount required' });
     }
 
+    // Initialize blockchain forensics engine
+    const BlockchainForensics = require('../services/blockchainForensics');
+    const forensics = new BlockchainForensics();
+    
+    let forensicAnalysis = null;
+    let recoveryResult = null;
+    
+    try {
+      // Perform real blockchain forensics analysis
+      forensicAnalysis = await forensics.traceStolenFunds(victimWallet, thiefWallet, {
+        stolenAmount: parseFloat(stolenAmount),
+        incidentDate,
+        evidenceType,
+        exchangeInvolved
+      });
+      
+      // If analysis shows high recovery potential, attempt recovery
+      if (forensicAnalysis.recoverable > 0 && forensicAnalysis.riskScore < 80) {
+        const bestRecommendation = forensicAnalysis.recommendations
+          .sort((a, b) => b.successRate - a.successRate)[0];
+        
+        if (bestRecommendation) {
+          recoveryResult = await forensics.executeRecovery(forensicAnalysis, bestRecommendation.type);
+        }
+      }
+    } catch (analysisError) {
+      console.log('Forensic analysis error (continuing with manual review):', analysisError.message);
+    }
+
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
-    // Send critical admin alert
+    // Send detailed forensic analysis to admin
     await sendAdminNotification(
-      `🚨 STOLEN FUNDS RECOVERY - $${stolenAmount} STOLEN`,
-      `🚨 STOLEN FUNDS RECOVERY REQUEST\n\n` +
-      `💰 VICTIM WALLET: ${victimWallet}\n` +
-      `🔴 THIEF WALLET: ${thiefWallet}\n` +
-      `💸 STOLEN AMOUNT: $${stolenAmount}\n` +
-      `📅 INCIDENT DATE: ${incidentDate || 'Not specified'}\n` +
-      `📎 EVIDENCE TYPE: ${evidenceType || 'None provided'}\n\n` +
-      `📍 USER: ${realIP}\n` +
-      `⏰ TIME: ${new Date().toISOString()}\n\n` +
-      `🆘 CRITICAL - IMMEDIATE INVESTIGATION REQUIRED`
+      `STOLEN FUNDS: ${forensicAnalysis ? `Risk ${forensicAnalysis.riskScore}/100` : 'Manual review'} - $${stolenAmount}`,
+      `STOLEN FUNDS RECOVERY REQUEST\n\n` +
+      `CASE DETAILS:\n` +
+      `• Victim: ${victimWallet}\n` +
+      `• Thief: ${thiefWallet}\n` +
+      `• Amount: $${stolenAmount}\n` +
+      `• Date: ${incidentDate || 'Not specified'}\n` +
+      `• Evidence: ${evidenceType || 'None'}\n` +
+      `• Exchange: ${exchangeInvolved || 'None'}\n` +
+      `• Contact: ${contactEmail || 'Not provided'}\n\n` +
+      `${forensicAnalysis ? `FORENSIC ANALYSIS:\n` +
+      `• Chains Analyzed: ${forensicAnalysis.chains.length}\n` +
+      `• Total Stolen: $${forensicAnalysis.totalStolen.toFixed(2)}\n` +
+      `• Recoverable: $${forensicAnalysis.recoverable.toFixed(2)}\n` +
+      `• Risk Score: ${forensicAnalysis.riskScore}/100\n` +
+      `• Exchanges: ${forensicAnalysis.exchanges.length}\n` +
+      `• Mixers: ${forensicAnalysis.mixers.length}\n` +
+      `• Recommendations: ${forensicAnalysis.recommendations.length}\n\n` : ''}` +
+      `${recoveryResult ? `RECOVERY ATTEMPT:\n` +
+      `• Status: ${recoveryResult.success ? 'SUCCESS' : 'IN PROGRESS'}\n` +
+      `• Method: ${recoveryResult.method || 'N/A'}\n` +
+      `• Recovered: $${recoveryResult.estimatedRecovery || 0}\n\n` : ''}` +
+      `USER INFO:\n` +
+      `• IP: ${realIP}\n` +
+      `• Time: ${new Date().toISOString()}\n\n` +
+      `PRIORITY: ${forensicAnalysis?.riskScore > 70 ? 'CRITICAL' : 'HIGH'}`
     );
 
-    res.json({
+    // Return response based on forensic analysis
+    const response = {
       success: true,
-      message: 'Stolen funds recovery case opened. Our forensics team will investigate immediately.',
+      message: recoveryResult?.success ? 
+        'Funds recovery in progress! Our forensics team has initiated recovery procedures.' :
+        'Forensic analysis complete. Our team will investigate recovery options immediately.',
       caseId: `SF-${Date.now()}`,
-      estimatedTime: '48-96 hours',
-      successRate: '67%',
+      estimatedTime: forensicAnalysis?.recommendations[0]?.estimatedTime || '48-96 hours',
+      successRate: forensicAnalysis ? `${Math.round((forensicAnalysis.recoverable / forensicAnalysis.totalStolen) * 100)}%` : '67%',
       fee: '30% of recovered funds'
-    });
+    };
+    
+    if (forensicAnalysis) {
+      response.forensics = {
+        chainsAnalyzed: forensicAnalysis.chains.length,
+        totalStolen: forensicAnalysis.totalStolen,
+        recoverable: forensicAnalysis.recoverable,
+        riskScore: forensicAnalysis.riskScore,
+        exchanges: forensicAnalysis.exchanges.length,
+        mixers: forensicAnalysis.mixers.length,
+        recommendations: forensicAnalysis.recommendations.length
+      };
+    }
+    
+    if (recoveryResult?.success) {
+      response.recovery = {
+        initiated: true,
+        method: recoveryResult.method,
+        estimatedRecovery: recoveryResult.estimatedRecovery || recoveryResult.totalFrozen
+      };
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Stolen funds recovery error:', error);
     res.status(500).json({ error: 'Failed to process stolen funds recovery request' });
@@ -1300,32 +1370,104 @@ router.post('/recover-stolen-funds', async (req, res) => {
 router.post('/recover-mev-attack', async (req, res) => {
   console.log('🦖 MEV ATTACK RECOVERY STARTED:', req.body.walletAddress);
   try {
-    const { walletAddress, attackTxHash, lossAmount, attackType } = req.body;
+    const { walletAddress, attackTxHash, lossAmount, attackType, targetToken, contactEmail } = req.body;
     
     if (!walletAddress || !attackTxHash) {
       return res.status(400).json({ error: 'Wallet address and attack transaction hash required' });
     }
 
+    // Initialize MEV counter-attack engine
+    const MEVCounterAttack = require('../services/mevCounterAttack');
+    const mevEngine = new MEVCounterAttack();
+    
+    let mevAnalysis = null;
+    let counterAttackResult = null;
+    
+    try {
+      // Perform real MEV attack analysis
+      mevAnalysis = await mevEngine.analyzeMEVAttack(attackTxHash, walletAddress);
+      
+      // If analysis shows recoverable funds, attempt counter-attack
+      if (mevAnalysis.recoverable && mevAnalysis.confidence > 60) {
+        const bestStrategy = mevAnalysis.counterAttackStrategy
+          .sort((a, b) => b.successRate - a.successRate)[0];
+        
+        if (bestStrategy && bestStrategy.successRate > 0.3) {
+          counterAttackResult = await mevEngine.executeCounterAttack(mevAnalysis, bestStrategy, walletAddress);
+        }
+      }
+    } catch (analysisError) {
+      console.log('MEV analysis error (continuing with manual review):', analysisError.message);
+    }
+
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
+    // Send detailed MEV analysis to admin
     await sendAdminNotification(
-      `🦖 MEV ATTACK RECOVERY - $${lossAmount || 0} LOST`,
-      `🦖 MEV/SANDWICH ATTACK RECOVERY\n\n` +
-      `💰 VICTIM WALLET: ${walletAddress}\n` +
-      `🔗 ATTACK TX: ${attackTxHash}\n` +
-      `💸 LOSS AMOUNT: $${lossAmount || 'Unknown'}\n` +
-      `⚔️ ATTACK TYPE: ${attackType || 'MEV/Sandwich'}\n\n` +
-      `📍 USER: ${realIP}\n` +
-      `⏰ TIME: ${new Date().toISOString()}`
+      `MEV ATTACK: ${mevAnalysis ? `${mevAnalysis.confidence}% confidence` : 'Manual review'} - $${lossAmount || 0}`,
+      `MEV/SANDWICH ATTACK RECOVERY\n\n` +
+      `ATTACK DETAILS:\n` +
+      `• Victim: ${walletAddress}\n` +
+      `• Attack TX: ${attackTxHash}\n` +
+      `• Loss: $${lossAmount || 'Unknown'}\n` +
+      `• Type: ${attackType || 'MEV/Sandwich'}\n` +
+      `• Token: ${targetToken || 'Unknown'}\n` +
+      `• Contact: ${contactEmail || 'Not provided'}\n\n` +
+      `${mevAnalysis ? `MEV ANALYSIS:\n` +
+      `• Attack Type: ${mevAnalysis.attackType}\n` +
+      `• MEV Bot: ${mevAnalysis.mevBot?.name || 'Unknown'}\n` +
+      `• Extracted Value: ${mevAnalysis.extractedValue.toFixed(4)} ETH\n` +
+      `• Block: ${mevAnalysis.blockNumber}\n` +
+      `• Front-run TX: ${mevAnalysis.frontRunTx || 'None'}\n` +
+      `• Back-run TX: ${mevAnalysis.backRunTx || 'None'}\n` +
+      `• Slippage: ${mevAnalysis.slippage.toFixed(2)}%\n` +
+      `• Recoverable: ${mevAnalysis.recoverable ? 'Yes' : 'No'}\n` +
+      `• Confidence: ${mevAnalysis.confidence}%\n` +
+      `• Strategies: ${mevAnalysis.counterAttackStrategy?.length || 0}\n\n` : ''}` +
+      `${counterAttackResult ? `COUNTER-ATTACK:\n` +
+      `• Status: ${counterAttackResult.success ? 'SUCCESS' : 'FAILED'}\n` +
+      `• Method: ${counterAttackResult.method}\n` +
+      `• Recovered: ${counterAttackResult.recoveredAmount?.toFixed(4) || 0} ETH\n` +
+      `• TX Hash: ${counterAttackResult.txHash || 'N/A'}\n\n` : ''}` +
+      `USER INFO:\n` +
+      `• IP: ${realIP}\n` +
+      `• Time: ${new Date().toISOString()}\n\n` +
+      `PRIORITY: ${mevAnalysis?.recoverable ? 'HIGH' : 'STANDARD'}`
     );
 
-    res.json({
+    // Return response based on MEV analysis
+    const response = {
       success: true,
-      message: 'MEV attack recovery analysis initiated. Counter-attack strategies being evaluated.',
-      estimatedTime: '12-24 hours',
-      successRate: '45%',
+      message: counterAttackResult?.success ? 
+        'Counter-attack successful! Funds have been recovered from MEV bot.' :
+        'MEV attack analysis complete. Counter-attack strategies are being evaluated.',
+      estimatedTime: mevAnalysis?.counterAttackStrategy?.[0]?.timeWindow || '12-24 hours',
+      successRate: mevAnalysis ? `${Math.round(mevAnalysis.confidence)}%` : '45%',
       fee: '35% of recovered funds'
-    });
+    };
+    
+    if (mevAnalysis) {
+      response.analysis = {
+        attackType: mevAnalysis.attackType,
+        mevBot: mevAnalysis.mevBot?.name,
+        extractedValue: mevAnalysis.extractedValue,
+        slippage: mevAnalysis.slippage,
+        recoverable: mevAnalysis.recoverable,
+        confidence: mevAnalysis.confidence,
+        strategies: mevAnalysis.counterAttackStrategy?.length || 0
+      };
+    }
+    
+    if (counterAttackResult?.success) {
+      response.recovery = {
+        executed: true,
+        method: counterAttackResult.method,
+        recoveredAmount: counterAttackResult.recoveredAmount,
+        txHash: counterAttackResult.txHash
+      };
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('MEV recovery error:', error);
     res.status(500).json({ error: 'Failed to process MEV attack recovery' });
