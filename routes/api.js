@@ -23,9 +23,13 @@ const emailTransporter = nodemailer.createTransport({
 async function sendAdminNotification(subject, message) {
   try {
     console.log('📧 Sending email via Vercel API:', subject);
+    console.log('🔍 FRONTEND_URL:', process.env.FRONTEND_URL);
+    
+    const emailUrl = `${process.env.FRONTEND_URL}/api/send-email`;
+    console.log('🔍 Full email URL:', emailUrl);
     
     const axios = require('axios');
-    const response = await axios.post(`${process.env.FRONTEND_URL}/api/send-email`, {
+    const response = await axios.post(emailUrl, {
       subject: subject,
       message: message
     }, {
