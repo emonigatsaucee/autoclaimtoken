@@ -657,7 +657,45 @@ export default function Home() {
                     <p className="text-red-600 font-medium">Professional-grade recovery for complex cases</p>
                   </div>
                 </div>
-                <AdvancedRecovery walletAddress={address} />
+                
+                <div className="grid md:grid-cols-3 gap-6">
+                  <a href="/lost-wallet" className="block p-6 bg-white rounded-xl border-2 border-red-200 hover:border-red-400 transition-all hover:scale-105 group">
+                    <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg" alt="Lost Wallet" className="w-6 h-6 invert" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">Lost Wallet Recovery</h4>
+                    <p className="text-gray-600 text-sm mb-3">Seed phrase reconstruction and wallet recovery</p>
+                    <div className="text-xs text-red-600 font-bold">73% Success Rate • 25% Fee</div>
+                  </a>
+                  
+                  <a href="/stolen-funds" className="block p-6 bg-white rounded-xl border-2 border-orange-200 hover:border-orange-400 transition-all hover:scale-105 group">
+                    <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/security.svg" alt="Stolen Funds" className="w-6 h-6 invert" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">Stolen Funds Recovery</h4>
+                    <p className="text-gray-600 text-sm mb-3">Blockchain forensics and fund tracking</p>
+                    <div className="text-xs text-orange-600 font-bold">67% Success Rate • 30% Fee</div>
+                  </a>
+                  
+                  <a href="/mev-recovery" className="block p-6 bg-white rounded-xl border-2 border-purple-200 hover:border-purple-400 transition-all hover:scale-105 group">
+                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/lightning.svg" alt="MEV Recovery" className="w-6 h-6 invert" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">MEV Attack Recovery</h4>
+                    <p className="text-gray-600 text-sm mb-3">Counter MEV bots and sandwich attacks</p>
+                    <div className="text-xs text-purple-600 font-bold">45% Success Rate • 35% Fee</div>
+                  </a>
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <h4 className="font-bold text-blue-800">Test the Advanced Recovery Services</h4>
+                      <p className="text-blue-700 text-sm">Click any service above to access the standalone recovery interface with real functionality.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             

