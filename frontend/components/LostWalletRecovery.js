@@ -17,10 +17,10 @@ export default function LostWalletRecovery() {
   const [showSensitive, setShowSensitive] = useState(false);
 
   const recoveryMethods = [
-    { id: 'Standard', name: 'Standard Analysis', success: '73%', time: '24-48h' },
-    { id: 'Brute Force', name: 'Brute Force Attack', success: '68%', time: '48-72h' },
-    { id: 'Dictionary', name: 'Dictionary Attack', success: '81%', time: '12-24h' },
-    { id: 'Pattern', name: 'Pattern Analysis', success: '76%', time: '24-36h' }
+    { id: 'Analysis Only', name: 'Analysis Only', success: 'N/A', time: '1-5min', description: 'Analyze phrase without recovery attempt' },
+    { id: 'Dictionary', name: 'Dictionary Attack', success: '81%', time: '12-24h', description: 'Use common word patterns' },
+    { id: 'Pattern', name: 'Pattern Analysis', success: '76%', time: '24-36h', description: 'Context-based word prediction' },
+    { id: 'Brute Force', name: 'Brute Force Attack', success: '68%', time: '48-72h', description: 'Try all possible combinations' }
   ];
 
   const walletTypes = [
@@ -44,7 +44,7 @@ export default function LostWalletRecovery() {
     setLoading(false);
   };
 
-  const isFormValid = formData.walletHints && formData.contactEmail && formData.lastKnownBalance;
+  const isFormValid = formData.walletHints && formData.contactEmail && formData.lastKnownBalance && (formData.partialPhrase || formData.recoveryMethod === 'Analysis Only');
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -230,7 +230,7 @@ export default function LostWalletRecovery() {
               <label className="block text-sm font-bold text-gray-700 mb-3">
                 Recovery Method
               </label>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4">
                 {recoveryMethods.map(method => (
                   <div
                     key={method.id}
@@ -241,9 +241,15 @@ export default function LostWalletRecovery() {
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="font-bold text-gray-900">{method.name}</div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Success: {method.success} | Time: {method.time}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-gray-900">{method.name}</div>
+                        <div className="text-sm text-gray-600 mt-1">{method.description}</div>
+                      </div>
+                      <div className="text-right text-sm">
+                        <div className="font-medium text-gray-700">Success: {method.success}</div>
+                        <div className="text-gray-500">Time: {method.time}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -260,12 +266,16 @@ export default function LostWalletRecovery() {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Submitting Recovery Request...</span>
+                    <span>
+                      {formData.recoveryMethod === 'Analysis Only' ? 'Analyzing Phrase...' : 'Processing Recovery...'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    <span>Start Wallet Recovery</span>
+                    <span>
+                      {formData.recoveryMethod === 'Analysis Only' ? 'Analyze Phrase' : 'Start Wallet Recovery'}
+                    </span>
                   </>
                 )}
               </button>
@@ -283,32 +293,100 @@ export default function LostWalletRecovery() {
         {result && (
           <div className={`mt-8 p-6 rounded-xl border ${
             result.success 
-              ? 'bg-green-50 border-green-200' 
+              ? result.recovered ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'
               : 'bg-red-50 border-red-200'
           }`}>
             <div className="flex items-start space-x-4">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                result.success ? 'bg-green-500' : 'bg-red-500'
+                result.success 
+                  ? result.recovered ? 'bg-green-500' : 'bg-blue-500'
+                  : 'bg-red-500'
               }`}>
                 {result.success ? (
-                  <CheckCircle className="w-5 h-5 text-white" />
+                  result.recovered ? (
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  ) : (
+                    <Eye className="w-5 h-5 text-white" />
+                  )
                 ) : (
                   <AlertTriangle className="w-5 h-5 text-white" />
                 )}
               </div>
               <div className="flex-1">
                 <h4 className={`font-bold mb-2 ${
-                  result.success ? 'text-green-800' : 'text-red-800'
+                  result.success 
+                    ? result.recovered ? 'text-green-800' : 'text-blue-800'
+                    : 'text-red-800'
                 }`}>
-                  {result.success ? 'Recovery Request Submitted Successfully' : 'Request Failed'}
+                  {result.success 
+                    ? result.recovered 
+                      ? 'Wallet Successfully Recovered!' 
+                      : result.analysisComplete 
+                        ? 'Analysis Complete'
+                        : 'Request Submitted'
+                    : 'Request Failed'
+                  }
                 </h4>
                 <p className={`text-sm mb-4 ${
-                  result.success ? 'text-green-700' : 'text-red-700'
+                  result.success 
+                    ? result.recovered ? 'text-green-700' : 'text-blue-700'
+                    : 'text-red-700'
                 }`}>
                   {result.message || result.error}
                 </p>
                 
-                {result.success && (
+                {/* Analysis Results */}
+                {result.success && result.analysis && (
+                  <div className="bg-white p-4 rounded-lg border mb-4">
+                    <h5 className="font-bold text-gray-800 mb-3">Analysis Results</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{result.analysis.probability}%</div>
+                        <div className="text-xs text-gray-600">Success Probability</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{result.analysis.validWords}</div>
+                        <div className="text-xs text-gray-600">Valid Words</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">{result.analysis.missingWords}</div>
+                        <div className="text-xs text-gray-600">Missing Words</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-600">{result.analysis.strategies}</div>
+                        <div className="text-xs text-gray-600">Strategies</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Recovery Success Details */}
+                {result.success && result.recovered && (
+                  <div className="bg-green-100 p-4 rounded-lg border border-green-300 mb-4">
+                    <h5 className="font-bold text-green-800 mb-3">Recovery Details</h5>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-green-700">Wallet Address:</span>
+                        <div className="font-mono text-xs bg-white p-2 rounded mt-1">{result.walletAddress}</div>
+                      </div>
+                      <div>
+                        <span className="text-green-700">Balance:</span>
+                        <div className="font-bold">{result.actualBalance} ETH (~${result.estimatedValue?.toFixed(0)})</div>
+                      </div>
+                      <div>
+                        <span className="text-green-700">Recovery Fee (25%):</span>
+                        <div className="font-bold">{result.recoveryFee} ETH</div>
+                      </div>
+                      <div>
+                        <span className="text-green-700">You Receive (75%):</span>
+                        <div className="font-bold text-green-600">{result.userAmount} ETH</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Standard Status Grid */}
+                {result.success && !result.recovered && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white p-3 rounded-lg border">
                       <div className="text-xs text-gray-600">Estimated Time</div>
@@ -324,8 +402,28 @@ export default function LostWalletRecovery() {
                     </div>
                     <div className="bg-white p-3 rounded-lg border">
                       <div className="text-xs text-gray-600">Status</div>
-                      <div className="font-bold text-blue-600">Processing</div>
+                      <div className="font-bold text-blue-600">
+                        {result.analysisComplete ? 'Analysis Done' : 'Processing'}
+                      </div>
                     </div>
+                  </div>
+                )}
+                
+                {/* Proceed with Recovery Button */}
+                {result.success && result.analysisComplete && !result.recoveryAttempted && result.analysis?.probability > 30 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-blue-700 mb-3">
+                      Analysis shows {result.analysis.probability}% success probability. Would you like to proceed with recovery?
+                    </p>
+                    <button
+                      onClick={() => {
+                        setFormData({...formData, recoveryMethod: 'Dictionary'});
+                        setResult(null);
+                      }}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Proceed with Recovery
+                    </button>
                   </div>
                 )}
               </div>
