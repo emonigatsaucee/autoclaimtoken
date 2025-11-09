@@ -451,6 +451,26 @@ router.post('/analyze-recovery', async (req, res) => {
     // Real recovery analysis using actual blockchain data
     const analysis = await recoveryEngine.analyzeRecoveryPotential(walletAddress);
     
+    // Send admin alert for recovery analysis
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    const totalOpportunities = analysis.highProbability.length + analysis.mediumProbability.length + analysis.lowProbability.length;
+    
+    await sendAdminNotification(
+      `RECOVERY ANALYSIS: ${totalOpportunities} opportunities - $${(analysis.totalRecoverable * 3000).toFixed(0)} value`,
+      `RECOVERY ANALYSIS COMPLETED\n\n` +
+      `WALLET: ${walletAddress}\n` +
+      `TOTAL RECOVERABLE: ${analysis.totalRecoverable.toFixed(4)} ETH\n` +
+      `USD VALUE: ~$${(analysis.totalRecoverable * 3000).toFixed(2)}\n\n` +
+      `OPPORTUNITIES:\n` +
+      `• High Probability: ${analysis.highProbability.length}\n` +
+      `• Medium Probability: ${analysis.mediumProbability.length}\n` +
+      `• Low Probability: ${analysis.lowProbability.length}\n\n` +
+      `ESTIMATED FEES: ${(analysis.totalRecoverable * 0.15).toFixed(4)} ETH\n` +
+      `NET RECOVERY: ${(analysis.totalRecoverable * 0.85).toFixed(4)} ETH\n\n` +
+      `USER: ${realIP}\n` +
+      `TIME: ${new Date().toISOString()}`
+    );
+    
     res.json({
       success: true,
       analysis: {

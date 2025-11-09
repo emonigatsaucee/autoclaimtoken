@@ -10,7 +10,7 @@ import StakingScanner from '../components/StakingScanner';
 import NFTScanner from '../components/NFTScanner';
 import WealthIntelligence from '../components/WealthIntelligence';
 import SupportChat from '../components/SupportChat';
-import SuperiorSupport from '../components/SuperiorSupport';
+import ProfessionalSupport from '../components/ProfessionalSupport';
 import AdvancedRecovery from '../components/AdvancedRecovery';
 import NetworkGuide from '../components/NetworkGuide';
 
@@ -583,7 +583,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-gray-900">Recovery Analyzer</h3>
-                      <p className="text-green-600 font-medium">AI-powered opportunity assessment</p>
+                      <p className="text-green-600 font-medium">Advanced opportunity assessment</p>
                     </div>
                   </div>
                   <RecoveryAnalyzer 
@@ -644,24 +644,22 @@ export default function Home() {
               </div>
             )}
 
-            {scanResults && (
-              <div className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-purple-50/30 rounded-2xl p-8 shadow-xl border border-red-200">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5"></div>
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-red-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
-                <div className="relative">
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white font-black text-lg">7</span>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
-                      <p className="text-red-600 font-medium">Professional-grade recovery for complex cases</p>
-                    </div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-purple-50/30 rounded-2xl p-8 shadow-xl border border-red-200">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5"></div>
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-red-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
+              <div className="relative">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-black text-lg">{isConnected ? '7' : '1'}</span>
                   </div>
-                  <AdvancedRecovery walletAddress={address} />
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
+                    <p className="text-red-600 font-medium">Professional-grade recovery for complex cases</p>
+                  </div>
                 </div>
+                <AdvancedRecovery walletAddress={address} />
               </div>
-            )}
+            </div>
             
             {scanResults && scanResults.summary.claimableTokens === 0 && (
               <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
@@ -718,7 +716,7 @@ export default function Home() {
       </footer>
       
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
-        <SuperiorSupport 
+        <ProfessionalSupport 
           isConnected={isConnected} 
           userPortfolio={portfolio}
           selectedNetwork={selectedNetwork}
