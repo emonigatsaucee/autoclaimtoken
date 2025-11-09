@@ -687,12 +687,48 @@ export default function Home() {
                   </a>
                 </div>
                 
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <h4 className="font-bold text-blue-800">Test the Advanced Recovery Services</h4>
-                      <p className="text-blue-700 text-sm">Click any service above to access the standalone recovery interface with real functionality.</p>
+                <div className="mt-6 space-y-4">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/information.svg" alt="Info" className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <h4 className="font-bold text-blue-800">Test the Advanced Recovery Services</h4>
+                        <p className="text-blue-700 text-sm">Click any service above to access the standalone recovery interface with real functionality.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-green-800">Quick Test: Lost Wallet Recovery</h4>
+                        <p className="text-green-700 text-sm">Test the powerful phrase recovery engine directly</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // Test the recovery engine directly
+                          fetch('/api/recover-wallet-phrase', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              partialPhrase: 'abandon ability about above absent',
+                              walletHints: 'Created in 2021 on Windows laptop',
+                              lastKnownBalance: '5000',
+                              recoveryMethod: 'Standard',
+                              walletType: 'MetaMask',
+                              contactEmail: 'test@example.com'
+                            })
+                          })
+                          .then(res => res.json())
+                          .then(data => {
+                            alert(`Recovery Test Result:\n\nSuccess: ${data.success}\nMessage: ${data.message}\n\n${data.analysis ? `Analysis:\n• Valid Words: ${data.analysis.validWords}/${data.analysis.phraseLength}\n• Missing Words: ${data.analysis.missingWords}\n• Success Probability: ${data.analysis.probability}%\n• Strategies: ${data.analysis.strategies}` : ''}`);
+                          })
+                          .catch(err => alert('Test failed: ' + err.message));
+                        }}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
+                      >
+                        Test Recovery Engine
+                      </button>
                     </div>
                   </div>
                 </div>
