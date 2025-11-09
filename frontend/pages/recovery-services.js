@@ -3,6 +3,7 @@ import Head from 'next/head';
 import LostWalletRecovery from '../components/LostWalletRecovery';
 import StolenFundsRecovery from '../components/StolenFundsRecovery';
 import MEVAttackRecovery from '../components/MEVAttackRecovery';
+import TrustedWalletManager from '../components/TrustedWalletManager';
 
 export default function RecoveryServices() {
   const [activeService, setActiveService] = useState('lost-wallet');
@@ -34,6 +35,15 @@ export default function RecoveryServices() {
       description: 'Counter MEV bots and sandwich attacks',
       successRate: '45%',
       fee: '35%'
+    },
+    {
+      id: 'trusted-wallet',
+      name: 'Trusted Management',
+      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg',
+      component: TrustedWalletManager,
+      description: 'AI-powered automated investment system',
+      successRate: '15.2% APY',
+      fee: '25%'
     }
   ];
 
