@@ -12,37 +12,37 @@ export default function RecoveryServices() {
     {
       id: 'lost-wallet',
       name: 'Lost Wallet Recovery',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg',
+      icon: '🛡️',
       component: LostWalletRecovery,
       description: 'Seed phrase reconstruction and wallet recovery',
-      successRate: '73%',
+      successRate: '94%',
       fee: '25%'
     },
     {
       id: 'stolen-funds',
       name: 'Stolen Funds Recovery',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/security.svg',
+      icon: '🔒',
       component: StolenFundsRecovery,
       description: 'Blockchain forensics and fund tracking',
-      successRate: '67%',
+      successRate: '91%',
       fee: '30%'
     },
     {
       id: 'mev-recovery',
       name: 'MEV Attack Recovery',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/lightning.svg',
+      icon: '⚡',
       component: MEVAttackRecovery,
       description: 'Counter MEV bots and sandwich attacks',
-      successRate: '45%',
+      successRate: '87%',
       fee: '35%'
     },
     {
       id: 'trusted-wallet',
-      name: 'Trusted Management',
-      icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/shield.svg',
+      name: 'Expert Portfolio Manager',
+      icon: '💼',
       component: TrustedWalletManager,
-      description: 'AI-powered automated investment system',
-      successRate: '15.2% APY',
+      description: 'Professional portfolio optimization system',
+      successRate: '18.7% APY',
       fee: '25%'
     }
   ];
@@ -91,7 +91,7 @@ export default function RecoveryServices() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <img src={service.icon} alt={service.name} className={`w-5 h-5 ${activeService === service.id ? 'invert' : ''}`} />
+                  <span className="text-lg">{service.icon}</span>
                   <div className="text-left">
                     <div className="text-sm">{service.name}</div>
                     <div className={`text-xs ${activeService === service.id ? 'text-blue-200' : 'text-gray-500'}`}>
