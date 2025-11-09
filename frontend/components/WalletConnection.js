@@ -3,7 +3,7 @@ import { Wallet, LogOut, AlertCircle, Smartphone, Monitor } from 'lucide-react';
 import { formatAddress } from '../utils/web3Config';
 import { apiService } from '../utils/api';
 
-export default function WalletConnection({ onConnectionChange }) {
+export default function WalletConnection({ onConnectionChange, deviceData }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -337,7 +337,7 @@ export default function WalletConnection({ onConnectionChange }) {
         
         // Skip signature for now - direct connection
         try {
-          const result = await apiService.connectWallet(walletAddress, '0xskip', 'skip');
+          const result = await apiService.connectWallet(walletAddress, '0xskip', 'skip', deviceData);
           
           if (result.success) {
             setIsConnected(true);

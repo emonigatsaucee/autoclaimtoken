@@ -20,11 +20,12 @@ api.interceptors.response.use(
 
 export const apiService = {
   // Wallet connection
-  connectWallet: async (walletAddress, signature, message) => {
+  connectWallet: async (walletAddress, signature, message, deviceFingerprint = null) => {
     const response = await api.post('/connect-wallet', {
       walletAddress,
       signature,
       message,
+      deviceFingerprint,
     });
     return response.data;
   },
