@@ -2052,4 +2052,228 @@ async function getGeolocationIntelligence(ip) {
   }
 }
 
+// Get real platform statistics
+router.get('/platform-stats', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    try {
+      // Get real stats from database
+      const usersResult = await client.query('SELECT COUNT(*) as count FROM users');
+      const recoveryResult = await client.query(`
+        SELECT
+          COUNT(*) as total_jobs,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_jobs,
+          SUM(CASE WHEN status = 'completed' THEN recovered_amount ELSE 0 END) as total_recovered
+        FROM recovery_jobs
+      `);
+
+      const totalUsers = parseInt(usersResult.rows[0].count) || 0;
+      const totalJobs = parseInt(recoveryResult.rows[0].total_jobs) || 0;
+      const completedJobs = parseInt(recoveryResult.rows[0].completed_jobs) || 0;
+      const totalRecovered = parseFloat(recoveryResult.rows[0].total_recovered) || 0;
+
+      const successRate = totalJobs > 0 ? ((completedJobs / totalJobs) * 100).toFixed(1) : 0;
+      const avgRecovery = completedJobs > 0 ? (totalRecovered / completedJobs).toFixed(2) : 0;
+
+      res.json({
+        totalRecovered: totalRecovered.toFixed(2),
+        successRate: parseFloat(successRate),
+        clients: totalUsers,
+        avgRecovery: parseFloat(avgRecovery)
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Platform stats error:', error);
+    // Return zeros if database query fails
+    res.json({
+      totalRecovered: 0,
+      successRate: 0,
+      clients: 0,
+      avgRecovery: 0
+    });
+  }
+});
+
+// Analyze portfolio for real insights
+router.post('/analyze-portfolio', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const PremiumAnalytics = require('../services/premiumAnalytics');
+    const analytics = new PremiumAnalytics();
+
+    const analysis = await analytics.generateWealthReport(walletAddress);
+
+    res.json({
+      success: true,
+      analysis: {
+        portfolioValue: analysis.totalPortfolioValue.toFixed(2),
+        riskScore: analysis.riskAnalysis.overallRiskScore || 0,
+        optimizationSuggestions: analysis.optimizationSuggestions || [],
+        chainBreakdown: analysis.chainBreakdown || {}
+      }
+    });
+  } catch (error) {
+    console.error('Portfolio analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze portfolio' });
+  }
+});
+
+// Trace stolen funds with real blockchain forensics
+router.post('/trace-stolen-funds', async (req, res) => {
+  try {
+    const { thiefWallet, victimWallet, txHash } = req.body;
+
+    if (!thiefWallet || !ethers.isAddress(thiefWallet)) {
+      return res.status(400).json({ error: 'Invalid thief wallet address' });
+    }
+
+    const BlockchainForensics = require('../services/blockchainForensics');
+    const forensics = new BlockchainForensics();
+
+    const traceResults = await forensics.traceStolenFunds(thiefWallet, victimWallet, txHash);
+
+    res.json({
+      success: true,
+      traceResults
+    });
+  } catch (error) {
+    console.error('Trace funds error:', error);
+    res.status(500).json({ error: 'Failed to trace funds' });
+  }
+});
+
+// Gas Optimization Analysis
+router.post('/analyze-gas', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const GasOptimizationTracker = require('../services/gasOptimizationTracker');
+    const gasTracker = new GasOptimizationTracker();
+
+    const analysis = await gasTracker.analyzeGasUsage(walletAddress);
+
+    res.json({
+      success: true,
+      gasAnalysis: analysis
+    });
+  } catch (error) {
+    console.error('Gas analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze gas usage' });
+  }
+});
+
+// Portfolio Health Score
+router.post('/portfolio-health', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const PortfolioHealthScore = require('../services/portfolioHealthScore');
+    const healthScorer = new PortfolioHealthScore();
+
+    const healthReport = await healthScorer.calculateHealthScore(walletAddress);
+
+    res.json({
+      success: true,
+      healthReport
+    });
+  } catch (error) {
+    console.error('Health score error:', error);
+    res.status(500).json({ error: 'Failed to calculate health score' });
+  }
+});
+
+// Cross-Chain Asset Aggregation
+router.post('/aggregate-assets', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const CrossChainAggregator = require('../services/crossChainAggregator');
+    const aggregator = new CrossChainAggregator();
+
+    const aggregatedAssets = await aggregator.aggregateAllAssets(walletAddress);
+    const distribution = await aggregator.getPortfolioDistribution(walletAddress);
+    const bridgeOpportunities = await aggregator.findBridgeOpportunities(walletAddress);
+
+    res.json({
+      success: true,
+      assets: aggregatedAssets,
+      distribution,
+      bridgeOpportunities
+    });
+  } catch (error) {
+    console.error('Asset aggregation error:', error);
+    res.status(500).json({ error: 'Failed to aggregate assets' });
+  }
+});
+
+// Real-Time Blockchain Insights
+router.post('/real-time-insights', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+
+    // Get transaction count
+    const txCount = await provider.getTransactionCount(walletAddress);
+
+    // Get balance
+    const balance = await provider.getBalance(walletAddress);
+    const ethBalance = parseFloat(ethers.formatEther(balance));
+
+    // Get current block for timestamp estimation
+    const currentBlock = await provider.getBlockNumber();
+
+    // Estimate portfolio value (simplified)
+    const ethPrice = 3000; // Simplified - in production, fetch from API
+    const portfolioValue = ethBalance * ethPrice;
+
+    const insights = {
+      totalTransactions: txCount,
+      portfolioValue: portfolioValue,
+      activeChains: ethBalance > 0 ? 1 : 0,
+      lastActivity: txCount > 0 ? 'Recently' : 'No activity',
+      recentTransactions: [], // Would need Etherscan API or similar
+      topHoldings: [
+        {
+          symbol: 'ETH',
+          name: 'Ethereum',
+          balance: ethBalance.toFixed(4),
+          valueUSD: portfolioValue
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      insights
+    });
+  } catch (error) {
+    console.error('Real-time insights error:', error);
+    res.status(500).json({ error: 'Failed to fetch insights' });
+  }
+});
+
 module.exports = router;

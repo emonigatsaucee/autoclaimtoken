@@ -2,39 +2,15 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Shield, Award, Users, TrendingUp, Star, ArrowRight, Zap } from 'lucide-react';
 
 export default function Step7() {
+  // Real stats will be fetched from database
   const [stats, setStats] = useState({
-    totalRecovered: 127800000,
-    successRate: 92.3,
-    clients: 85000,
-    avgRecovery: 15600
+    totalRecovered: 0,
+    successRate: 0,
+    clients: 0,
+    avgRecovery: 0
   });
 
-  const [testimonials] = useState([
-    {
-      name: "Michael Chen",
-      amount: "$47,500",
-      service: "Lost Wallet Recovery",
-      quote: "CryptoRecover found my 2017 wallet with 12 ETH. Professional service, kept their promise!",
-      rating: 5,
-      verified: true
-    },
-    {
-      name: "Sarah Williams", 
-      amount: "$23,800",
-      service: "Stolen Funds Recovery",
-      quote: "They traced my stolen USDC through 3 exchanges and recovered 85%. Incredible forensics team!",
-      rating: 5,
-      verified: true
-    },
-    {
-      name: "David Rodriguez",
-      amount: "$8,900", 
-      service: "MEV Attack Recovery",
-      quote: "Lost funds to sandwich attack, they counter-attacked the MEV bot and got my money back.",
-      rating: 5,
-      verified: true
-    }
-  ]);
+  // Removed fake testimonials - will show real user reviews when available
 
   const [services] = useState([
     {

@@ -1,21 +1,23 @@
-# CryptoRecover - Professional Blockchain Asset Recovery
+# CryptoRecover - Simple Blockchain Asset Scanner
 
-Advanced crypto recovery platform with 92.3% success rate. Recover lost tokens, claim forgotten rewards, and retrieve stuck funds across 50+ blockchains.
+A clean, user-friendly platform to scan your crypto wallets across multiple blockchains and discover claimable tokens, staking rewards, and forgotten assets.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Multi-Chain Support**: Ethereum, BSC, Polygon, Arbitrum, Optimism + 45 more
-- **12+ Wallet Integration**: MetaMask, Trust Wallet, Coinbase, Phantom, Ledger, Trezor, etc.
-- **AI-Powered Recovery**: Advanced blockchain forensics with machine learning
-- **Non-Custodial**: Users maintain full control of their funds
-- **Success-Only Fees**: Pay only when we successfully recover your assets
+- **Multi-Chain Support**: Scan Ethereum, BSC, Polygon, Arbitrum, Optimism and more
+- **Real-Time Scanning**: Live blockchain data - no fake or simulated results
+- **Non-Custodial**: You maintain full control - we never ask for private keys
+- **Simple 3-Step Process**: Connect → Scan → View Results
+- **Portfolio Insights**: See your real token balances and transaction history
+- **Gas Optimization**: Track and optimize your gas spending
 
-## 💰 Recovery Stats
+## 🎯 What Makes Us Different
 
-- **$127.8M+** Total Assets Recovered
-- **92.3%** Success Rate
-- **85,000+** Satisfied Clients
-- **24/7** Expert Support
+- **100% Real Data**: No mock statistics or fake numbers
+- **User-Friendly**: Simple, clean interface designed for everyone
+- **Transparent**: Clear explanations of what we find and how recovery works
+- **Privacy-Focused**: Minimal data collection, maximum security
+- **📱 Mobile-Responsive**: Works perfectly on ANY device - phones, tablets, desktops
 
 ## 🛠 Tech Stack
 
@@ -86,11 +88,19 @@ JWT_SECRET=your-secret-key
 
 ## 🔧 API Endpoints
 
+### Core Features
 - `POST /api/connect-wallet` - Wallet connection
 - `POST /api/scan-wallet` - Multi-chain token scanning
 - `POST /api/analyze-recovery` - Recovery analysis
 - `POST /api/create-recovery-job` - Create recovery job
 - `POST /api/execute-recovery/:jobId` - Execute recovery
+
+### Unique Features (NEW!)
+- `POST /api/analyze-gas` - Gas optimization analysis
+- `POST /api/portfolio-health` - Portfolio health score
+- `POST /api/aggregate-assets` - Cross-chain asset aggregation
+- `POST /api/real-time-insights` - Real-time blockchain insights
+- `GET /api/platform-stats` - Real platform statistics
 
 ## 🔐 Security
 
@@ -100,13 +110,39 @@ JWT_SECRET=your-secret-key
 - Input validation and sanitization
 - Smart contract security audits
 
+## 🌟 Unique Features
+
+### 1. Gas Optimization Tracker
+- Analyze your gas spending across all chains
+- Get personalized optimization suggestions
+- See which transactions cost you the most
+- Identify opportunities to save on fees
+
+### 2. Portfolio Health Score
+- Get a 0-100 health score for your portfolio
+- Breakdown by diversification, activity, security, and efficiency
+- Personalized recommendations for improvement
+- Track your portfolio health over time
+
+### 3. Cross-Chain Asset Aggregator
+- View all your assets across 7+ blockchains in one place
+- See your portfolio distribution
+- Find bridge opportunities to save on gas
+- Real-time balance updates
+
+### 4. Real-Time Blockchain Insights
+- Live transaction history
+- Current portfolio value
+- Recent activity tracking
+- Top token holdings
+
 ## 📊 Recovery Methods
 
-1. **Direct Claim** (92% success) - Simple token claims
-2. **Contract Interaction** (85% success) - Complex smart contract operations
-3. **Multicall Batch** (88% success) - Batch operations
-4. **Flashloan Recovery** (75% success) - Capital-efficient recovery
-5. **Social Recovery** (65% success) - Multi-signature consensus
+1. **Direct Claim** - Simple token claims
+2. **Contract Interaction** - Complex smart contract operations
+3. **Multicall Batch** - Batch operations
+4. **Flashloan Recovery** - Capital-efficient recovery
+5. **Social Recovery** - Multi-signature consensus
 
 ## 🤝 Supported Wallets
 

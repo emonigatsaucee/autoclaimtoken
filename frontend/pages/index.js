@@ -209,22 +209,18 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto mb-12">
-                    <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-yellow-400 mb-2">94.7%</div>
-                      <div className="text-xs font-bold text-yellow-200 uppercase tracking-wider">Success Rate</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
+                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-6 border border-blue-400/30 shadow-2xl hover:scale-105 transition-transform">
+                      <div className="text-4xl font-black text-blue-400 mb-2">50+</div>
+                      <div className="text-xs font-bold text-blue-200 uppercase tracking-wider">Blockchains</div>
                     </div>
                     <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-green-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-green-400 mb-2">$247M</div>
-                      <div className="text-xs font-bold text-green-200 uppercase tracking-wider">Recovered</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-6 border border-blue-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-blue-400 mb-2">150K+</div>
-                      <div className="text-xs font-bold text-blue-200 uppercase tracking-wider">Clients</div>
+                      <div className="text-4xl font-black text-green-400 mb-2">Real-Time</div>
+                      <div className="text-xs font-bold text-green-200 uppercase tracking-wider">Scanning</div>
                     </div>
                     <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-6 border border-purple-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-purple-400 mb-2">24/7</div>
-                      <div className="text-xs font-bold text-purple-200 uppercase tracking-wider">Support</div>
+                      <div className="text-4xl font-black text-purple-400 mb-2">Non-Custodial</div>
+                      <div className="text-xs font-bold text-purple-200 uppercase tracking-wider">100% Safe</div>
                     </div>
                   </div>
                   

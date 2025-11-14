@@ -8,39 +8,25 @@ export default function WealthIntelligence({ walletAddress }) {
 
   const handleAnalyze = async () => {
     if (!walletAddress) return;
-    
+
     setIsAnalyzing(true);
     setError('');
-    
+
     try {
-      // Simulate wealth analysis
-      await new Promise(resolve => setTimeout(resolve, 4000));
-      
-      const mockAnalysis = {
-        portfolioValue: '12,450.00',
-        riskScore: 65,
-        optimizationSuggestions: [
-          {
-            type: 'gas_optimization',
-            title: 'Consolidate small positions',
-            description: 'Merge 5 small token positions to save $120 in gas fees',
-            potentialSavings: '$120'
-          },
-          {
-            type: 'yield_optimization', 
-            title: 'Optimize DeFi yields',
-            description: 'Move idle USDC to higher-yield protocols',
-            potentialGains: '4.2% APY increase'
-          }
-        ],
-        chainBreakdown: {
-          ethereum: 8500,
-          polygon: 2200,
-          arbitrum: 1750
-        }
-      };
-      
-      setAnalysis(mockAnalysis);
+      // Call real API for portfolio analysis
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/analyze-portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAnalysis(data.analysis);
+      } else {
+        setError(data.error || 'Failed to analyze portfolio');
+      }
     } catch (err) {
       setError('Failed to analyze portfolio: ' + err.message);
     } finally {

