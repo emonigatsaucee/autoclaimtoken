@@ -10,7 +10,8 @@ export default function Step7() {
     avgRecovery: 0
   });
 
-  // Removed fake testimonials - will show real user reviews when available
+  // Real testimonials will be fetched from database when available
+  const [testimonials] = useState([]);
 
   const [services] = useState([
     {
@@ -167,47 +168,49 @@ export default function Step7() {
         </div>
       </div>
 
-      {/* Testimonials Section */}
-      <div className="bg-white/50 backdrop-blur-sm py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Success Stories</h2>
-            <p className="text-xl text-gray-600">Real recoveries from satisfied clients</p>
-          </div>
+      {/* Testimonials Section - Will show when real testimonials are available */}
+      {testimonials.length > 0 && (
+        <div className="bg-white/50 backdrop-blur-sm py-20">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-black text-gray-900 mb-4">Success Stories</h2>
+              <p className="text-xl text-gray-600">Real recoveries from satisfied clients</p>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-                <div className="flex items-center space-x-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                
-                <p className="text-gray-700 mb-6 italic">"{testimonial.quote}"</p>
-                
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-gray-900 flex items-center space-x-2">
-                        <span>{testimonial.name}</span>
-                        {testimonial.verified && (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        )}
+            <div className="grid md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                  <div className="flex items-center space-x-1 mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+
+                  <p className="text-gray-700 mb-6 italic">"{testimonial.quote}"</p>
+
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-gray-900 flex items-center space-x-2">
+                          <span>{testimonial.name}</span>
+                          {testimonial.verified && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500">{testimonial.service}</div>
                       </div>
-                      <div className="text-sm text-gray-500">{testimonial.service}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-green-600">{testimonial.amount}</div>
-                      <div className="text-xs text-gray-500">Recovered</div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-600">{testimonial.amount}</div>
+                        <div className="text-xs text-gray-500">Recovered</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-20">
