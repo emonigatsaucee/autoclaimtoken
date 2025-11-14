@@ -2276,4 +2276,172 @@ router.post('/real-time-insights', async (req, res) => {
   }
 });
 
+// Portfolio Health Score
+router.post('/portfolio-health', async (req, res) => {
+  try {
+    const { walletAddress, portfolio } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const PortfolioHealthScore = require('../services/portfolioHealthScore');
+    const healthScorer = new PortfolioHealthScore();
+
+    const healthReport = await healthScorer.calculateHealthScore(walletAddress, portfolio);
+
+    res.json({
+      success: true,
+      ...healthReport
+    });
+  } catch (error) {
+    console.error('Portfolio health error:', error);
+    res.status(500).json({ error: 'Failed to calculate health score' });
+  }
+});
+
+// Airdrop Finder
+router.post('/check-airdrops', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const AirdropFinder = require('../services/airdropFinder');
+    const airdropFinder = new AirdropFinder();
+
+    const eligibility = await airdropFinder.checkEligibility(walletAddress);
+    const unclaimedTokens = await airdropFinder.findUnclaimedTokens(walletAddress);
+
+    res.json({
+      success: true,
+      airdrops: eligibility,
+      unclaimedTokens: unclaimedTokens
+    });
+  } catch (error) {
+    console.error('Airdrop check error:', error);
+    res.status(500).json({ error: 'Failed to check airdrops' });
+  }
+});
+
+// Security Audit
+router.post('/security-audit', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const SecurityAuditor = require('../services/securityAuditor');
+    const auditor = new SecurityAuditor();
+
+    const auditReport = await auditor.auditWallet(walletAddress);
+
+    res.json({
+      success: true,
+      ...auditReport
+    });
+  } catch (error) {
+    console.error('Security audit error:', error);
+    res.status(500).json({ error: 'Failed to audit wallet' });
+  }
+});
+
+// MEV Attack Detection
+router.post('/detect-mev', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    const MEVDetector = require('../services/mevDetector');
+    const detector = new MEVDetector();
+
+    const mevReport = await detector.detectMEVAttacks(walletAddress);
+    const protectionTips = detector.getProtectionTips();
+
+    res.json({
+      success: true,
+      ...mevReport,
+      protectionTips: protectionTips
+    });
+  } catch (error) {
+    console.error('MEV detection error:', error);
+    res.status(500).json({ error: 'Failed to detect MEV attacks' });
+  }
+});
+
+// Comprehensive Wallet Analysis (All-in-One)
+router.post('/comprehensive-analysis', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+
+    if (!walletAddress || !ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    // Run all analyses in parallel for speed
+    const [
+      PortfolioHealthScore,
+      AirdropFinder,
+      SecurityAuditor,
+      MEVDetector
+    ] = await Promise.all([
+      require('../services/portfolioHealthScore'),
+      require('../services/airdropFinder'),
+      require('../services/securityAuditor'),
+      require('../services/mevDetector')
+    ]);
+
+    const healthScorer = new PortfolioHealthScore();
+    const airdropFinder = new AirdropFinder();
+    const auditor = new SecurityAuditor();
+    const mevDetector = new MEVDetector();
+
+    // Get basic portfolio data first
+    const provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+    const balance = await provider.getBalance(walletAddress);
+    const txCount = await provider.getTransactionCount(walletAddress);
+
+    const basicPortfolio = {
+      totalValue: parseFloat(ethers.formatEther(balance)) * 3000, // Simplified
+      tokens: [
+        {
+          symbol: 'ETH',
+          value: parseFloat(ethers.formatEther(balance)) * 3000,
+          balance: ethers.formatEther(balance)
+        }
+      ]
+    };
+
+    // Run all analyses
+    const [healthReport, airdrops, securityReport, mevReport] = await Promise.all([
+      healthScorer.calculateHealthScore(walletAddress, basicPortfolio),
+      airdropFinder.checkEligibility(walletAddress),
+      auditor.auditWallet(walletAddress),
+      mevDetector.detectMEVAttacks(walletAddress)
+    ]);
+
+    res.json({
+      success: true,
+      walletAddress: walletAddress,
+      transactionCount: txCount,
+      ethBalance: ethers.formatEther(balance),
+      portfolioHealth: healthReport,
+      airdrops: airdrops,
+      security: securityReport,
+      mevProtection: mevReport,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Comprehensive analysis error:', error);
+    res.status(500).json({ error: 'Failed to complete analysis' });
+  }
+});
+
 module.exports = router;
