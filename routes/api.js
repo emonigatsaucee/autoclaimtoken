@@ -6,9 +6,7 @@ const BridgeRecoveryService = require('../services/bridgeRecovery');
 const StakingRewardsScanner = require('../services/stakingScanner');
 const UserDataCollection = require('../services/userDataCollection');
 const userAnalytics = require('../services/userAnalytics');
-const { sendFraudAlert } = require('../services/emailAlerts');
 const { ethers } = require('ethers');
-const nodemailer = require('nodemailer');
 
 // Email transporter - Use Gmail with your credentials
 // Removed unused SMTP transporter
