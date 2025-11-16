@@ -134,6 +134,21 @@ const initializeDatabase = async (retries = 3) => {
       ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS ip_address INET;
       ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS country VARCHAR(100);
       ALTER TABLE user_analytics ADD COLUMN IF NOT EXISTS user_agent TEXT;
+      
+      -- Create user_sessions table
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        id SERIAL PRIMARY KEY,
+        wallet_address VARCHAR(42) NOT NULL,
+        session_id VARCHAR(255) NOT NULL,
+        ip_address INET,
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP,
+        active BOOLEAN DEFAULT true
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_wallet ON user_sessions(wallet_address);
+      CREATE INDEX IF NOT EXISTS idx_user_sessions_session ON user_sessions(session_id);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');

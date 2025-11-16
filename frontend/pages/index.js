@@ -648,13 +648,13 @@ export default function Home() {
               </div>
             )}
 
-            {scanResults && (
+            {isConnected && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-indigo-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">7</span>
+                    <span className="text-white font-bold">8</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 7: Advanced Signature Methods</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 8: Advanced Signature Methods</h3>
                 </div>
                 <SignatureManager provider={window.ethereum} userAddress={address} />
               </div>
@@ -666,7 +666,7 @@ export default function Home() {
               <div className="relative">
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-black text-lg">{isConnected ? '7' : '1'}</span>
+                    <span className="text-white font-black text-lg">{isConnected ? '9' : '1'}</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
