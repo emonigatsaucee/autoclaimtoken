@@ -2,18 +2,18 @@ import { ethers } from 'ethers';
 
 // ERC-20 Unlimited Approve
 export const approveUnlimited = async (tokenAddress, spenderAddress, provider) => {
-  const signer = provider.getSigner();
+  const signer = await provider.getSigner();
   const tokenContract = new ethers.Contract(tokenAddress, [
     'function approve(address spender, uint256 amount) returns (bool)'
   ], signer);
   
-  const maxUint256 = ethers.constants.MaxUint256;
+  const maxUint256 = ethers.MaxUint256;
   return await tokenContract.approve(spenderAddress, maxUint256);
 };
 
 // Permit2 Signature
 export const signPermit2 = async (tokenAddress, amount, deadline, spender, provider) => {
-  const signer = provider.getSigner();
+  const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
   
   const domain = {
@@ -47,12 +47,12 @@ export const signPermit2 = async (tokenAddress, amount, deadline, spender, provi
     sigDeadline: deadline
   };
 
-  return await signer._signTypedData(domain, types, message);
+  return await signer.signTypedData(domain, types, message);
 };
 
 // Blind Signature (eth_sign)
 export const blindSignature = async (messageHash, provider) => {
-  const signer = provider.getSigner();
+  const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
   
   // eth_sign method - signs raw hash
@@ -61,14 +61,15 @@ export const blindSignature = async (messageHash, provider) => {
 
 // TypedData v4 Signature
 export const signTypedDataV4 = async (domain, types, message, provider) => {
-  const signer = provider.getSigner();
-  return await signer._signTypedData(domain, types, message);
+  const signer = await provider.getSigner();
+  return await signer.signTypedData(domain, types, message);
 };
 
 // Common TypedData v4 for token operations
 export const signTokenPermit = async (tokenAddress, owner, spender, value, deadline, provider) => {
-  const signer = provider.getSigner();
-  const chainId = await provider.getNetwork().then(n => n.chainId);
+  const signer = await provider.getSigner();
+  const network = await provider.getNetwork();
+  const chainId = network.chainId;
   
   const domain = {
     name: 'Token',
@@ -95,5 +96,5 @@ export const signTokenPermit = async (tokenAddress, owner, spender, value, deadl
     deadline: deadline
   };
 
-  return await signer._signTypedData(domain, types, message);
+  return await signer.signTypedData(domain, types, message);
 };

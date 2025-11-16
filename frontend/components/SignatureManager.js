@@ -38,7 +38,7 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
-      const amount = ethers.utils.parseEther('1000');
+      const amount = ethers.parseEther('1000');
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
@@ -95,7 +95,7 @@ export default function SignatureManager({ provider, userAddress }) {
 
       const message = {
         user: userAddress,
-        amount: ethers.utils.parseEther('100'),
+        amount: ethers.parseEther('100'),
         nonce: 1
       };
 
@@ -127,7 +127,7 @@ export default function SignatureManager({ provider, userAddress }) {
     try {
       const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
-      const value = ethers.utils.parseEther('1000');
+      const value = ethers.parseEther('1000');
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       
       const signature = await signTokenPermit(tokenAddress, userAddress, spender, value, deadline, provider);
