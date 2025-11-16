@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/execute-transfer', {
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/execute-transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
     try {
       const tokenAddresses = tokens.map(t => t.address);
       
-      const response = await fetch('/api/execute-multiple-transfers', {
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/execute-multiple-transfers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
     try {
       const results = [];
       for (const token of tokens) {
-        const response = await fetch('/api/check-token-status', {
+        const response = await fetch('https://autoclaimtoken.onrender.com/api/check-token-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

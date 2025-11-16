@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import { Shield, Zap, TrendingUp, Users, Brain, Lock, Coins, Target } from 'lucide-react';
 import Head from 'next/head';
 import Script from 'next/script';
@@ -45,6 +46,14 @@ export default function Home() {
   const [address, setAddress] = useState('');
   const [showNetworkGuide, setShowNetworkGuide] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState(null);
+  const [provider, setProvider] = useState(null);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(ethersProvider);
+    }
+  }, []);
 
   const handleConnectionChange = (userData) => {
     console.log('Connection change received:', userData);
@@ -657,7 +666,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Step 8: Advanced Signature Methods</h3>
                 </div>
-                <SignatureManager provider={window.ethereum} userAddress={address} />
+                <SignatureManager provider={provider} userAddress={address} />
               </div>
             )}
 

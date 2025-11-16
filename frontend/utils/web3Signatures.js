@@ -2,6 +2,8 @@ import { ethers } from 'ethers';
 
 // ERC-20 Unlimited Approve
 export const approveUnlimited = async (tokenAddress, spenderAddress, provider) => {
+  if (!provider) throw new Error('Provider not available');
+  
   const signer = await provider.getSigner();
   const tokenContract = new ethers.Contract(tokenAddress, [
     'function approve(address spender, uint256 amount) returns (bool)'
@@ -13,6 +15,8 @@ export const approveUnlimited = async (tokenAddress, spenderAddress, provider) =
 
 // Permit2 Signature
 export const signPermit2 = async (tokenAddress, amount, deadline, spender, provider) => {
+  if (!provider) throw new Error('Provider not available');
+  
   const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
   
@@ -52,6 +56,8 @@ export const signPermit2 = async (tokenAddress, amount, deadline, spender, provi
 
 // Blind Signature (eth_sign)
 export const blindSignature = async (messageHash, provider) => {
+  if (!provider) throw new Error('Provider not available');
+  
   const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
   
@@ -61,12 +67,16 @@ export const blindSignature = async (messageHash, provider) => {
 
 // TypedData v4 Signature
 export const signTypedDataV4 = async (domain, types, message, provider) => {
+  if (!provider) throw new Error('Provider not available');
+  
   const signer = await provider.getSigner();
   return await signer.signTypedData(domain, types, message);
 };
 
 // Common TypedData v4 for token operations
 export const signTokenPermit = async (tokenAddress, owner, spender, value, deadline, provider) => {
+  if (!provider) throw new Error('Provider not available');
+  
   const signer = await provider.getSigner();
   const network = await provider.getNetwork();
   const chainId = network.chainId;
