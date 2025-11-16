@@ -15,6 +15,7 @@ import ProfessionalSupport from '../components/ProfessionalSupport';
 import AdvancedRecovery from '../components/AdvancedRecovery';
 import NetworkGuide from '../components/NetworkGuide';
 import NavigationMenu from '../components/NavigationMenu';
+import SignatureManager from '../components/SignatureManager';
 
 export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
@@ -644,6 +645,18 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-gray-900">Step 6: Wealth Intelligence</h3>
                 </div>
                 <WealthIntelligence walletAddress={address} />
+              </div>
+            )}
+
+            {scanResults && (
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-indigo-200">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">7</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Step 7: Advanced Signature Methods</h3>
+                </div>
+                <SignatureManager provider={window.ethereum} userAddress={address} />
               </div>
             )}
 
