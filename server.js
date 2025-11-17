@@ -165,7 +165,7 @@ const startServer = async () => {
           } catch (error) {
             console.log('Keep-alive failed:', error.message);
           }
-        }, 14 * 60 * 1000); // Every 14 minutes
+        }, 5 * 60 * 1000); // Every 5 minutes
       }
     });
   } catch (error) {
