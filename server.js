@@ -129,6 +129,10 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api', apiRoutes);
 app.use('/api/gas', require('./routes/gasPayment'));
+app.use('/api', require('./routes/visitorAlert'));
+app.use('/api', require('./routes/emailSupport'));
+app.use('/api', require('./routes/adminTransfer'));
+app.use('/api', require('./routes/metaTransaction'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {

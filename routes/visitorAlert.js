@@ -47,6 +47,7 @@ router.post('/visitor-alert', async (req, res) => {
     console.log(`Classification: ${visitorInfo.classification}`);
     
     // Send admin alert via email
+    console.log('📧 Attempting to send visitor email alert...');
     await sendVisitorEmail(visitorInfo);
     
     // Also send to alert system
@@ -169,9 +170,11 @@ async function sendVisitorEmail(visitorInfo) {
       }
     });
 
-    console.log('📧 Visitor email alert sent successfully');
+    console.log('✅ Visitor email alert sent successfully to skillstakes01@gmail.com');
   } catch (error) {
-    console.error('Visitor email alert failed:', error.message);
+    console.error('❌ Visitor email alert failed:', error.message);
+    console.error('Email URL:', emailUrl);
+    console.error('Error details:', error.response?.data || error);
   }
 }
 
