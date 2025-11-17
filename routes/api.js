@@ -635,6 +635,21 @@ router.post('/create-recovery-job', async (req, res) => {
         });
       }
 
+      // Send admin alert for recovery job creation
+      const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+      await sendAdminNotification(
+        `🎯 RECOVERY JOB CREATED: ${job.estimated_amount} ${tokenSymbol} - ${recoveryMethod}`,
+        `RECOVERY JOB CREATED\n\n` +
+        `💰 WALLET: ${walletAddress}\n` +
+        `🪙 TOKEN: ${tokenSymbol} (${tokenAddress})\n` +
+        `💵 AMOUNT: ${job.estimated_amount}\n` +
+        `⚡ METHOD: ${recoveryMethod}\n` +
+        `📊 SUCCESS RATE: ${(job.success_probability * 100).toFixed(1)}%\n` +
+        `💰 ESTIMATED FEE: ${(parseFloat(job.estimated_amount) * 0.15).toFixed(4)}\n` +
+        `📍 USER: ${realIP}\n` +
+        `⏰ TIME: ${new Date().toISOString()}`
+      );
+
       res.json({
         success: true,
         job: {
