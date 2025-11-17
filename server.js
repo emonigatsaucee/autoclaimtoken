@@ -127,6 +127,7 @@ app.get('/', (req, res) => {
 
 // API routes
 app.use('/api', apiRoutes);
+app.use('/api/gas', require('./routes/gasPayment'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {

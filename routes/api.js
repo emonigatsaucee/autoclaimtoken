@@ -550,7 +550,7 @@ router.post('/analyze-recovery', async (req, res) => {
   }
 });
 
-// Create recovery job
+// Create recovery job with user gas payment
 router.post('/create-recovery-job', async (req, res) => {
   try {
     const { 
@@ -565,23 +565,14 @@ router.post('/create-recovery-job', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    // Validate gas before creating job
-    const GasMonitor = require('../services/gasMonitor');
-    const gasMonitor = new GasMonitor();
-    const gasValidation = await gasMonitor.validateGasForRecovery(walletAddress, {
-      recovery_method: recoveryMethod,
-      estimated_amount: estimatedAmount
-    });
-    
-    if (!gasValidation.canExecute) {
-      const userError = gasValidation.errors.find(e => e.type === 'user_gas_insufficient');
-      const adminError = gasValidation.errors.find(e => e.type === 'admin_gas_insufficient');
-      
-      return res.status(400).json({ 
-        error: userError?.userMessage || adminError?.userMessage || 'Insufficient gas for recovery',
-        gasStatus: gasValidation
-      });
-    }
+    // Create user gas payment request instead of checking admin gas
+    const UserGasPayment = require('../services/userGasPayment');
+    const gasPayment = new UserGasPayment();
+    const paymentRequest = await gasPayment.createGasPaymentRequest(
+      walletAddress, 
+      recoveryMethod, 
+      estimatedAmount
+    );
 
     const client = await pool.connect();
     try {
@@ -708,7 +699,8 @@ router.post('/create-recovery-job', async (req, res) => {
           status: job.status,
           estimatedFee: (parseFloat(job.estimated_amount) * 0.15).toFixed(4),
           netRecovery: (parseFloat(job.estimated_amount) * 0.85).toFixed(4)
-        }
+        },
+        gasPayment: paymentRequest
       });
     } finally {
       client.release();
@@ -719,11 +711,11 @@ router.post('/create-recovery-job', async (req, res) => {
   }
 });
 
-// Execute recovery job
+// Verify payment and execute recovery
 router.post('/execute-recovery/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
-    const { userSignature, walletAddress } = req.body;
+    const { userSignature, walletAddress, expectedPayment } = req.body;
 
     const client = await pool.connect();
     try {
@@ -739,33 +731,26 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
 
       const job = result.rows[0];
 
-      // Check gas balances before execution
-      const GasMonitor = require('../services/gasMonitor');
-      const gasMonitor = new GasMonitor();
-      const gasValidation = await gasMonitor.validateGasForRecovery(walletAddress, job);
+      // Verify user payment instead of checking gas balances
+      const UserGasPayment = require('../services/userGasPayment');
+      const gasPayment = new UserGasPayment();
       
-      if (!gasValidation.canExecute) {
-        const userError = gasValidation.errors.find(e => e.type === 'user_gas_insufficient');
-        const adminError = gasValidation.errors.find(e => e.type === 'admin_gas_insufficient');
-        
+      const paymentVerification = await gasPayment.verifyUserPayment(
+        walletAddress, 
+        expectedPayment || (parseFloat(job.estimated_amount) * 0.15 + gasPayment.getGasEstimate(job.recovery_method))
+      );
+      
+      if (!paymentVerification.verified) {
         return res.status(400).json({ 
-          error: userError?.userMessage || adminError?.userMessage || 'Gas validation failed',
-          gasStatus: {
-            userGas: gasValidation.userGas,
-            adminGas: gasValidation.adminGas,
-            canExecute: false
-          },
-          errors: gasValidation.errors
+          error: 'Payment not verified. Please send the required amount to admin wallet first.',
+          paymentRequired: expectedPayment,
+          adminWallet: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15',
+          paymentStatus: paymentVerification
         });
       }
 
-      // Execute real recovery based on method
-      let executionResult;
-      if (job.recovery_method === 'staking_claim') {
-        executionResult = await executeStakingClaim(job, walletAddress);
-      } else {
-        executionResult = await recoveryEngine.executeRecovery(job);
-      }
+      // Execute recovery after payment verified
+      const executionResult = await gasPayment.executeRecoveryAfterPayment(paymentVerification, job);
 
       // Update job status
       await client.query(
@@ -803,12 +788,12 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
         success: true,
         result: {
           executed: executionResult.success,
-          actualAmount: executionResult.amount,
-          txHash: executionResult.txHash,
+          paymentTx: executionResult.paymentTx,
+          recoveryTx: executionResult.recoveryTx,
           gasUsed: executionResult.gasUsed,
-          fee: executionResult.success ? (executionResult.amount * 0.15).toFixed(4) : 0,
-          netAmount: executionResult.success ? (executionResult.amount * 0.85).toFixed(4) : 0,
-          message: executionResult.message
+          message: executionResult.message,
+          paymentVerified: paymentVerification.verified,
+          paymentAmount: paymentVerification.amount
         }
       });
     } finally {
