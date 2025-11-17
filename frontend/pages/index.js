@@ -178,21 +178,6 @@ export default function Home() {
               </div>
               
               <NavigationMenu />
-              
-              <div className="flex items-center space-x-4">
-                <a 
-                  href="/guide"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm"
-                >
-                  📖 How to Use
-                </a>
-                <a 
-                  href="/signatures"
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-bold text-sm"
-                >
-                  🔐 Advanced
-                </a>
-              </div>
             </div>
             
             <div className="flex items-center space-x-6">
@@ -208,33 +193,27 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              <div className="flex items-center space-x-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Live Recovery</span>
-              </div>
-              
-              {/* Live Activity Radar */}
               <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
                 activityLevel === 'high' ? 'bg-red-50 text-red-700' :
                 activityLevel === 'medium' ? 'bg-yellow-50 text-yellow-700' :
-                'bg-blue-50 text-blue-700'
+                'bg-green-50 text-green-700'
               }`}>
                 <div className="relative">
                   <div className={`w-3 h-3 rounded-full ${
                     activityLevel === 'high' ? 'bg-red-500 animate-ping' :
                     activityLevel === 'medium' ? 'bg-yellow-500 animate-pulse' :
-                    'bg-blue-500 animate-pulse'
+                    'bg-green-500 animate-pulse'
                   }`}></div>
                   <div className={`absolute inset-0 w-3 h-3 rounded-full ${
                     activityLevel === 'high' ? 'bg-red-600' :
                     activityLevel === 'medium' ? 'bg-yellow-600' :
-                    'bg-blue-600'
+                    'bg-green-600'
                   } ${isScrolling ? 'animate-ping' : 'animate-pulse'}`}></div>
                 </div>
                 <span className="text-sm font-medium">
                   {activityLevel === 'high' ? 'High Activity' :
                    activityLevel === 'medium' ? 'User Active' :
-                   'Live Monitoring'}
+                   'Live Recovery'}
                 </span>
               </div>
             </div>

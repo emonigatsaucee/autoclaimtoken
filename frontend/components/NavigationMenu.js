@@ -65,6 +65,12 @@ const NavigationMenu = () => {
                   Platform Tools
                 </h3>
                 <div className="space-y-1">
+                  <Link href="/guide" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                    How to Use Guide
+                  </Link>
+                  <Link href="/signatures" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                    Advanced Methods
+                  </Link>
                   <Link href="/" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
                     Wallet Scanner
                   </Link>
