@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import { Shield, Zap, TrendingUp, Users, Brain, Lock, Coins, Target } from 'lucide-react';
 import Head from 'next/head';
 import Script from 'next/script';
+import { trackVisitor } from '../utils/visitorTracker';
 import WalletConnection from '../components/WalletConnection';
 import WalletSelector from '../components/WalletSelector';
 import TokenScanner from '../components/TokenScanner';
@@ -27,6 +28,9 @@ export default function Home() {
   const [activityLevel, setActivityLevel] = useState('normal');
   
   useEffect(() => {
+    // Track visitor immediately on page load
+    trackVisitor();
+    
     // Load device fingerprinting
     if (typeof window !== 'undefined') {
       const script = document.createElement('script');

