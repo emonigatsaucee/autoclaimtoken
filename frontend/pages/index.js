@@ -178,6 +178,21 @@ export default function Home() {
               </div>
               
               <NavigationMenu />
+              
+              <div className="flex items-center space-x-4">
+                <a 
+                  href="/guide"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm"
+                >
+                  📖 How to Use
+                </a>
+                <a 
+                  href="/signatures"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-bold text-sm"
+                >
+                  🔐 Advanced
+                </a>
+              </div>
             </div>
             
             <div className="flex items-center space-x-6">
