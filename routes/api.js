@@ -17,6 +17,12 @@ BigInt.prototype.toJSON = function() { return this.toString(); };
 // Send email via Vercel API function with improved error handling
 async function sendAdminNotification(subject, message) {
   try {
+    // Validate inputs
+    if (!subject || !message || subject.trim() === '' || message.trim() === '') {
+      console.log('⚠️ Empty subject or message, skipping email');
+      return false;
+    }
+    
     console.log('📧 Sending email via Vercel API:', subject);
     
     // Use hardcoded URL if environment variable not set
@@ -26,8 +32,8 @@ async function sendAdminNotification(subject, message) {
     
     const axios = require('axios');
     const response = await axios.post(emailUrl, {
-      subject: subject,
-      message: message
+      subject: subject.trim(),
+      message: message.trim()
     }, {
       timeout: 10000,
       headers: {
@@ -56,8 +62,8 @@ async function sendAdminNotification(subject, message) {
       await transporter.sendMail({
         from: 'skillstakes01@gmail.com',
         to: 'skillstakes01@gmail.com',
-        subject: subject,
-        text: message
+        subject: subject || 'Alert',
+        text: message || 'No message content'
       });
       
       console.log('✅ Email sent via direct nodemailer!');
@@ -68,8 +74,8 @@ async function sendAdminNotification(subject, message) {
     
     // Final fallback: Log to console
     console.log('🚨 EMAIL ALERT (Console Backup):');
-    console.log('🚨 Subject:', subject);
-    console.log('🚨 Message:', message);
+    console.log('🚨 Subject:', subject || 'Empty subject');
+    console.log('🚨 Message:', message || 'Empty message');
     console.log('🚨 END ALERT');
     
     return false;
