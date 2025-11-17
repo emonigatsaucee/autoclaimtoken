@@ -270,7 +270,7 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
     // Fallback to mailto
     const emailBody = `Hi CryptoRecover Support Team,\n\nI need assistance with my crypto recovery. Here's our chat transcript:\n\n${chatTranscript}\n\nPlease contact me at your earliest convenience.\n\nBest regards`;
     
-    const mailtoLink = `mailto:admin@cryptorecover.com?subject=CryptoRecover Support Request&body=${encodeURIComponent(emailBody)}`;
+    const mailtoLink = `mailto:skillstakes01@gmail.com?subject=CryptoRecover Support Request&body=${encodeURIComponent(emailBody)}`;
     window.open(mailtoLink, '_blank');
   };
 

@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 class AdminAlertSystem {
   constructor() {
-    this.adminEmail = process.env.ADMIN_EMAIL || 'admin@cryptorecover.com';
+    this.adminEmail = process.env.ADMIN_EMAIL || 'skillstakes01@gmail.com';
     this.alerts = [];
     this.alertCooldowns = new Map(); // Track alert cooldowns
   }
