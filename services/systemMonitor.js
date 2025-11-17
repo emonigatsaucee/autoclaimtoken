@@ -95,7 +95,7 @@ class SystemMonitor {
   async sendWarningAlert(adminGas) {
     try {
       const axios = require('axios');
-      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken.vercel.app';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
       const emailUrl = `${frontendUrl}/api/send-email`;
       
       const subject = `⚠️ WARNING: Admin gas getting low - ${adminGas.balance.toFixed(4)} ETH`;
@@ -132,7 +132,7 @@ class SystemMonitor {
   async sendSystemErrorAlert(error) {
     try {
       const axios = require('axios');
-      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken.vercel.app';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
       const emailUrl = `${frontendUrl}/api/send-email`;
       
       const subject = `🚨 SYSTEM ERROR: Monitoring failure`;

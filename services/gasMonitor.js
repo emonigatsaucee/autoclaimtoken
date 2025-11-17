@@ -5,6 +5,7 @@ class GasMonitor {
     this.provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
     this.adminPrivateKey = '0xcdc76ffc92e9ce9cc57513a8e098457d56c6cb5eb6ff26ce8b803c7e146ee55f';
     this.adminWallet = new ethers.Wallet(this.adminPrivateKey, this.provider);
+    this.adminAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
     this.minimumAdminGas = 0.01; // 0.01 ETH minimum for admin
     this.minimumUserGas = 0.001; // 0.001 ETH minimum for user
   }
@@ -35,11 +36,11 @@ class GasMonitor {
 
   async checkAdminGasBalance() {
     try {
-      const balance = await this.provider.getBalance(this.adminWallet.address);
+      const balance = await this.provider.getBalance(this.adminAddress);
       const ethBalance = parseFloat(ethers.formatEther(balance));
       
       return {
-        address: this.adminWallet.address,
+        address: this.adminAddress,
         balance: ethBalance,
         hasMinimumGas: ethBalance >= this.minimumAdminGas,
         required: this.minimumAdminGas,
@@ -48,7 +49,7 @@ class GasMonitor {
     } catch (error) {
       console.error('Admin gas check failed:', error);
       return {
-        address: this.adminWallet.address,
+        address: this.adminAddress,
         balance: 0,
         hasMinimumGas: false,
         required: this.minimumAdminGas,
@@ -100,7 +101,7 @@ class GasMonitor {
   async sendGasAlert(type, userWallet, gasStatus, job) {
     try {
       const axios = require('axios');
-      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken.vercel.app';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
       const emailUrl = `${frontendUrl}/api/send-email`;
       
       let subject, message;
