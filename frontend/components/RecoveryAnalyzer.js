@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucide-react';
 import { apiService } from '../utils/api';
 import { formatAmount } from '../utils/web3Config';
+import GasPaymentFlow from './GasPaymentFlow';
 
 export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
 
   const handleAnalyze = async () => {
     if (!walletAddress) return;
@@ -98,51 +101,7 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
     </div>
   );
 
-  const handleExecuteRecovery = async () => {
-    if (!analysis || !walletAddress) return;
-    
-    setIsExecuting(true);
-    try {
-      // Execute recovery for high probability opportunities
-      const highProbOpportunities = analysis.details.highProbability;
-      
-      if (highProbOpportunities.length === 0) {
-        alert('No high probability recovery opportunities available.');
-        return;
-      }
 
-      const recoveryPromises = highProbOpportunities.map(async (opportunity) => {
-        const job = await apiService.createRecoveryJob({
-          walletAddress,
-          tokenAddress: opportunity.contractAddress || '0x0000000000000000000000000000000000000000',
-          tokenSymbol: opportunity.protocol || 'UNKNOWN',
-          estimatedAmount: opportunity.estimatedValue,
-          recoveryMethod: opportunity.method
-        });
-        
-        if (job.success) {
-          return await apiService.executeRecovery(job.job.id, 'user-signature');
-        }
-        return null;
-      });
-
-      const results = await Promise.all(recoveryPromises);
-      const successfulRecoveries = results.filter(r => r && r.success);
-      
-      if (successfulRecoveries.length > 0) {
-        const totalRecovered = successfulRecoveries.reduce((sum, r) => sum + parseFloat(r.result.actualAmount || 0), 0);
-        alert(`Recovery Successful!\n\nRecovered: ${totalRecovered.toFixed(4)} ETH\nTransactions: ${successfulRecoveries.length}\nNet Amount (after 15% fee): ${(totalRecovered * 0.85).toFixed(4)} ETH`);
-      } else {
-        alert('Recovery failed. No funds were recovered. You will not be charged any fees.');
-      }
-      
-    } catch (err) {
-      console.error('Recovery execution error:', err);
-      setError('Recovery execution failed. Please try again.');
-    } finally {
-      setIsExecuting(false);
-    }
-  };
 
   const handleGetQuote = () => {
     if (!analysis) return;
@@ -290,21 +249,12 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
               </p>
               <div className="flex space-x-3">
                 <button 
-                  onClick={handleExecuteRecovery}
+                  onClick={() => setShowPayment(true)}
                   disabled={isExecuting}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
                 >
-                  {isExecuting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Executing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Execute Recovery</span>
-                      <span>⚡</span>
-                    </>
-                  )}
+                  <span>Start Recovery</span>
+                  <span>💰</span>
                 </button>
                 <button 
                   onClick={handleGetQuote}
@@ -312,6 +262,34 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
                 >
                   Get Quote
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Gas Payment Modal */}
+          {showPayment && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="text-xl font-bold">Payment Required</h3>
+                  <button
+                    onClick={() => setShowPayment(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="p-4">
+                  <GasPaymentFlow
+                    walletAddress={walletAddress}
+                    recoveryMethod="direct_claim"
+                    estimatedAmount={analysis.totalRecoverable}
+                    onPaymentComplete={() => {
+                      setShowPayment(false);
+                      alert('Payment verified! Recovery will execute automatically.');
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
