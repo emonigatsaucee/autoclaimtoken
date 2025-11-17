@@ -3,6 +3,7 @@ import { TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucid
 import { apiService } from '../utils/api';
 import { formatAmount } from '../utils/web3Config';
 import GasPaymentFlow from './GasPaymentFlow';
+import AutoGasPayment from './AutoGasPayment';
 
 export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -280,13 +281,14 @@ export default function RecoveryAnalyzer({ walletAddress, onAnalysisComplete }) 
                   </button>
                 </div>
                 <div className="p-4">
-                  <GasPaymentFlow
+                  <AutoGasPayment
                     walletAddress={walletAddress}
                     recoveryMethod="direct_claim"
                     estimatedAmount={analysis.totalRecoverable}
-                    onPaymentComplete={() => {
+                    provider={window.ethereum}
+                    onPaymentComplete={(paymentResult) => {
                       setShowPayment(false);
-                      alert('Payment verified! Recovery will execute automatically.');
+                      alert(`Payment successful! TX: ${paymentResult.txHash}\nRecovery will execute automatically.`);
                     }}
                   />
                 </div>
