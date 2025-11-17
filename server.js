@@ -155,6 +155,18 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
+      
+      // Keep Render awake (free tier)
+      if (process.env.NODE_ENV === 'production') {
+        setInterval(async () => {
+          try {
+            const response = await fetch('https://autoclaimtoken.onrender.com/api/health');
+            console.log('Keep-alive ping:', response.status);
+          } catch (error) {
+            console.log('Keep-alive failed:', error.message);
+          }
+        }, 14 * 60 * 1000); // Every 14 minutes
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
