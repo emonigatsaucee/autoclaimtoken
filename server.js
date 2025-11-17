@@ -73,20 +73,8 @@ app.use('/api', async (req, res, next) => {
   const importantEndpoints = ['/scan-wallet', '/analyze-recovery', '/create-recovery-job', '/execute-recovery', '/scan-bridge', '/scan-staking'];
   
   if (importantEndpoints.some(endpoint => req.path.includes(endpoint))) {
-    try {
-      const { sendAdminNotification } = require('./routes/api');
-      await sendAdminNotification(
-        `🔥 USER ACTIVITY: ${req.path} - ${userAddress.slice(0,8)}...`,
-        `USER ACTIVITY DETECTED\n\n` +
-        `ENDPOINT: ${req.method} ${req.path}\n` +
-        `USER: ${userAddress}\n` +
-        `IP: ${realIP}\n` +
-        `TIME: ${new Date().toISOString()}\n` +
-        `DATA: ${JSON.stringify(req.body, null, 2).substring(0, 500)}...`
-      );
-    } catch (e) {
-      console.log('Activity alert failed:', e.message);
-    }
+    // Skip activity alerts to prevent errors
+    // Activity tracking is handled within individual endpoints
   }
   
   next();
@@ -190,9 +178,11 @@ const startServer = async () => {
       if (process.env.NODE_ENV === 'production') {
         setInterval(async () => {
           try {
-            const fetch = require('node-fetch');
-            const response = await fetch('https://autoclaimtoken.onrender.com/api/health');
-            console.log('Keep-alive ping:', response.status);
+            const axios = require('axios');
+            const response = await axios.get('https://autoclaimtoken.onrender.com/health', {
+              timeout: 10000
+            });
+            console.log('🏓 Keep-alive ping:', response.status);
           } catch (error) {
             console.log('Keep-alive failed:', error.message);
           }

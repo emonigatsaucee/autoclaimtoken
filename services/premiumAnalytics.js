@@ -125,13 +125,33 @@ class PremiumAnalytics {
 
   getRpcUrl(chainId) {
     const urls = {
-      1: process.env.ETHEREUM_RPC_URL,
-      56: process.env.BSC_RPC_URL,
-      137: process.env.POLYGON_RPC_URL,
-      42161: process.env.ARBITRUM_RPC_URL,
-      10: process.env.OPTIMISM_RPC_URL
+      1: process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
+      56: process.env.BSC_RPC_URL || 'https://bsc-dataseed.binance.org',
+      137: process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com',
+      42161: process.env.ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
+      10: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io'
     };
     return urls[chainId];
+  }
+
+  async getTokenBalances(walletAddress, chainId, provider) {
+    return [];
+  }
+
+  async analyzeDeFiPositions(walletAddress, chainId, provider) {
+    return [];
+  }
+
+  async getNFTCollections(walletAddress, chainId) {
+    return [];
+  }
+
+  calculateChainValue(analysis) {
+    return analysis.nativeBalance * 3000;
+  }
+
+  async analyzeGasUsage(walletAddress, chainId) {
+    return {};
   }
 
   // Additional helper methods...
