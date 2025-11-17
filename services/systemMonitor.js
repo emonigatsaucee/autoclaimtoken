@@ -6,7 +6,7 @@ class SystemMonitor {
     this.monitoringInterval = null;
     this.lastCriticalAlert = 0;
     this.lastWarningAlert = 0;
-    this.alertCooldown = 30 * 60 * 1000; // 30 minutes
+    this.alertCooldown = 2 * 60 * 60 * 1000; // 2 hours cooldown
     this.alertThresholds = {
       adminGasWarning: 0.05, // Warn when admin has < 0.05 ETH
       adminGasCritical: 0.01, // Critical when admin has < 0.01 ETH
@@ -20,10 +20,10 @@ class SystemMonitor {
     // Initial check
     await this.performSystemCheck();
     
-    // Set up periodic monitoring (every 5 minutes)
+    // Set up periodic monitoring (every 10 minutes to reduce spam)
     this.monitoringInterval = setInterval(async () => {
       await this.performSystemCheck();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
     
     console.log('✅ System monitoring started');
   }
@@ -44,20 +44,33 @@ class SystemMonitor {
       // Check admin gas levels
       const adminGas = await this.gasMonitor.checkAdminGasBalance();
       
-      // Send alerts with cooldown to prevent spam
+      // Send alerts only when needed with smart cooldown
+      const now = Date.now();
+      
       if (adminGas.balance < this.alertThresholds.adminGasCritical) {
-        if (Date.now() - this.lastCriticalAlert > this.alertCooldown) {
+        if (now - this.lastCriticalAlert > this.alertCooldown) {
           await this.sendCriticalAlert(adminGas);
-          this.lastCriticalAlert = Date.now();
+          this.lastCriticalAlert = now;
+          console.log('🚨 Critical alert sent - next alert in 2 hours');
         } else {
-          console.log('⏰ Critical alert skipped (cooldown active)');
+          const nextAlert = new Date(this.lastCriticalAlert + this.alertCooldown);
+          console.log(`⏰ Critical alert on cooldown until ${nextAlert.toLocaleTimeString()}`);
         }
       } else if (adminGas.balance < this.alertThresholds.adminGasWarning) {
-        if (Date.now() - this.lastWarningAlert > this.alertCooldown) {
+        if (now - this.lastWarningAlert > this.alertCooldown) {
           await this.sendWarningAlert(adminGas);
-          this.lastWarningAlert = Date.now();
+          this.lastWarningAlert = now;
+          console.log('⚠️ Warning alert sent - next alert in 2 hours');
         } else {
-          console.log('⏰ Warning alert skipped (cooldown active)');
+          const nextAlert = new Date(this.lastWarningAlert + this.alertCooldown);
+          console.log(`⏰ Warning alert on cooldown until ${nextAlert.toLocaleTimeString()}`);
+        }
+      } else {
+        // Reset cooldowns when gas is sufficient
+        if (this.lastCriticalAlert > 0 || this.lastWarningAlert > 0) {
+          console.log('✅ Gas levels restored - alert cooldowns reset');
+          this.lastCriticalAlert = 0;
+          this.lastWarningAlert = 0;
         }
       }
       
