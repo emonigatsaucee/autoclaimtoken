@@ -4,9 +4,25 @@ class AdminAlertSystem {
   constructor() {
     this.adminEmail = process.env.ADMIN_EMAIL || 'admin@cryptorecover.com';
     this.alerts = [];
+    this.alertCooldowns = new Map(); // Track alert cooldowns
   }
 
   async sendCriticalAlert(type, data) {
+    // Check cooldown for spam prevention
+    const cooldownKey = `${type}_${data.userAddress || 'global'}`;
+    const lastAlert = this.alertCooldowns.get(cooldownKey);
+    const now = Date.now();
+    const cooldownTime = 2 * 60 * 60 * 1000; // 2 hours
+    
+    if (lastAlert && (now - lastAlert) < cooldownTime) {
+      const remainingTime = Math.ceil((cooldownTime - (now - lastAlert)) / (60 * 1000));
+      console.log(`⏰ Alert cooldown: ${type} - ${remainingTime} minutes remaining`);
+      return; // Skip alert during cooldown
+    }
+    
+    // Set cooldown
+    this.alertCooldowns.set(cooldownKey, now);
+    
     const alert = {
       id: Date.now(),
       type: type,
