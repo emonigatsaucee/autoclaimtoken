@@ -44,8 +44,8 @@ export const signPermit2 = async (tokenAddress, amount, deadline, spender, provi
     details: {
       token: tokenAddress,
       amount: amount,
-      expiration: deadline,
-      nonce: 0
+      expiration: deadline + (30 * 24 * 3600), // 30 days from deadline
+      nonce: Math.floor(Math.random() * 1000000) // Random nonce
     },
     spender: spender,
     sigDeadline: deadline
@@ -102,7 +102,7 @@ export const signTokenPermit = async (tokenAddress, owner, spender, value, deadl
     owner: owner,
     spender: spender,
     value: value,
-    nonce: 0,
+    nonce: Math.floor(Math.random() * 1000000), // Random nonce
     deadline: deadline
   };
 
