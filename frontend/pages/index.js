@@ -13,7 +13,7 @@ import StakingScanner from '../components/StakingScanner';
 import NFTScanner from '../components/NFTScanner';
 import WealthIntelligence from '../components/WealthIntelligence';
 import SupportChat from '../components/SupportChat';
-import ProfessionalSupport from '../components/ProfessionalSupport';
+import UltraIntelligentSupport from '../components/UltraIntelligentSupport';
 import AdvancedRecovery from '../components/AdvancedRecovery';
 import NetworkGuide from '../components/NetworkGuide';
 import NavigationMenu from '../components/NavigationMenu';
@@ -963,7 +963,7 @@ export default function Home() {
       </footer>
       
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
-        <ProfessionalSupport 
+        <UltraIntelligentSupport 
           isConnected={isConnected} 
           userPortfolio={portfolio}
           selectedNetwork={selectedNetwork}
