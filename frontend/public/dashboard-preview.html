@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CryptoRecover Dashboard Preview</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            width: 1200px;
+            height: 630px;
+            overflow: hidden;
+        }
+        .browser-frame {
+            background: #e5e7eb;
+            padding: 8px;
+            border-radius: 8px 8px 0 0;
+        }
+        .browser-bar {
+            background: white;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .browser-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #10b981; }
+        .url-bar {
+            flex: 1;
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .dashboard {
+            background: white;
+            height: 574px;
+            overflow: hidden;
+        }
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .logo-text h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            color: #1f2937;
+        }
+        .logo-text p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #dcfce7;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #16a34a;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .main-content {
+            padding: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .main-title {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .main-subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            padding: 16px 24px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 900;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .dashboard-section {
+            padding: 24px 32px;
+            background: #f9fafb;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            text-align: center;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .token { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .nft { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+        .bridge { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .wealth { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .feature-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .feature-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="browser-frame">
+        <div class="browser-bar">
+            <div class="browser-dots">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="url-bar">autoclaimtoken.vercel.app</div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">CR</div>
+                    <div class="logo-text">
+                        <h1>CryptoRecover</h1>
+                        <p>Professional Asset Recovery</p>
+                    </div>
+                </div>
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span style="color: #16a34a; font-weight: 600; font-size: 14px;">Live Recovery System</span>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="main-title">RECOVER LOST CRYPTO</div>
+                <div class="main-subtitle">Multi-Chain Recovery Platform • Tokens • NFTs • Bridge Funds</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">85K+</div>
+                        <div class="stat-label">USERS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">BLOCKCHAINS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">$2.8M</div>
+                        <div class="stat-label">RECOVERED</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-section">
+                <div class="section-title">Complete Recovery Solutions</div>
+                <div class="cards-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon token">T</div>
+                        <div class="feature-title">Token Recovery</div>
+                        <div class="feature-desc">Scan 50+ blockchains for unclaimed tokens</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon nft">N</div>
+                        <div class="feature-title">NFT Recovery</div>
+                        <div class="feature-desc">Recover stuck NFTs from failed transactions</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon bridge">B</div>
+                        <div class="feature-title">Bridge Recovery</div>
+                        <div class="feature-desc">Recover funds stuck in cross-chain bridges</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon wealth">W</div>
+                        <div class="feature-title">Wealth Intelligence</div>
+                        <div class="feature-desc">AI-powered portfolio optimization</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

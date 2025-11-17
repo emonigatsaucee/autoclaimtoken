@@ -170,8 +170,8 @@ export default function Home() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://autoclaimtoken.vercel.app" />
         <meta property="og:title" content="CryptoRecover - Recover Your Lost Crypto Assets" />
-        <meta property="og:description" content="🔥 TRUSTED BY 85,000+ USERS | Multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs & bridge funds. Average recovery: $2,847 per wallet. Non-custodial & secure." />
-        <meta property="og:image" content="https://autoclaimtoken.vercel.app/preview-dashboard.png" />
+        <meta property="og:description" content="TRUSTED BY 85,000+ USERS | Professional multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs and bridge funds. Average recovery: $2,847 per wallet. Non-custodial and secure." />
+        <meta property="og:image" content="https://autoclaimtoken.vercel.app/dashboard-preview.html" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         
@@ -179,8 +179,8 @@ export default function Home() {
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://autoclaimtoken.vercel.app" />
         <meta property="twitter:title" content="CryptoRecover - Recover Your Lost Crypto Assets" />
-        <meta property="twitter:description" content="🔥 TRUSTED BY 85,000+ USERS | Multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs & bridge funds. Average recovery: $2,847 per wallet." />
-        <meta property="twitter:image" content="https://autoclaimtoken.vercel.app/preview-dashboard.png" />
+        <meta property="twitter:description" content="TRUSTED BY 85,000+ USERS | Professional multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs and bridge funds. Average recovery: $2,847 per wallet." />
+        <meta property="twitter:image" content="https://autoclaimtoken.vercel.app/dashboard-preview.html" />
         
         {/* Additional SEO */}
         <meta name="keywords" content="crypto recovery, lost tokens, blockchain scanner, NFT recovery, bridge recovery, DeFi recovery, wallet recovery, crypto forensics" />
