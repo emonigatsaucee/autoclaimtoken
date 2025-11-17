@@ -74,20 +74,21 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
   // Simulate agent assignment
   useEffect(() => {
     if (isOpen && !supportAgent) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setSupportAgent({
-          name: 'Sarah Chen',
+          name: 'Alex Thompson',
           role: 'Senior Recovery Specialist',
           rating: 4.9,
           recoveries: 1247,
           specialties: ['DeFi Recovery', 'Bridge Issues', 'MEV Protection'],
           status: 'online',
-          responseTime: '< 30 seconds',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
+          responseTime: 'under 30 seconds'
         });
       }, 2000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, supportAgent]);
 
   // Advanced LLM-style response engine with context awareness
   const findBestResponse = (userInput) => {
@@ -217,10 +218,8 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
   ];
 
   const supportChannels = [
-    { id: 'chat', name: 'Live Chat', icon: MessageCircle, available: true, waitTime: '< 30s' },
-    { id: 'video', name: 'Video Call', icon: Video, available: true, waitTime: '< 2min' },
-    { id: 'phone', name: 'Phone', icon: Phone, available: true, waitTime: '< 1min' },
-    { id: 'expert', name: 'Expert', icon: Shield, available: true, waitTime: '< 5min' }
+    { id: 'chat', name: 'Live Chat', icon: MessageCircle, available: true, waitTime: 'under 30s' },
+    { id: 'email', name: 'Email', icon: Mail, available: true, waitTime: 'under 1hr' }
   ];
 
   const handleQuickAction = (action) => {
@@ -319,14 +318,14 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
           >
             <MessageCircle className="w-4 h-4 mx-auto mb-1" />
             <div>Live Chat</div>
-            <div className="text-xs text-gray-500">&lt; 30s</div>
+            <div className="text-xs text-gray-500">under 30s</div>
           </button>
           <button
             className="p-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200"
           >
             <Mail className="w-4 h-4 mx-auto mb-1" />
             <div>Email Support</div>
-            <div className="text-xs text-gray-500">&lt; 1hr</div>
+            <div className="text-xs text-gray-500">under 1hr</div>
           </button>
         </div>
       </div>
