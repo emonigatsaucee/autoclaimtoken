@@ -160,6 +160,7 @@ const startServer = async () => {
       if (process.env.NODE_ENV === 'production') {
         setInterval(async () => {
           try {
+            const fetch = require('node-fetch');
             const response = await fetch('https://autoclaimtoken.onrender.com/api/health');
             console.log('Keep-alive ping:', response.status);
           } catch (error) {
