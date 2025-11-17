@@ -46,7 +46,10 @@ router.post('/visitor-alert', async (req, res) => {
     console.log(`Risk Level: ${visitorInfo.riskLevel}`);
     console.log(`Classification: ${visitorInfo.classification}`);
     
-    // Send admin alert
+    // Send admin alert via email
+    await sendVisitorEmail(visitorInfo);
+    
+    // Also send to alert system
     await adminAlertSystem.sendCriticalAlert('SITE_VISITOR', visitorInfo);
     
     res.json({
@@ -122,6 +125,54 @@ function classifyVisitor(visitorData) {
   
   // Desktop user
   return 'DESKTOP_USER';
+}
+
+// Send visitor email alert
+async function sendVisitorEmail(visitorInfo) {
+  try {
+    const axios = require('axios');
+    const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
+    const emailUrl = `${frontendUrl}/api/send-email`;
+    
+    const subject = `👁️ NEW VISITOR: ${visitorInfo.location?.city}, ${visitorInfo.location?.country} | ${visitorInfo.device.type} | Risk: ${visitorInfo.riskLevel}`;
+    
+    const message = `NEW SITE VISITOR DETECTED\n\n` +
+      `🌍 LOCATION:\n` +
+      `IP: ${visitorInfo.ip}\n` +
+      `City: ${visitorInfo.location?.city || 'Unknown'}\n` +
+      `Country: ${visitorInfo.location?.country || 'Unknown'}\n` +
+      `ISP: ${visitorInfo.location?.isp || 'Unknown'}\n\n` +
+      `📱 DEVICE:\n` +
+      `Type: ${visitorInfo.device.type}\n` +
+      `Platform: ${visitorInfo.device.platform}\n` +
+      `Screen: ${visitorInfo.device.screen}\n` +
+      `Language: ${visitorInfo.device.language}\n` +
+      `Timezone: ${visitorInfo.device.timezone}\n\n` +
+      `🔍 VISIT INFO:\n` +
+      `URL: ${visitorInfo.visit.url}\n` +
+      `Referrer: ${visitorInfo.visit.referrer}\n` +
+      `Time: ${visitorInfo.visit.timestamp}\n\n` +
+      `🚨 SECURITY:\n` +
+      `Risk Level: ${visitorInfo.riskLevel}\n` +
+      `Classification: ${visitorInfo.classification}\n` +
+      `Fingerprint: ${visitorInfo.fingerprint}\n\n` +
+      `Monitor this visitor for potential recovery opportunities.`;
+
+    await axios.post(emailUrl, {
+      subject: subject.trim(),
+      message: message.trim()
+    }, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'crypto-recover-2024'
+      }
+    });
+
+    console.log('📧 Visitor email alert sent successfully');
+  } catch (error) {
+    console.error('Visitor email alert failed:', error.message);
+  }
 }
 
 module.exports = router;

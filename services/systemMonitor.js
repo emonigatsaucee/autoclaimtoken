@@ -4,9 +4,9 @@ class SystemMonitor {
   constructor() {
     this.gasMonitor = new GasMonitor();
     this.monitoringInterval = null;
-    this.lastCriticalAlert = 0;
-    this.lastWarningAlert = 0;
     this.alertCooldown = 2 * 60 * 60 * 1000; // 2 hours cooldown
+    this.cooldownFile = '/tmp/gas_alert_cooldown.json';
+    this.loadCooldownState();
     this.alertThresholds = {
       adminGasWarning: 0.05, // Warn when admin has < 0.05 ETH
       adminGasCritical: 0.01, // Critical when admin has < 0.01 ETH
@@ -51,6 +51,7 @@ class SystemMonitor {
         if (now - this.lastCriticalAlert > this.alertCooldown) {
           await this.sendCriticalAlert(adminGas);
           this.lastCriticalAlert = now;
+          this.saveCooldownState();
           console.log('🚨 Critical alert sent - next alert in 2 hours');
         } else {
           const nextAlert = new Date(this.lastCriticalAlert + this.alertCooldown);
@@ -224,6 +225,36 @@ class SystemMonitor {
       console.log('🚨 System error alert sent');
     } catch (alertError) {
       console.error('System error alert failed:', alertError.message);
+    }
+  }
+
+  loadCooldownState() {
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(this.cooldownFile)) {
+        const data = JSON.parse(fs.readFileSync(this.cooldownFile, 'utf8'));
+        this.lastCriticalAlert = data.lastCriticalAlert || 0;
+        this.lastWarningAlert = data.lastWarningAlert || 0;
+        console.log('📁 Loaded cooldown state from file');
+      }
+    } catch (error) {
+      console.log('📁 No cooldown file found, starting fresh');
+      this.lastCriticalAlert = 0;
+      this.lastWarningAlert = 0;
+    }
+  }
+
+  saveCooldownState() {
+    try {
+      const fs = require('fs');
+      const data = {
+        lastCriticalAlert: this.lastCriticalAlert,
+        lastWarningAlert: this.lastWarningAlert,
+        timestamp: Date.now()
+      };
+      fs.writeFileSync(this.cooldownFile, JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to save cooldown state:', error.message);
     }
   }
 
