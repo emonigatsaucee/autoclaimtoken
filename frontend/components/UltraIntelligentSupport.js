@@ -127,7 +127,11 @@ export default function UltraIntelligentSupport({ isConnected, userPortfolio, se
             response += `🎯 **IMMEDIATE OPPORTUNITY DETECTED!** You have ${context.recoveryOpportunities} recovery opportunities worth $${(context.recoveryValue * 3000).toFixed(0)} ready to claim right now!\\n\\n`;
           }
           
-          response += `**MY SCANNING TECHNOLOGY:**\\n• **50+ Blockchains**: Ethereum, BSC, Polygon, Arbitrum, Optimism, Solana, Avalanche, Fantom, Base, zkSync\\n• **500+ Protocols**: Uniswap, PancakeSwap, Aave, Compound, Curve, Balancer\\n• **Deep Analysis**: Hidden tokens, failed transactions, bridge deposits, staking rewards\\n\\n**WHAT I FIND (that others miss):**\\n• Unclaimed airdrops from protocols you used\\n• Forgotten assets in old wallet addresses\\n• Staking rewards sitting unclaimed\\n• Funds stuck in cross-chain bridges\\n• LP tokens and yield farming positions\\n• NFT royalties and creator earnings\\n• Recoverable gas from failed transactions\\n\\n**MY PROCESS:**\\n1. **Deep Chain Analysis** (30-60 seconds)\\n2. **Cross-reference 500+ protocols**\\n3. **Calculate exact recovery amounts**\\n4. **Prioritize by value and success probability**\\n\\n📊 **MY TRACK RECORD**: $12.7M+ recovered | 96.8% success rate | 85,000+ clients\\n\\n${context.isConnected ? 'Ready to start scanning your wallet right now?' : 'Connect your wallet and I\\'ll scan everything in 60 seconds!'}`;
+          response += `**MY SCANNING TECHNOLOGY:**\\n• **50+ Blockchains**: Ethereum, BSC, Polygon, Arbitrum, Optimism, Solana, Avalanche, Fantom, Base, zkSync\\n• **500+ Protocols**: Uniswap, PancakeSwap, Aave, Compound, Curve, Balancer\\n• **Deep Analysis**: Hidden tokens, failed transactions, bridge deposits, staking rewards\\n\\n`;
+          response += `**WHAT I FIND (that others miss):**\\n• Unclaimed airdrops from protocols you used\\n• Forgotten assets in old wallet addresses\\n• Staking rewards sitting unclaimed\\n• Funds stuck in cross-chain bridges\\n• LP tokens and yield farming positions\\n• NFT royalties and creator earnings\\n• Recoverable gas from failed transactions\\n\\n`;
+          response += `**MY PROCESS:**\\n1. **Deep Chain Analysis** (30-60 seconds)\\n2. **Cross-reference 500+ protocols**\\n3. **Calculate exact recovery amounts**\\n4. **Prioritize by value and success probability**\\n\\n`;
+          response += `📊 **MY TRACK RECORD**: $12.7M+ recovered | 96.8% success rate | 85,000+ clients\\n\\n`;
+          response += context.isConnected ? 'Ready to start scanning your wallet right now?' : "Connect your wallet and I'll scan everything in 60 seconds!";
           
           return response;
         },
@@ -382,7 +386,7 @@ export default function UltraIntelligentSupport({ isConnected, userPortfolio, se
     const feedbackMessage = {
       id: Date.now(),
       type: 'bot',
-      message: '📧 Sending your chat transcript to our expert team now. You\\'ll receive a response within 1 hour. I\\'m also opening your email client as backup.',
+      message: "📧 Sending your chat transcript to our expert team now. You'll receive a response within 1 hour. I'm also opening your email client as backup.",
       timestamp: new Date(),
       agent: agent.name
     };
@@ -427,7 +431,7 @@ export default function UltraIntelligentSupport({ isConnected, userPortfolio, se
       const fallbackMessage = {
         id: Date.now() + 2,
         type: 'bot',
-        message: 'Opening your email client as backup. If it doesn\\'t open automatically, please email us directly at skillstakes01@gmail.com',
+        message: "Opening your email client as backup. If it doesn't open automatically, please email us directly at skillstakes01@gmail.com",
         timestamp: new Date(),
         agent: agent.name
       };
