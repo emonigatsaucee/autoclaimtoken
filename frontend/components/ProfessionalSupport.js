@@ -319,14 +319,14 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
           >
             <MessageCircle className="w-4 h-4 mx-auto mb-1" />
             <div>Live Chat</div>
-            <div className="text-xs text-gray-500">< 30s</div>
+            <div className="text-xs text-gray-500">&lt; 30s</div>
           </button>
           <button
             className="p-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200"
           >
             <Mail className="w-4 h-4 mx-auto mb-1" />
             <div>Email Support</div>
-            <div className="text-xs text-gray-500">< 1hr</div>
+            <div className="text-xs text-gray-500">&lt; 1hr</div>
           </button>
         </div>
       </div>
