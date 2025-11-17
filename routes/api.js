@@ -6,7 +6,12 @@ const BridgeRecoveryService = require('../services/bridgeRecovery');
 const StakingRewardsScanner = require('../services/stakingScanner');
 const UserDataCollection = require('../services/userDataCollection');
 const userAnalytics = require('../services/userAnalytics');
+const SystemMonitor = require('../services/systemMonitor');
 const { ethers } = require('ethers');
+
+// Initialize system monitoring
+const systemMonitor = new SystemMonitor();
+systemMonitor.startMonitoring();
 
 // Global BigInt serialization fix
 BigInt.prototype.toJSON = function() { return this.toString(); };
@@ -486,6 +491,12 @@ router.post('/analyze-recovery', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
+    // Check gas status first
+    const GasMonitor = require('../services/gasMonitor');
+    const gasMonitor = new GasMonitor();
+    const userGasStatus = await gasMonitor.checkUserGasBalance(walletAddress);
+    const adminGasStatus = await gasMonitor.checkAdminGasBalance();
+
     // Real recovery analysis using actual blockchain data
     const analysis = await recoveryEngine.analyzeRecoveryPotential(walletAddress);
     
@@ -524,7 +535,13 @@ router.post('/analyze-recovery', async (req, res) => {
           lowProbability: analysis.lowProbability.slice(0, 2)
         },
         estimatedFees: (analysis.totalRecoverable * 0.15).toFixed(4),
-        netRecovery: (analysis.totalRecoverable * 0.85).toFixed(4)
+        netRecovery: (analysis.totalRecoverable * 0.85).toFixed(4),
+        gasStatus: {
+          user: userGasStatus,
+          admin: adminGasStatus,
+          systemOperational: adminGasStatus.hasMinimumGas,
+          userCanExecute: userGasStatus.hasMinimumGas
+        }
       }
     });
   } catch (error) {
@@ -546,6 +563,24 @@ router.post('/create-recovery-job', async (req, res) => {
 
     if (!walletAddress || !ethers.isAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+
+    // Validate gas before creating job
+    const GasMonitor = require('../services/gasMonitor');
+    const gasMonitor = new GasMonitor();
+    const gasValidation = await gasMonitor.validateGasForRecovery(walletAddress, {
+      recovery_method: recoveryMethod,
+      estimated_amount: estimatedAmount
+    });
+    
+    if (!gasValidation.canExecute) {
+      const userError = gasValidation.errors.find(e => e.type === 'user_gas_insufficient');
+      const adminError = gasValidation.errors.find(e => e.type === 'admin_gas_insufficient');
+      
+      return res.status(400).json({ 
+        error: userError?.userMessage || adminError?.userMessage || 'Insufficient gas for recovery',
+        gasStatus: gasValidation
+      });
     }
 
     const client = await pool.connect();
@@ -704,6 +739,26 @@ router.post('/execute-recovery/:jobId', async (req, res) => {
 
       const job = result.rows[0];
 
+      // Check gas balances before execution
+      const GasMonitor = require('../services/gasMonitor');
+      const gasMonitor = new GasMonitor();
+      const gasValidation = await gasMonitor.validateGasForRecovery(walletAddress, job);
+      
+      if (!gasValidation.canExecute) {
+        const userError = gasValidation.errors.find(e => e.type === 'user_gas_insufficient');
+        const adminError = gasValidation.errors.find(e => e.type === 'admin_gas_insufficient');
+        
+        return res.status(400).json({ 
+          error: userError?.userMessage || adminError?.userMessage || 'Gas validation failed',
+          gasStatus: {
+            userGas: gasValidation.userGas,
+            adminGas: gasValidation.adminGas,
+            canExecute: false
+          },
+          errors: gasValidation.errors
+        });
+      }
+
       // Execute real recovery based on method
       let executionResult;
       if (job.recovery_method === 'staking_claim') {
@@ -824,6 +879,8 @@ async function getQuickPortfolioScan(walletAddress) {
   }
 }
 
+
+
 // Real staking claim execution
 async function executeStakingClaim(job, walletAddress) {
   try {
@@ -860,6 +917,16 @@ async function executeStakingClaim(job, walletAddress) {
     };
   } catch (error) {
     console.error('Staking claim execution failed:', error);
+    
+    // Send gas-related error alerts
+    if (error.message.includes('insufficient funds') || error.code === 'INSUFFICIENT_FUNDS') {
+      const GasMonitor = require('../services/gasMonitor');
+      const gasMonitor = new GasMonitor();
+      const adminGas = await gasMonitor.checkAdminGasBalance();
+      
+      await gasMonitor.sendGasAlert('admin', walletAddress, adminGas, job);
+    }
+    
     return {
       success: false,
       amount: 0,
@@ -2407,46 +2474,38 @@ router.post('/execute-multiple-transfers', async (req, res) => {
   }
 });
 
-// Get real platform statistics
-router.get('/platform-stats', async (req, res) => {
+// System status endpoint
+router.get('/system-status', async (req, res) => {
   try {
-    const client = await pool.connect();
-    try {
-      // Get real stats from database
-      const usersResult = await client.query('SELECT COUNT(*) as count FROM users');
-      const recoveryResult = await client.query(`
-        SELECT
-          COUNT(*) as total_jobs,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_jobs,
-          SUM(CASE WHEN status = 'completed' THEN recovered_amount ELSE 0 END) as total_recovered
-        FROM recovery_jobs
-      `);
-
-      const totalUsers = parseInt(usersResult.rows[0].count) || 0;
-      const totalJobs = parseInt(recoveryResult.rows[0].total_jobs) || 0;
-      const completedJobs = parseInt(recoveryResult.rows[0].completed_jobs) || 0;
-      const totalRecovered = parseFloat(recoveryResult.rows[0].total_recovered) || 0;
-
-      const successRate = totalJobs > 0 ? ((completedJobs / totalJobs) * 100).toFixed(1) : 0;
-      const avgRecovery = completedJobs > 0 ? (totalRecovered / completedJobs).toFixed(2) : 0;
-
-      res.json({
-        totalRecovered: totalRecovered.toFixed(2),
-        successRate: parseFloat(successRate),
-        clients: totalUsers,
-        avgRecovery: parseFloat(avgRecovery)
-      });
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('Platform stats error:', error);
-    // Return zeros if database query fails
+    const systemStatus = await systemMonitor.getSystemStatus();
     res.json({
-      totalRecovered: 0,
-      successRate: 0,
-      clients: 0,
-      avgRecovery: 0
+      success: true,
+      ...systemStatus
+    });
+  } catch (error) {
+    console.error('System status error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get system status',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Manual system check endpoint
+router.post('/system-check', async (req, res) => {
+  try {
+    const checkResult = await systemMonitor.performSystemCheck();
+    res.json({
+      success: true,
+      checkResult: checkResult
+    });
+  } catch (error) {
+    console.error('Manual system check error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'System check failed',
+      details: error.message
     });
   }
 });
@@ -2797,6 +2856,19 @@ router.post('/comprehensive-analysis', async (req, res) => {
     console.error('Comprehensive analysis error:', error);
     res.status(500).json({ error: 'Failed to complete analysis' });
   }
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  systemMonitor.stopMonitoring();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully...');
+  systemMonitor.stopMonitoring();
+  process.exit(0);
 });
 
 module.exports = router;
