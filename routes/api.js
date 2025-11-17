@@ -17,9 +17,16 @@ BigInt.prototype.toJSON = function() { return this.toString(); };
 // Send email via Vercel API function with improved error handling
 async function sendAdminNotification(subject, message) {
   try {
+    // Debug logging
+    console.log('📧 sendAdminNotification called with:');
+    console.log('📧 Subject type:', typeof subject, 'Value:', subject);
+    console.log('📧 Message type:', typeof message, 'Value:', message ? message.substring(0, 100) + '...' : 'undefined');
+    
     // Validate inputs
     if (!subject || !message || subject.trim() === '' || message.trim() === '') {
       console.log('⚠️ Empty subject or message, skipping email');
+      console.log('⚠️ Subject empty:', !subject || subject.trim() === '');
+      console.log('⚠️ Message empty:', !message || message.trim() === '');
       return false;
     }
     
