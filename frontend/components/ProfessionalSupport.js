@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Phone, Video, FileText, Shield, Clock, Star, User, Headphones, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { MessageCircle, X, Send, Phone, Video, FileText, Shield, Clock, Star, User, Headphones, AlertCircle, CheckCircle, Info, Mail } from 'lucide-react';
 
 export default function ProfessionalSupport({ isConnected, userPortfolio, selectedNetwork }) {
   const [isOpen, setIsOpen] = useState(false);
