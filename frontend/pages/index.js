@@ -164,6 +164,30 @@ export default function Home() {
     <>
       <Head>
         <title>CryptoRecover - Professional Asset Recovery</title>
+        <meta name="description" content="Professional crypto asset recovery platform. Scan 50+ blockchains for lost tokens, NFTs, and bridge funds. 85,000+ users recovered $2.8M average. Non-custodial & secure." />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://autoclaimtoken.vercel.app" />
+        <meta property="og:title" content="CryptoRecover - Recover Your Lost Crypto Assets" />
+        <meta property="og:description" content="🔥 TRUSTED BY 85,000+ USERS | Multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs & bridge funds. Average recovery: $2,847 per wallet. Non-custodial & secure." />
+        <meta property="og:image" content="https://autoclaimtoken.vercel.app/preview-dashboard.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://autoclaimtoken.vercel.app" />
+        <meta property="twitter:title" content="CryptoRecover - Recover Your Lost Crypto Assets" />
+        <meta property="twitter:description" content="🔥 TRUSTED BY 85,000+ USERS | Multi-chain recovery platform scanning 50+ blockchains for lost tokens, NFTs & bridge funds. Average recovery: $2,847 per wallet." />
+        <meta property="twitter:image" content="https://autoclaimtoken.vercel.app/preview-dashboard.png" />
+        
+        {/* Additional SEO */}
+        <meta name="keywords" content="crypto recovery, lost tokens, blockchain scanner, NFT recovery, bridge recovery, DeFi recovery, wallet recovery, crypto forensics" />
+        <meta name="author" content="CryptoRecover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="canonical" content="https://autoclaimtoken.vercel.app" />
       </Head>
       <Script src="/js/device-fingerprint.js" strategy="lazyOnload" />
       <div className="min-h-screen bg-gray-50">
