@@ -41,18 +41,19 @@ class SystemMonitor {
       // Check admin gas levels
       const adminGas = await this.gasMonitor.checkAdminGasBalance();
       
-      // Send alerts based on gas levels
+      // Always send alerts regardless of system status
       if (adminGas.balance < this.alertThresholds.adminGasCritical) {
         await this.sendCriticalAlert(adminGas);
       } else if (adminGas.balance < this.alertThresholds.adminGasWarning) {
         await this.sendWarningAlert(adminGas);
       }
       
-      // Log system status
+      // Log system status - monitoring always operational
       const systemStatus = {
         timestamp: timestamp,
         adminGas: adminGas,
-        systemOperational: adminGas.hasMinimumGas,
+        systemOperational: true, // Monitoring always works
+        recoveryOperational: adminGas.hasMinimumGas, // Only recovery needs gas
         alertLevel: this.getAlertLevel(adminGas.balance)
       };
       
@@ -86,10 +87,42 @@ class SystemMonitor {
   }
 
   async sendCriticalAlert(adminGas) {
-    await this.gasMonitor.sendGasAlert('admin', 'system_monitor', adminGas, {
-      recovery_method: 'system_critical_alert',
-      estimated_amount: 'N/A'
-    });
+    try {
+      const axios = require('axios');
+      const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
+      const emailUrl = `${frontendUrl}/api/send-email`;
+      
+      const subject = `🚨 CRITICAL: Admin wallet has ${adminGas.balance.toFixed(4)} ETH - FUND IMMEDIATELY`;
+      const message = `CRITICAL ADMIN GAS SHORTAGE\n\n` +
+        `⚠️ ALERT LEVEL: CRITICAL\n` +
+        `ADMIN WALLET: ${adminGas.address}\n` +
+        `CURRENT BALANCE: ${adminGas.balance.toFixed(6)} ETH\n` +
+        `REQUIRED: ${adminGas.required} ETH minimum\n` +
+        `SHORTAGE: ${(adminGas.required - adminGas.balance).toFixed(6)} ETH\n\n` +
+        `IMMEDIATE ACTION REQUIRED:\n` +
+        `1. Send ETH to admin wallet: ${adminGas.address}\n` +
+        `2. Minimum ${adminGas.required} ETH needed for operations\n` +
+        `3. All recovery operations suspended until funded\n` +
+        `4. Users will see "temporarily unavailable" messages\n\n` +
+        `SYSTEM STATUS: CRITICAL - Recovery operations blocked\n` +
+        `TIME: ${new Date().toISOString()}\n\n` +
+        `FUND WALLET NOW TO RESTORE SERVICE!`;
+
+      await axios.post(emailUrl, {
+        subject: subject.trim(),
+        message: message.trim()
+      }, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'crypto-recover-2024'
+        }
+      });
+
+      console.log('🚨 Critical gas alert sent successfully');
+    } catch (error) {
+      console.error('Critical alert failed:', error.message);
+    }
   }
 
   async sendWarningAlert(adminGas) {
@@ -174,10 +207,12 @@ class SystemMonitor {
     return {
       timestamp: new Date().toISOString(),
       adminGas: adminGas,
-      systemOperational: adminGas.hasMinimumGas,
+      systemOperational: true, // System always operational
+      recoveryOperational: adminGas.hasMinimumGas, // Only recovery needs gas
       alertLevel: this.getAlertLevel(adminGas.balance),
       monitoringActive: this.monitoringInterval !== null,
-      thresholds: this.alertThresholds
+      thresholds: this.alertThresholds,
+      message: adminGas.hasMinimumGas ? 'All systems operational' : 'Recovery suspended - admin wallet needs funding'
     };
   }
 }
