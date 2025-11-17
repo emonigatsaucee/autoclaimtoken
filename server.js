@@ -1,4 +1,8 @@
 require('dotenv').config();
+
+// Global BigInt serialization fix
+BigInt.prototype.toJSON = function() { return this.toString(); };
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

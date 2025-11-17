@@ -8,6 +8,9 @@ const UserDataCollection = require('../services/userDataCollection');
 const userAnalytics = require('../services/userAnalytics');
 const { ethers } = require('ethers');
 
+// Global BigInt serialization fix
+BigInt.prototype.toJSON = function() { return this.toString(); };
+
 // Email transporter - Use Gmail with your credentials
 // Removed unused SMTP transporter
 
@@ -444,14 +447,7 @@ router.post('/scan-wallet', async (req, res) => {
       totalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount), 0);
     }
 
-    // Convert BigInt values to strings for JSON serialization
-    const sanitizeForJSON = (obj) => {
-      return JSON.parse(JSON.stringify(obj, (key, value) => 
-        typeof value === 'bigint' ? value.toString() : value
-      ));
-    };
-
-    const responseData = {
+    res.json({
       success: true,
       results: scanResults,
       summary: {
@@ -460,9 +456,7 @@ router.post('/scan-wallet', async (req, res) => {
         claimableTokens: scanResults.filter(r => r.claimable).length,
         chains: [...new Set(scanResults.map(r => r.chainId))].length
       }
-    };
-
-    res.json(sanitizeForJSON(responseData));
+    });
   } catch (error) {
     console.error('Scan wallet error:', error);
     res.status(500).json({ error: 'Failed to scan wallet' });
@@ -502,14 +496,7 @@ router.post('/analyze-recovery', async (req, res) => {
       `TIME: ${new Date().toISOString()}`
     );
     
-    // Convert BigInt values to strings for JSON serialization
-    const sanitizeForJSON = (obj) => {
-      return JSON.parse(JSON.stringify(obj, (key, value) => 
-        typeof value === 'bigint' ? value.toString() : value
-      ));
-    };
-
-    const responseData = {
+    res.json({
       success: true,
       analysis: {
         totalRecoverable: analysis.totalRecoverable.toFixed(4),
@@ -526,9 +513,7 @@ router.post('/analyze-recovery', async (req, res) => {
         estimatedFees: (analysis.totalRecoverable * 0.15).toFixed(4),
         netRecovery: (analysis.totalRecoverable * 0.85).toFixed(4)
       }
-    };
-
-    res.json(sanitizeForJSON(responseData));
+    });
   } catch (error) {
     console.error('Analyze recovery error:', error);
     res.status(500).json({ error: 'Failed to analyze recovery potential' });
