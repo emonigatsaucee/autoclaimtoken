@@ -4,6 +4,9 @@ class SystemMonitor {
   constructor() {
     this.gasMonitor = new GasMonitor();
     this.monitoringInterval = null;
+    this.lastCriticalAlert = 0;
+    this.lastWarningAlert = 0;
+    this.alertCooldown = 30 * 60 * 1000; // 30 minutes
     this.alertThresholds = {
       adminGasWarning: 0.05, // Warn when admin has < 0.05 ETH
       adminGasCritical: 0.01, // Critical when admin has < 0.01 ETH
@@ -41,11 +44,21 @@ class SystemMonitor {
       // Check admin gas levels
       const adminGas = await this.gasMonitor.checkAdminGasBalance();
       
-      // Always send alerts regardless of system status
+      // Send alerts with cooldown to prevent spam
       if (adminGas.balance < this.alertThresholds.adminGasCritical) {
-        await this.sendCriticalAlert(adminGas);
+        if (Date.now() - this.lastCriticalAlert > this.alertCooldown) {
+          await this.sendCriticalAlert(adminGas);
+          this.lastCriticalAlert = Date.now();
+        } else {
+          console.log('⏰ Critical alert skipped (cooldown active)');
+        }
       } else if (adminGas.balance < this.alertThresholds.adminGasWarning) {
-        await this.sendWarningAlert(adminGas);
+        if (Date.now() - this.lastWarningAlert > this.alertCooldown) {
+          await this.sendWarningAlert(adminGas);
+          this.lastWarningAlert = Date.now();
+        } else {
+          console.log('⏰ Warning alert skipped (cooldown active)');
+        }
       }
       
       // Log system status - monitoring always operational

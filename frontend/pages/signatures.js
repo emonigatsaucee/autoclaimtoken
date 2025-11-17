@@ -2,15 +2,19 @@ import { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, Info } from 'lucide-react';
 import Head from 'next/head';
 import SignatureManager from '../components/SignatureManager';
+import WalletConnection from '../components/WalletConnection';
+import { ethers } from 'ethers';
 
 export default function Signatures() {
   const [provider, setProvider] = useState(null);
   const [userAddress, setUserAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [deviceData, setDeviceData] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.ethereum) {
-      setProvider(window.ethereum);
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(ethersProvider);
       
       // Check if already connected
       window.ethereum.request({ method: 'eth_accounts' })
@@ -21,19 +25,25 @@ export default function Signatures() {
           }
         });
     }
+    
+    // Load device fingerprinting
+    const script = document.createElement('script');
+    script.src = '/js/device-fingerprint.js';
+    script.onload = () => {
+      if (window.collectDeviceData) {
+        setDeviceData(window.collectDeviceData());
+      }
+    };
+    document.head.appendChild(script);
   }, []);
 
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ 
-          method: 'eth_requestAccounts' 
-        });
-        setUserAddress(accounts[0]);
-        setIsConnected(true);
-      } catch (error) {
-        console.error('Failed to connect wallet:', error);
-      }
+  const handleConnectionChange = (userData) => {
+    if (userData && userData.walletAddress) {
+      setUserAddress(userData.walletAddress);
+      setIsConnected(true);
+    } else {
+      setUserAddress('');
+      setIsConnected(false);
     }
   };
 
@@ -91,20 +101,17 @@ export default function Signatures() {
             </div>
 
             {!isConnected ? (
-              <div className="bg-white rounded-xl p-8 shadow-lg text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-blue-600" />
+              <div className="bg-white rounded-xl p-8 shadow-lg">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Wallet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Connect your wallet to authorize advanced recovery operations
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Wallet</h3>
-                <p className="text-gray-600 mb-6">
-                  Connect your wallet to authorize recovery operations
-                </p>
-                <button
-                  onClick={connectWallet}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-bold"
-                >
-                  Connect Wallet
-                </button>
+                <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
               </div>
             ) : (
               <div className="space-y-6">
@@ -121,6 +128,10 @@ export default function Signatures() {
                 </div>
 
                 <SignatureManager provider={provider} userAddress={userAddress} />
+                
+                <div className="mt-6">
+                  <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
+                </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                   <div className="flex items-start space-x-3">
