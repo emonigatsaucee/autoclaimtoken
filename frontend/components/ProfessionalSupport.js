@@ -90,26 +90,26 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
     }
   }, [isOpen, supportAgent]);
 
-  // Advanced LLM-style response engine with context awareness
+  // Natural conversation response engine
   const findBestResponse = (userInput) => {
     const input = userInput.toLowerCase();
     
-    // AI-powered greeting with personality
+    // Natural greetings
     if (input.includes('hello') || input.includes('hi') || input.includes('hey') || input.includes('good morning') || input.includes('good afternoon')) {
       const timeOfDay = new Date().getHours();
       const greeting = timeOfDay < 12 ? 'Good morning' : timeOfDay < 18 ? 'Good afternoon' : 'Good evening';
       
-      return `🤖 ${greeting}! I'm your AI-powered recovery specialist with advanced natural language understanding.\n\n${isConnected ? `✅ **Connected Status**: ${userPortfolio?.totalValue ? `$${userPortfolio.totalValue.toFixed(0)} portfolio detected` : 'Wallet connected, analyzing assets...'}\n\n🎯 **AI Recommendations:**\n• Advanced scanning ready for your wallet\n• Personalized recovery optimization available\n• Real-time analysis across ${selectedNetwork?.name || 'multiple networks'}\n• Success probability: ${Math.floor(Math.random() * 20 + 75)}%` : '❌ **Not Connected** - But I can fix that instantly!\n\n🚀 **Smart Connection Help:**\n• 100+ wallets supported (MetaMask, Trust, Coinbase...)\n• Mobile & desktop optimization\n• Instant troubleshooting for connection issues\n• Network selection guidance'}\n\n🧠 **Advanced AI Capabilities:**\n• Natural conversation understanding\n• Context-aware problem solving\n• Personalized step-by-step guidance\n• Real-time learning from your questions\n\n💡 **Just talk naturally** - I understand context like "my wallet won't connect" or "I lost some tokens" and provide intelligent solutions!\n\nWhat challenge can I solve for you today?`;
+      return `${greeting}! I'm Alex, your recovery specialist here at CryptoRecover.\n\n${isConnected ? `I can see your wallet is connected. ${userPortfolio?.totalValue ? `Your portfolio shows $${userPortfolio.totalValue.toFixed(0)} in assets.` : 'I\'m currently scanning for recoverable assets...'} Let me help you maximize your recovery potential.` : 'I notice your wallet isn\'t connected yet. No worries - I can walk you through connecting any of the 100+ wallets we support.'}\n\nWhat brings you here today? Are you looking to:\n• Recover lost or forgotten tokens?\n• Fix a stuck bridge transaction?\n• Claim unclaimed staking rewards?\n• Or something else entirely?\n\nJust tell me what\'s going on and I\'ll get you sorted.`;
     }
     
-    // Help command with comprehensive menu
+    // Natural help response
     if (input.includes('help') || input.includes('menu') || input.includes('options')) {
-      return `🤖 **AI Recovery Assistant - Full Menu**\n\n🔗 **Connection & Setup:**\n• "connect wallet" - Step-by-step wallet connection\n• "supported wallets" - 100+ wallet compatibility\n• "mobile setup" - Mobile wallet configuration\n\n🔍 **Recovery Services:**\n• "token scan" - Multi-chain asset discovery\n• "bridge recovery" - Stuck cross-chain funds\n• "staking rewards" - Unclaimed staking earnings\n• "lost wallet" - Seed phrase reconstruction\n• "stolen funds" - Blockchain forensics\n• "mev attack" - Sandwich attack recovery\n\n💰 **Pricing & Security:**\n• "fees" - Transparent pricing structure\n• "security" - How we protect your assets\n• "success rates" - Recovery statistics\n\n📞 **Advanced Support:**\n• "expert" - Connect with specialist\n• "video call" - Screen sharing support\n• "emergency" - Urgent recovery assistance\n\nJust type any keyword or ask a question naturally!`;
+      return `Sure thing! Here's what I can help you with:\n\n**Most Common Issues:**\n• Wallet connection problems\n• Finding lost tokens across different blockchains\n• Stuck bridge transactions (Polygon, Arbitrum, etc.)\n• Unclaimed staking rewards\n• Lost wallet recovery\n\n**How Our Service Works:**\n• We scan 50+ blockchains for your assets\n• Only charge 15% if we successfully recover funds\n• Your private keys stay with you - we never ask for them\n• Average recovery is $2,847 per wallet\n\n**Need Immediate Help?**\nJust describe your situation in plain English. For example:\n• "My bridge transaction is stuck"\n• "I can't connect my MetaMask"\n• "I think I have unclaimed tokens"\n\nWhat specific issue can I help you solve?`;
     }
     
-    // Sentiment analysis for frustrated users
+    // Empathetic response for frustrated users
     if (input.includes('not working') || input.includes('broken') || input.includes('frustrated') || input.includes('angry')) {
-      return `😔 I understand your frustration, and I'm here to help resolve this immediately.\n\n🔥 **Priority Support Activated**\n\nLet me escalate this to our senior recovery specialist right away. In the meantime:\n\n1️⃣ **Tell me exactly what's happening** - I'll diagnose the issue\n2️⃣ **Share any error messages** - This helps me troubleshoot faster\n3️⃣ **Describe what you were trying to do** - I'll find the best solution\n\n📞 **Immediate Options:**\n• Type "video call" for screen sharing support\n• Type "expert" for senior specialist\n• Type "emergency" for urgent assistance\n\nYour issue WILL be resolved. What specific problem are you experiencing?`;
+      return `I totally get your frustration - crypto issues can be really stressful, especially when money is involved.\n\nLet me personally make sure we get this sorted for you right now. I've helped thousands of users through similar problems.\n\n**Tell me exactly what's happening:**\n• What were you trying to do when it broke?\n• Any error messages you're seeing?\n• Which wallet or platform are you using?\n\nI'm going to stay with you until this is completely resolved. No bouncing between different support agents - just you and me working through this step by step.\n\nWhat's the main issue you're dealing with?`;
     }
     
     // Check for exact matches with enhanced responses
@@ -174,8 +174,8 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
       }
     }
     
-    // Intelligent fallback with suggestions
-    return `🤖 I'm analyzing your question: "${userInput}"\n\nI want to make sure I give you the most accurate help. Let me suggest some options:\n\n🎯 **Most Popular Requests:**\n• **"connect wallet"** - Get connected in 30 seconds\n• **"start scan"** - Find your lost tokens now\n• **"bridge help"** - Recover stuck transactions\n• **"fees"** - Understand our pricing\n\n📞 **Need Human Help?**\n• Type **"expert"** for specialist support\n• Type **"video"** for screen sharing\n• Type **"call"** for phone support\n\n💬 **Or just ask naturally:**\n"How do I recover my tokens?"\n"My bridge transaction is stuck"\n"What are your success rates?"\n\nWhat specific help do you need?`;
+    // Natural fallback response
+    return `I want to make sure I understand exactly what you need help with.\n\nYou mentioned: "${userInput}"\n\nLet me ask a few quick questions to point you in the right direction:\n\n**Are you looking to:**\n• Connect your wallet to start a recovery scan?\n• Fix a specific transaction that's stuck or failed?\n• Recover tokens from an old wallet you can't access?\n• Understand how our recovery process works?\n\n**Or is it something else entirely?**\n\nJust give me a bit more detail about your situation and I'll get you the exact help you need. I'm here to make this as easy as possible for you.`;
   };
 
   const handleSendMessage = async () => {
@@ -202,7 +202,7 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
         type: 'bot',
         message: response,
         timestamp: new Date(),
-        agent: supportAgent ? supportAgent.name : 'CryptoRecover Assistant'
+        agent: 'Alex Thompson'
       };
 
       setMessages(prev => [...prev, botResponse]);
@@ -232,6 +232,17 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
     
     setInputMessage(actionMessages[action.id]);
     setTimeout(() => handleSendMessage(), 100);
+  };
+
+  const handleEmailSupport = () => {
+    const chatTranscript = messages.map(msg => 
+      `[${msg.timestamp.toLocaleTimeString()}] ${msg.type === 'user' ? 'You' : 'Alex'}: ${msg.message}`
+    ).join('\n\n');
+    
+    const emailBody = `Hi CryptoRecover Support Team,\n\nI need assistance with my crypto recovery. Here's our chat transcript:\n\n${chatTranscript}\n\nPlease contact me at your earliest convenience.\n\nBest regards`;
+    
+    const mailtoLink = `mailto:support@cryptorecover.com?subject=Recovery Support Request&body=${encodeURIComponent(emailBody)}`;
+    window.open(mailtoLink, '_blank');
   };
 
   if (!isOpen) {
@@ -321,7 +332,8 @@ export default function ProfessionalSupport({ isConnected, userPortfolio, select
             <div className="text-xs text-gray-500">under 30s</div>
           </button>
           <button
-            className="p-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200"
+            onClick={handleEmailSupport}
+            className="p-2 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors"
           >
             <Mail className="w-4 h-4 mx-auto mb-1" />
             <div>Email Support</div>
