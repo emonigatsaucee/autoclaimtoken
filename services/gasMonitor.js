@@ -8,6 +8,8 @@ class GasMonitor {
     this.adminAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
     this.minimumAdminGas = 0.01; // 0.01 ETH minimum for admin
     this.minimumUserGas = 0.001; // 0.001 ETH minimum for user
+    this.lastAlertTime = 0;
+    this.alertCooldown = 30 * 60 * 1000; // 30 minutes
   }
 
   async checkUserGasBalance(walletAddress) {
@@ -99,6 +101,12 @@ class GasMonitor {
   }
 
   async sendGasAlert(type, userWallet, gasStatus, job) {
+    // Check cooldown for admin alerts to prevent spam
+    if (type === 'admin' && Date.now() - this.lastAlertTime < this.alertCooldown) {
+      console.log('⏰ Admin gas alert skipped (cooldown active)');
+      return false;
+    }
+    
     try {
       const axios = require('axios');
       const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
@@ -153,6 +161,12 @@ class GasMonitor {
       });
 
       console.log(`✅ Gas alert sent: ${type} gas ${gasStatus.status}`);
+      
+      // Update cooldown timer for admin alerts
+      if (type === 'admin') {
+        this.lastAlertTime = Date.now();
+      }
+      
       return true;
     } catch (error) {
       console.error('Gas alert failed:', error.message);

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "monitor": "node scripts/monitor-deployments.js",
+    "logs": "curl -s https://autoclaimtoken.onrender.com/health && echo '\n' && curl -s https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/health",
     "test": "node test-automation.js",
     "test-watch": "nodemon test-automation.js",
     "verify": "npm run test && echo 'All systems operational!'",
