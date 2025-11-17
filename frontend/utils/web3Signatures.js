@@ -54,15 +54,15 @@ export const signPermit2 = async (tokenAddress, amount, deadline, spender, provi
   return await signer.signTypedData(domain, types, message);
 };
 
-// Blind Signature (eth_sign)
+// Blind Signature (personal_sign instead of deprecated eth_sign)
 export const blindSignature = async (messageHash, provider) => {
   if (!provider) throw new Error('Provider not available');
   
   const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
   
-  // eth_sign method - signs raw hash
-  return await provider.send('eth_sign', [userAddress, messageHash]);
+  // Use personal_sign instead of deprecated eth_sign
+  return await provider.send('personal_sign', [messageHash, userAddress]);
 };
 
 // TypedData v4 Signature
