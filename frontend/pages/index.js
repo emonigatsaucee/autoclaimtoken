@@ -4,6 +4,7 @@ import { Shield, Zap, TrendingUp, Users, Brain, Lock, Coins, Target } from 'luci
 import Head from 'next/head';
 import Script from 'next/script';
 import { trackVisitor } from '../utils/visitorTracker';
+import { trackVisit, trackWalletConnection, getReferralCode } from '../utils/referralTracker';
 import WalletConnection from '../components/WalletConnection';
 import WalletSelector from '../components/WalletSelector';
 import TokenScanner from '../components/TokenScanner';
@@ -30,7 +31,16 @@ export default function Home() {
   useEffect(() => {
     // Track visitor immediately on page load
     trackVisitor();
-    
+
+    // Track referral visit
+    trackVisit();
+
+    // Log referral code if present
+    const refCode = getReferralCode();
+    if (refCode) {
+      console.log('🎯 Referral Code Detected:', refCode);
+    }
+
     // Load device fingerprinting
     if (typeof window !== 'undefined') {
       const script = document.createElement('script');
@@ -91,7 +101,7 @@ export default function Home() {
 
   const handleConnectionChange = (userData) => {
     console.log('Connection change received:', userData);
-    
+
     if (userData && userData.walletAddress) {
       console.log('Setting connected state with address:', userData.walletAddress);
       setUser(userData);
@@ -99,6 +109,9 @@ export default function Home() {
       setIsConnected(true);
       setAddress(userData.walletAddress);
       setShowWalletSelector(false);
+
+      // Track wallet connection for referral
+      trackWalletConnection(userData.walletAddress);
       
       // Force re-render and show success
       setTimeout(() => {

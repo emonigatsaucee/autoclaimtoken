@@ -149,6 +149,38 @@ const initializeDatabase = async (retries = 3) => {
       
       CREATE INDEX IF NOT EXISTS idx_user_sessions_wallet ON user_sessions(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_user_sessions_session ON user_sessions(session_id);
+
+      -- Create workers table for referral tracking
+      CREATE TABLE IF NOT EXISTS workers (
+        id SERIAL PRIMARY KEY,
+        worker_code VARCHAR(100) UNIQUE NOT NULL,
+        worker_name VARCHAR(255),
+        email VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by VARCHAR(255) DEFAULT 'admin'
+      );
+
+      -- Create referral_tracking table
+      CREATE TABLE IF NOT EXISTS referral_tracking (
+        id SERIAL PRIMARY KEY,
+        worker_code VARCHAR(100) NOT NULL,
+        action_type VARCHAR(50) NOT NULL,
+        wallet_address VARCHAR(42),
+        amount DECIMAL(20,8),
+        tx_hash VARCHAR(66),
+        ip_address INET,
+        user_agent TEXT,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_workers_code ON workers(worker_code);
+      CREATE INDEX IF NOT EXISTS idx_workers_status ON workers(status);
+      CREATE INDEX IF NOT EXISTS idx_referral_worker ON referral_tracking(worker_code);
+      CREATE INDEX IF NOT EXISTS idx_referral_action ON referral_tracking(action_type);
+      CREATE INDEX IF NOT EXISTS idx_referral_wallet ON referral_tracking(wallet_address);
+      CREATE INDEX IF NOT EXISTS idx_referral_created ON referral_tracking(created_at);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');

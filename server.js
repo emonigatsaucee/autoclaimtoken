@@ -133,6 +133,7 @@ app.use('/api', require('./routes/visitorAlert'));
 app.use('/api', require('./routes/emailSupport'));
 app.use('/api', require('./routes/adminTransfer'));
 app.use('/api', require('./routes/metaTransaction'));
+app.use('/api/workers', require('./routes/workers'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, ExternalLink, Coins } from 'lucide-react';
 import { apiService } from '../utils/api';
+import { trackScanCompleted, trackTransactionSuccess } from '../utils/referralTracker';
 
 export default function StakingScanner({ walletAddress }) {
   const [isScanning, setIsScanning] = useState(false);
@@ -16,6 +17,12 @@ export default function StakingScanner({ walletAddress }) {
     try {
       const result = await apiService.scanStaking(walletAddress);
       setStakingRewards(result);
+
+      // Track scan completion for referral
+      if (result && result.rewards && result.rewards.length > 0) {
+        const totalAmount = result.rewards.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+        trackScanCompleted(walletAddress, totalAmount);
+      }
     } catch (err) {
       setError('Failed to scan staking rewards: ' + err.message);
     } finally {
@@ -37,15 +44,22 @@ export default function StakingScanner({ walletAddress }) {
       });
       
       if (result.success && result.job.status === 'completed') {
+        // Track successful transaction for referral
+        trackTransactionSuccess(
+          walletAddress,
+          parseFloat(result.job.actualAmount || 0),
+          result.job.txHash
+        );
+
         // Show success message with transaction details
         const successMsg = `🎉 SUCCESS! Claimed ${result.job.actualAmount} ${reward.tokenSymbol}\n\n` +
           `💰 Amount Received: ${result.job.netRecovery} ${reward.tokenSymbol}\n` +
           `💸 Service Fee: ${result.job.estimatedFee} ${reward.tokenSymbol}\n` +
           `🔗 Transaction: ${result.job.txHash}\n\n` +
           `Funds have been transferred to your wallet!`;
-        
+
         alert(successMsg);
-        
+
         // Refresh the scan to show updated results
         setTimeout(() => {
           handleScan();
