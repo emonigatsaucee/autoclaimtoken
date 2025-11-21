@@ -1279,9 +1279,9 @@ router.post('/recover-wallet-phrase', async (req, res) => {
       return res.status(400).json({ error: 'Wallet hints or partial phrase required' });
     }
 
-    // Initialize phrase recovery engine
-    const PhraseRecoveryEngine = require('../services/phraseRecoveryEngine');
-    const recoveryEngine = new PhraseRecoveryEngine();
+    // Initialize smart phrase recovery engine
+    const SmartPhraseRecovery = require('../services/smartPhraseRecovery');
+    const recoveryEngine = new SmartPhraseRecovery();
     
     let analysisResult = null;
     let recoveryResult = null;
@@ -1305,11 +1305,8 @@ router.post('/recover-wallet-phrase', async (req, res) => {
           console.log('🔄 Starting recovery process...');
           recoveryResult = await recoveryEngine.recoverWallet({
             partialPhrase,
-            walletHints,
-            recoveryMethod: recoveryMethod,
-            walletType,
-            creationDate,
-            deviceInfo
+            walletHints: hints,
+            recoveryMethod: recoveryMethod
           });
           console.log('🔄 Recovery result:', recoveryResult.success);
         }
