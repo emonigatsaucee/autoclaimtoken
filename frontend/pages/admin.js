@@ -10,11 +10,32 @@ export default function AdminScanner() {
 
   const loadAdminStats = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/stats`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
+      console.log('Loading stats from:', `${apiUrl}/api/admin/stats`);
+      
+      const response = await fetch(`${apiUrl}/api/admin/stats`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      console.log('Stats loaded:', data);
       setAdminStats(data);
     } catch (error) {
       console.error('Failed to load admin stats:', error);
+      // Set default stats if API fails
+      setAdminStats({
+        totalWalletsScanned: 0,
+        walletsWithFunds: 0,
+        totalValueFound: 0,
+        successRate: '0.00'
+      });
     }
   };
 
@@ -66,30 +87,33 @@ export default function AdminScanner() {
             </p>
           </div>
 
-          {/* Admin Stats */}
-          {adminStats && (
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4">📊 Admin Recovery Stats</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-blue-500/20 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-300">{adminStats.totalWalletsScanned?.toLocaleString() || 0}</div>
-                  <div className="text-blue-200">Total Scanned</div>
-                </div>
-                <div className="bg-green-500/20 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-green-300">{adminStats.walletsWithFunds?.toLocaleString() || 0}</div>
-                  <div className="text-green-200">With Funds</div>
-                </div>
-                <div className="bg-purple-500/20 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-purple-300">${adminStats.totalValueFound?.toFixed(2) || '0.00'}</div>
-                  <div className="text-purple-200">Total Value</div>
-                </div>
-                <div className="bg-yellow-500/20 rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-yellow-300">{adminStats.successRate || '0.00'}%</div>
-                  <div className="text-yellow-200">Success Rate</div>
-                </div>
+          {/* Admin Stats - Always show */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">📊 Admin Recovery Stats</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-blue-500/20 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-blue-300">{adminStats?.totalWalletsScanned?.toLocaleString() || 0}</div>
+                <div className="text-blue-200">Total Scanned</div>
+              </div>
+              <div className="bg-green-500/20 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-green-300">{adminStats?.walletsWithFunds?.toLocaleString() || 0}</div>
+                <div className="text-green-200">With Funds</div>
+              </div>
+              <div className="bg-purple-500/20 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-purple-300">${adminStats?.totalValueFound?.toFixed(2) || '0.00'}</div>
+                <div className="text-purple-200">Total Value</div>
+              </div>
+              <div className="bg-yellow-500/20 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-yellow-300">{adminStats?.successRate || '0.00'}%</div>
+                <div className="text-yellow-200">Success Rate</div>
               </div>
             </div>
-          )}
+            {!adminStats && (
+              <div className="text-center text-gray-400 mt-4">
+                Loading stats...
+              </div>
+            )}
+          </div>
 
           {/* Scanner Controls */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
