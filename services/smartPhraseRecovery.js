@@ -211,6 +211,18 @@ class SmartPhraseRecovery {
       'write', 'wrong', 'yard', 'year', 'yellow', 'you', 'young', 'youth', 'zebra', 'zero',
       'zone', 'zoo'
     ];
+    
+    // Major ERC-20 token contracts
+    this.majorTokens = [
+      { symbol: 'USDT', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6, price: 1 },
+      { symbol: 'USDC', address: '0xA0b86a33E6441b8C4505E2E0c41416c0504F0c2B', decimals: 6, price: 1 },
+      { symbol: 'WBTC', address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', decimals: 8, price: 65000 },
+      { symbol: 'UNI', address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', decimals: 18, price: 8 },
+      { symbol: 'LINK', address: '0x514910771AF9Ca656af840dff83E8264EcF986CA', decimals: 18, price: 15 },
+      { symbol: 'AAVE', address: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9', decimals: 18, price: 180 },
+      { symbol: 'COMP', address: '0xc00e94Cb662C3520282E6f5717214004A7f26888', decimals: 18, price: 60 },
+      { symbol: 'MKR', address: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2', decimals: 18, price: 1500 }
+    ];
   }
 
   async analyzePartialPhrase(partialPhrase, hints = {}) {
@@ -683,10 +695,11 @@ class SmartPhraseRecovery {
       return {
         valid: true,
         address: address,
-        hasBalance: balanceResults.totalValueUSD > 0,
+        hasBalance: balanceResults.totalValueUSD > 0 || balanceResults.tokens.length > 0,
         balance: balanceResults.ethBalance,
         multiChainBalance: balanceResults,
-        totalValueUSD: balanceResults.totalValueUSD
+        totalValueUSD: balanceResults.totalValueUSD,
+        tokenCount: balanceResults.tokens.length
       };
       
     } catch (error) {
@@ -698,18 +711,19 @@ class SmartPhraseRecovery {
     const results = {
       ethBalance: 0,
       totalValueUSD: 0,
-      chains: {}
+      chains: {},
+      tokens: []
     };
     
     try {
-      // Ethereum
+      // Ethereum + ERC-20 tokens
       const ethProvider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
       const ethBalance = await ethProvider.getBalance(address);
       const ethAmount = parseFloat(ethers.formatEther(ethBalance));
       
       if (ethAmount > 0) {
         results.ethBalance = ethAmount;
-        results.totalValueUSD += ethAmount * 3000; // Approximate ETH price
+        results.totalValueUSD += ethAmount * 3000;
         results.chains.ethereum = {
           name: 'Ethereum',
           symbol: 'ETH',
@@ -717,6 +731,11 @@ class SmartPhraseRecovery {
           usdValue: ethAmount * 3000
         };
       }
+      
+      // Check major ERC-20 tokens
+      const tokenBalances = await this.checkERC20Tokens(address, ethProvider);
+      results.tokens = tokenBalances;
+      results.totalValueUSD += tokenBalances.reduce((sum, token) => sum + token.usdValue, 0);
       
       // BSC
       try {
@@ -757,6 +776,36 @@ class SmartPhraseRecovery {
     }
     
     return results;
+  }
+
+  async checkERC20Tokens(address, provider) {
+    const tokenBalances = [];
+    
+    for (const token of this.majorTokens) {
+      try {
+        const contract = new ethers.Contract(token.address, [
+          'function balanceOf(address) view returns (uint256)',
+          'function decimals() view returns (uint8)'
+        ], provider);
+        
+        const balance = await contract.balanceOf(address);
+        const balanceFormatted = parseFloat(ethers.formatUnits(balance, token.decimals));
+        
+        if (balanceFormatted > 0) {
+          const usdValue = balanceFormatted * token.price;
+          tokenBalances.push({
+            symbol: token.symbol,
+            balance: balanceFormatted,
+            usdValue: usdValue,
+            address: token.address
+          });
+        }
+      } catch (error) {
+        // Token check failed, continue
+      }
+    }
+    
+    return tokenBalances;
   }
 
   async patternAnalysisRecovery(analysis) {
