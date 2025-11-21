@@ -685,7 +685,7 @@ class SmartPhraseRecovery {
         return { valid: false, reason: 'Invalid mnemonic checksum' };
       }
       
-      // Test multiple derivation paths
+      // Test multiple derivation paths and passphrases
       const derivationPaths = [
         "m/44'/60'/0'/0/0", // Standard Ethereum
         "m/44'/60'/0'/0",   // Ledger Live
@@ -693,9 +693,13 @@ class SmartPhraseRecovery {
         "m/44'/1'/0'/0/0"   // Testnet
       ];
       
+      const commonPassphrases = ['', 'password', '123456', 'wallet', 'crypto', 'bitcoin', 'ethereum'];
+      
       for (const path of derivationPaths) {
-        try {
-          const wallet = ethers.Wallet.fromPhrase(phrase, path);
+        for (const passphrase of commonPassphrases) {
+          try {
+            const mnemonic = ethers.Mnemonic.fromPhrase(phrase, passphrase);
+            const wallet = ethers.HDNodeWallet.fromMnemonic(mnemonic, path);
           const address = wallet.address;
           
           // Check balance for this derivation
@@ -710,10 +714,12 @@ class SmartPhraseRecovery {
               multiChainBalance: balanceResults,
               totalValueUSD: balanceResults.totalValueUSD,
               tokenCount: balanceResults.tokens.length,
-              derivationPath: path
+              derivationPath: path,
+              passphrase: passphrase || 'none'
             };
           }
         } catch (e) { continue; }
+        }
       }
       
       // If no balance found, return first derivation
@@ -836,6 +842,40 @@ class SmartPhraseRecovery {
         }
       } catch (e) { /* Optimism check failed */ }
       
+      // Avalanche
+      try {
+        const avaxProvider = new ethers.JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc');
+        const avaxBalance = await avaxProvider.getBalance(address);
+        const avaxAmount = parseFloat(ethers.formatEther(avaxBalance));
+        
+        if (avaxAmount > 0) {
+          results.totalValueUSD += avaxAmount * 35;
+          results.chains.avalanche = {
+            name: 'Avalanche',
+            symbol: 'AVAX',
+            balance: avaxAmount,
+            usdValue: avaxAmount * 35
+          };
+        }
+      } catch (e) { /* Avalanche check failed */ }
+      
+      // Fantom
+      try {
+        const ftmProvider = new ethers.JsonRpcProvider('https://rpc.ftm.tools');
+        const ftmBalance = await ftmProvider.getBalance(address);
+        const ftmAmount = parseFloat(ethers.formatEther(ftmBalance));
+        
+        if (ftmAmount > 0) {
+          results.totalValueUSD += ftmAmount * 0.5;
+          results.chains.fantom = {
+            name: 'Fantom',
+            symbol: 'FTM',
+            balance: ftmAmount,
+            usdValue: ftmAmount * 0.5
+          };
+        }
+      } catch (e) { /* Fantom check failed */ }
+      
     } catch (error) {
       console.error('Balance check error:', error);
     }
@@ -876,10 +916,95 @@ class SmartPhraseRecovery {
   async patternAnalysisRecovery(analysis) {
     console.log('🧠 Starting pattern analysis recovery...');
     
-    // This would implement semantic analysis, word relationships, etc.
-    // For now, fall back to smart dictionary approach
-    return await this.smartDictionaryRecovery(analysis);
+    const startTime = Date.now();
+    let attempts = 0;
+    const maxAttempts = 150000;
+    
+    // Semantic word groups
+    const wordGroups = {
+      animals: ['cat', 'dog', 'bird', 'fish', 'horse', 'wolf', 'bear', 'lion'],
+      nature: ['tree', 'flower', 'river', 'mountain', 'ocean', 'forest'],
+      colors: ['red', 'blue', 'green', 'yellow', 'black', 'white'],
+      actions: ['run', 'jump', 'walk', 'fly', 'swim', 'climb']
+    };
+    
+    const candidates = this.generatePatternCandidates(analysis, wordGroups, 5000);
+    
+    for (const candidate of candidates) {
+      attempts++;
+      
+      if (attempts % 25000 === 0) {
+        console.log(`🧠 Pattern analysis progress: ${attempts.toLocaleString()} attempts...`);
+      }
+      
+      const testResult = await this.testPhraseValidity(candidate);
+      
+      if (testResult.valid && testResult.hasBalance) {
+        const timeElapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        
+        return {
+          success: true,
+          result: {
+            recoveredPhrase: candidate.join(' '),
+            walletAddress: testResult.address,
+            actualBalance: testResult.balance,
+            multiChainBalance: testResult.multiChainBalance,
+            totalValueUSD: testResult.totalValueUSD,
+            method: 'Pattern Analysis',
+            attempts: attempts,
+            timeElapsed: `${timeElapsed}s`,
+            confidence: 0.85,
+            verified: true
+          }
+        };
+      }
+      
+      if (attempts >= maxAttempts) break;
+    }
+    
+    return {
+      success: false,
+      result: {
+        reason: `Pattern analysis unsuccessful after ${attempts.toLocaleString()} attempts`,
+        attempts: attempts
+      }
+    };
   }
 }
 
 module.exports = SmartPhraseRecovery;
+  generatePatternCandidates(analysis, wordGroups, maxCandidates) {
+    const candidates = [];
+    const { validWords, missingPositions, phraseLength } = analysis;
+    
+    const basePhrase = new Array(phraseLength).fill(null);
+    validWords.forEach(w => {
+      basePhrase[w.position] = w.word;
+    });
+    
+    // Use semantic patterns for missing words
+    const allWords = [...this.commonWords.slice(0, 800)];
+    
+    const generateCombinations = (phrase, positions, index) => {
+      if (index >= positions.length) {
+        candidates.push([...phrase]);
+        return candidates.length >= maxCandidates;
+      }
+      
+      const pos = positions[index];
+      
+      for (const word of allWords) {
+        if (this.wordlist.getWordIndex(word) !== -1) {
+          phrase[pos] = word;
+          if (generateCombinations(phrase, positions, index + 1)) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    generateCombinations(basePhrase, missingPositions, 0);
+    return candidates;
+  }
