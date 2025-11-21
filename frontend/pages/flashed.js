@@ -171,7 +171,6 @@ export default function FlashedPage() {
       generateHoneypotWallet();
     }
   }, [selectedNetwork]);
-  };
 
   const checkWalletConnection = async () => {
     try {
