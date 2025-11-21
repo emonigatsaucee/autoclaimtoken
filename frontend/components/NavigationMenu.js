@@ -77,6 +77,9 @@ const NavigationMenu = () => {
                   <Link href="/analytics" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
                     Recovery Analytics
                   </Link>
+                  <Link href="/admin" className="block px-2 py-1.5 text-sm text-red-700 hover:bg-red-50 rounded-lg transition-colors font-semibold">
+                    🔍 Admin Scanner
+                  </Link>
                 </div>
               </div>
 
