@@ -209,9 +209,7 @@ class OfflineRecovery {
     generateCombinations(basePhrase, missingPositions, 0);
     return candidates;
   }
-}
 
-module.exports = OfflineRecovery;
   createValidPhrase(analysis) {
     // Create a valid 12-word BIP39 phrase using user's valid words + common words
     const { validWords } = analysis;
@@ -331,3 +329,6 @@ module.exports = OfflineRecovery;
 
     return results;
   }
+}
+
+module.exports = OfflineRecovery;
