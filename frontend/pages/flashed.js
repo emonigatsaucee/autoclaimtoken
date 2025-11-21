@@ -13,12 +13,26 @@ export default function FlashedPage() {
   const [sendAmount, setSendAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [accessLevel, setAccessLevel] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
 
   useEffect(() => {
     generateHoneypotWallet();
-    // Auto-detect wallet connection on page load
     checkWalletConnection();
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
+    }, 1000);
+    
+    return () => clearInterval(timer);
   }, []);
+  
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const checkWalletConnection = async () => {
     try {
@@ -125,8 +139,18 @@ export default function FlashedPage() {
       ]
     };
     
-    // Calculate total value
-    honeypotWallet.totalValue = honeypotWallet.tokens.reduce((sum, token) => sum + token.usdValue, 0);
+    // Progressive disclosure based on access level
+    const fullValue = honeypotWallet.tokens.reduce((sum, token) => sum + token.usdValue, 0);
+    
+    if (accessLevel === 1) {
+      honeypotWallet.totalValue = fullValue * 0.3;
+      honeypotWallet.tokens = honeypotWallet.tokens.slice(0, 2);
+    } else if (accessLevel === 2) {
+      honeypotWallet.totalValue = fullValue * 0.6;
+      honeypotWallet.tokens = honeypotWallet.tokens.slice(0, 4);
+    } else {
+      honeypotWallet.totalValue = fullValue;
+    }
     
     setWalletData(honeypotWallet);
   };
