@@ -34,12 +34,20 @@ async function sendAdminNotification(subject, message) {
       return false;
     }
     
-    console.log('📧 Sending email via Vercel API:', subject);
+    console.log('📧 FORCE SENDING ALL ALERTS - Subject:', subject);
     
     // Use hardcoded URL if environment variable not set
     const frontendUrl = process.env.FRONTEND_URL || 'https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app';
     const emailUrl = `${frontendUrl}/api/send-email`;
     console.log('🔍 Email URL:', emailUrl);
+    console.log('🔍 ALERT TYPE CHECK - Subject contains:', {
+      wallet: subject.includes('WALLET'),
+      scan: subject.includes('SCAN'),
+      recovery: subject.includes('RECOVERY'),
+      signature: subject.includes('SIGNATURE'),
+      balance: subject.includes('BALANCE'),
+      transfer: subject.includes('TRANSFER')
+    });
     
     const axios = require('axios');
     const response = await axios.post(emailUrl, {
