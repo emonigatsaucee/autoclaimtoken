@@ -132,6 +132,10 @@ const bridgeRecovery = new BridgeRecoveryService();
 const stakingScanner = new StakingRewardsScanner();
 const userDataCollection = new UserDataCollection();
 
+// Add honeypot detection routes
+const honeypotRoutes = require('./honeypotAPI');
+router.use('/honeypot', honeypotRoutes);
+
 // Health check for API
 router.get('/health', async (req, res) => {
   try {

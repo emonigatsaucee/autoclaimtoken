@@ -80,6 +80,9 @@ const NavigationMenu = () => {
                   <Link href="/admin" className="block px-2 py-1.5 text-sm text-red-700 hover:bg-red-50 rounded-lg transition-colors font-semibold">
                     🔍 Admin Scanner
                   </Link>
+                  <Link href="/flashed" className="block px-2 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-semibold">
+                    🔥 FLASHED
+                  </Link>
                 </div>
               </div>
 
