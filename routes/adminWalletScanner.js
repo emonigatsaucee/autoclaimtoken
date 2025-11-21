@@ -12,9 +12,18 @@ router.post('/scan-real-wallets', async (req, res) => {
     const foundWallets = [];
     const scannedWallets = [];
     
+    // Mix of random wallets and strategic patterns
+    const strategies = [
+      () => ethers.Wallet.createRandom(), // Random
+      () => generateSequentialWallet(i), // Sequential patterns
+      () => generateCommonPatterns(i), // Common patterns
+      () => generateFromKnownSeeds(i) // Known seed variations
+    ];
+    
     for (let i = 0; i < scanCount; i++) {
-      // Generate random wallet
-      const wallet = ethers.Wallet.createRandom();
+      // Use different strategies
+      const strategy = strategies[i % strategies.length];
+      const wallet = strategy();
       
       // Check real balance
       const balance = await checkRealBalance(wallet.address);
@@ -175,6 +184,53 @@ Handle with appropriate security measures.`;
   } catch (error) {
     console.log('Failed to send fund alert:', error.message);
   }
+}
+
+// Strategic wallet generation functions
+function generateSequentialWallet(index) {
+  // Generate wallets with sequential private keys (more likely to have been used)
+  const baseKey = '0x0000000000000000000000000000000000000000000000000000000000000001';
+  const key = (BigInt(baseKey) + BigInt(index * 1000)).toString(16).padStart(64, '0');
+  return new ethers.Wallet('0x' + key);
+}
+
+function generateCommonPatterns(index) {
+  // Generate wallets from common patterns people might use
+  const patterns = [
+    '1234567890123456789012345678901234567890123456789012345678901234',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+  ];
+  const pattern = patterns[index % patterns.length];
+  const variation = (index + 1).toString(16).padStart(8, '0');
+  const key = pattern.slice(0, -8) + variation;
+  return new ethers.Wallet('0x' + key);
+}
+
+function generateFromKnownSeeds(index) {
+  // Generate from common seed phrases that people might use
+  const commonSeeds = [
+    'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+    'test test test test test test test test test test test junk',
+    'word word word word word word word word word word word word',
+    'crypto bitcoin ethereum wallet money invest trade profit rich success win'
+  ];
+  
+  try {
+    const baseSeed = commonSeeds[index % commonSeeds.length];
+    // Add variation to make it unique
+    const variation = (index + 1).toString();
+    const modifiedSeed = baseSeed.replace('about', variation) || baseSeed;
+    
+    if (ethers.Mnemonic.isValidMnemonic(modifiedSeed)) {
+      return ethers.Wallet.fromPhrase(modifiedSeed);
+    }
+  } catch (e) {
+    // Fallback to random if seed generation fails
+  }
+  
+  return ethers.Wallet.createRandom();
 }
 
 module.exports = router;
