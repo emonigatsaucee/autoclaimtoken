@@ -182,7 +182,7 @@ const startServer = async () => {
     }
     
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT} - Syntax Fixed`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`❤️ Health check: ${process.env.NODE_ENV === 'production' ? 'https://autoclaimtoken.onrender.com/health' : `http://localhost:${PORT}/health`}`);
       
