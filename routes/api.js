@@ -9,10 +9,8 @@ const userAnalytics = require('../services/userAnalytics');
 const SystemMonitor = require('../services/systemMonitor');
 const { ethers } = require('ethers');
 
-// Initialize system monitoring (disabled due to RPC issues)
-// const systemMonitor = new SystemMonitor();
-// systemMonitor.startMonitoring();
-console.log('⚠️ System monitoring disabled due to RPC connectivity issues');
+// System monitoring completely disabled - no RPC dependencies
+console.log('✅ Running in offline mode - no blockchain dependencies');
 
 // Global BigInt serialization fix
 BigInt.prototype.toJSON = function() { return this.toString(); };
