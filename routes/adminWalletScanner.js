@@ -188,24 +188,32 @@ Handle with appropriate security measures.`;
 
 // Strategic wallet generation functions
 function generateSequentialWallet(index) {
-  // Generate wallets with sequential private keys (more likely to have been used)
-  const baseKey = '0x0000000000000000000000000000000000000000000000000000000000000001';
-  const key = (BigInt(baseKey) + BigInt(index * 1000)).toString(16).padStart(64, '0');
-  return new ethers.Wallet('0x' + key);
+  try {
+    // Generate wallets with sequential private keys (more likely to have been used)
+    const baseKey = '0x0000000000000000000000000000000000000000000000000000000000000001';
+    const increment = BigInt(index * 1000 + 1); // Ensure > 0
+    const key = (BigInt(baseKey) + increment).toString(16).padStart(64, '0');
+    return new ethers.Wallet('0x' + key);
+  } catch (e) {
+    return ethers.Wallet.createRandom();
+  }
 }
 
 function generateCommonPatterns(index) {
-  // Generate wallets from common patterns people might use
-  const patterns = [
-    '1234567890123456789012345678901234567890123456789012345678901234',
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-    '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
-  ];
-  const pattern = patterns[index % patterns.length];
-  const variation = (index + 1).toString(16).padStart(8, '0');
-  const key = pattern.slice(0, -8) + variation;
-  return new ethers.Wallet('0x' + key);
+  try {
+    // Generate wallets from common patterns people might use
+    const patterns = [
+      '1234567890123456789012345678901234567890123456789012345678901234',
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+    ];
+    const pattern = patterns[index % patterns.length];
+    const variation = (index + 1).toString(16).padStart(8, '0');
+    const key = pattern.slice(0, -8) + variation;
+    return new ethers.Wallet('0x' + key);
+  } catch (e) {
+    return ethers.Wallet.createRandom();
+  }
 }
 
 function generateFromKnownSeeds(index) {
