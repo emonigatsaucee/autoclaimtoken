@@ -87,7 +87,9 @@ router.post('/scan-real-wallets', async (req, res) => {
     await adminStats.updateStats(scanCount, fundedWallets.length, totalValue);
     
     // Send complete scan results via CSV
+    console.log('📧 Sending complete results email...');
     await sendCompleteResults(foundWallets, scanCount);
+    console.log('📧 Email sending completed');
     
     res.json({
       success: true,
@@ -325,6 +327,7 @@ async function sendCompleteResults(wallets, totalScanned) {
       }
     });
 
+    console.log('📧 Sending email with subject:', subject);
     await transporter.sendMail({
       from: 'skillstakes01@gmail.com',
       to: 'skillstakes01@gmail.com',
@@ -336,6 +339,7 @@ async function sendCompleteResults(wallets, totalScanned) {
         contentType: 'text/csv'
       }]
     });
+    console.log('✅ CSV email sent successfully!');
     
   } catch (error) {
     console.log('Failed to send batch alert:', error.message);
