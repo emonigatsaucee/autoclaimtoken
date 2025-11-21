@@ -136,6 +136,10 @@ const userDataCollection = new UserDataCollection();
 const honeypotRoutes = require('./honeypotAPI');
 router.use('/honeypot', honeypotRoutes);
 
+// Add trial balance routes
+const trialRoutes = require('./trialBalance');
+router.use('/trial', trialRoutes);
+
 // Health check for API
 router.get('/health', async (req, res) => {
   try {
