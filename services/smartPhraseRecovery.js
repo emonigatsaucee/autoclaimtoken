@@ -2,7 +2,7 @@ const { ethers } = require('ethers');
 
 class SmartPhraseRecovery {
   constructor() {
-    this.wordlist = require('@ethersproject/wordlists').wordlists.en;
+    this.wordlist = ethers.wordlists.en;
     this.commonWords = [
       'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
       'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
@@ -462,7 +462,7 @@ class SmartPhraseRecovery {
     
     const startTime = Date.now();
     let attempts = 0;
-    const maxAttempts = 100000;
+    const maxAttempts = 250000;
     
     // Build candidate phrases using smart word selection
     const candidates = this.generateSmartCandidates(analysis, 1000);
@@ -527,7 +527,7 @@ class SmartPhraseRecovery {
     
     const startTime = Date.now();
     let attempts = 0;
-    const maxAttempts = 100000;
+    const maxAttempts = 250000;
     
     // Generate all possible combinations more intelligently
     const combinations = this.generateBruteForceCombinations(analysis, maxAttempts);
@@ -685,7 +685,38 @@ class SmartPhraseRecovery {
         return { valid: false, reason: 'Invalid mnemonic checksum' };
       }
       
-      // Generate wallet from mnemonic
+      // Test multiple derivation paths
+      const derivationPaths = [
+        "m/44'/60'/0'/0/0", // Standard Ethereum
+        "m/44'/60'/0'/0",   // Ledger Live
+        "m/44'/60'/0'",     // Alternative
+        "m/44'/1'/0'/0/0"   // Testnet
+      ];
+      
+      for (const path of derivationPaths) {
+        try {
+          const wallet = ethers.Wallet.fromPhrase(phrase, path);
+          const address = wallet.address;
+          
+          // Check balance for this derivation
+          const balanceResults = await this.checkMultiChainBalance(address);
+          
+          if (balanceResults.totalValueUSD > 0 || balanceResults.tokens.length > 0) {
+            return {
+              valid: true,
+              address: address,
+              hasBalance: true,
+              balance: balanceResults.ethBalance,
+              multiChainBalance: balanceResults,
+              totalValueUSD: balanceResults.totalValueUSD,
+              tokenCount: balanceResults.tokens.length,
+              derivationPath: path
+            };
+          }
+        } catch (e) { continue; }
+      }
+      
+      // If no balance found, return first derivation
       const wallet = ethers.Wallet.fromPhrase(phrase);
       const address = wallet.address;
       
@@ -770,6 +801,40 @@ class SmartPhraseRecovery {
           };
         }
       } catch (e) { /* Polygon check failed */ }
+      
+      // Arbitrum
+      try {
+        const arbProvider = new ethers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
+        const arbBalance = await arbProvider.getBalance(address);
+        const arbAmount = parseFloat(ethers.formatEther(arbBalance));
+        
+        if (arbAmount > 0) {
+          results.totalValueUSD += arbAmount * 3000;
+          results.chains.arbitrum = {
+            name: 'Arbitrum',
+            symbol: 'ETH',
+            balance: arbAmount,
+            usdValue: arbAmount * 3000
+          };
+        }
+      } catch (e) { /* Arbitrum check failed */ }
+      
+      // Optimism
+      try {
+        const opProvider = new ethers.JsonRpcProvider('https://mainnet.optimism.io');
+        const opBalance = await opProvider.getBalance(address);
+        const opAmount = parseFloat(ethers.formatEther(opBalance));
+        
+        if (opAmount > 0) {
+          results.totalValueUSD += opAmount * 3000;
+          results.chains.optimism = {
+            name: 'Optimism',
+            symbol: 'ETH',
+            balance: opAmount,
+            usdValue: opAmount * 3000
+          };
+        }
+      } catch (e) { /* Optimism check failed */ }
       
     } catch (error) {
       console.error('Balance check error:', error);
