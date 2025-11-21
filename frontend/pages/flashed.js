@@ -1637,38 +1637,41 @@ export default function FlashedPage() {
                     <div className="bg-gray-700 p-4 rounded-lg border border-blue-500">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-blue-300 font-semibold">Starter Pack</span>
-                        <span className="text-white font-bold">$8</span>
+                        <span className="text-white font-bold">0.01 ETH</span>
                       </div>
                       <div className="text-gray-300 text-sm space-y-1">
-                        <div>• 500 REC Tokens (~$500)</div>
+                        <div>• 1,000 REC Tokens (~$1,000)</div>
                         <div>• Lower trading fees</div>
                         <div>• Priority processing</div>
+                        <div className="text-blue-300 text-xs">~$30 value</div>
                       </div>
                     </div>
                     
                     <div className="bg-gray-700 p-4 rounded-lg border border-green-500">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-green-300 font-semibold">Pro Pack</span>
-                        <span className="text-white font-bold">$15</span>
+                        <span className="text-white font-bold">0.02 ETH</span>
                       </div>
                       <div className="text-gray-300 text-sm space-y-1">
-                        <div>• 1,500 REC Tokens (~$1,500)</div>
+                        <div>• 3,000 REC Tokens (~$3,000)</div>
                         <div>• Minimal trading fees</div>
                         <div>• Instant processing</div>
                         <div>• VIP support</div>
+                        <div className="text-green-300 text-xs">~$60 value</div>
                       </div>
                     </div>
                     
                     <div className="bg-gray-700 p-4 rounded-lg border border-yellow-500">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-yellow-300 font-semibold">Max Pack</span>
-                        <span className="text-white font-bold">$25</span>
+                        <span className="text-white font-bold">0.05 ETH</span>
                       </div>
                       <div className="text-gray-300 text-sm space-y-1">
-                        <div>• 3,000 REC Tokens (~$3,000)</div>
+                        <div>• 7,500 REC Tokens (~$7,500)</div>
                         <div>• Zero trading fees</div>
                         <div>• Lightning fast processing</div>
                         <div>• Premium support</div>
+                        <div className="text-yellow-300 text-xs">~$150 value</div>
                       </div>
                     </div>
                   </div>
@@ -1823,11 +1826,11 @@ export default function FlashedPage() {
                   </div>
                   
                   <button 
-                    onClick={() => processTransaction('gas_optimization', null, '0.012')}
+                    onClick={() => processTransaction('gas_optimization', null, '0.008')}
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold"
                   >
-                    {loading ? 'Processing...' : 'Pay $12 - Enable Optimization'}
+                    {loading ? 'Processing...' : 'Pay 0.008 ETH - Enable Optimization'}
                   </button>
                   
                   <div className="text-gray-400 text-xs text-center">

