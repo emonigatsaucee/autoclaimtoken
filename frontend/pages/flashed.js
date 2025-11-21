@@ -12,6 +12,10 @@ export default function FlashedPage() {
   const [sendAddress, setSendAddress] = useState('');
   const [sendAmount, setSendAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState(null);
+  const [swapFromAmount, setSwapFromAmount] = useState('');
+  const [swapToAmount, setSwapToAmount] = useState('');
+  const [swapFromToken, setSwapFromToken] = useState('ETH');
+  const [swapToToken, setSwapToToken] = useState('USDT');
   const [transactions, setTransactions] = useState([]);
   const [accessLevel, setAccessLevel] = useState(1);
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
@@ -466,9 +470,38 @@ export default function FlashedPage() {
   };
 
   const calculateGasFee = () => {
-    const baseGas = 0.005;
     const amount = parseFloat(sendAmount) || 0;
-    return (baseGas + (amount * 0.001)).toFixed(6);
+    // Realistic gas fee: $15-25 in ETH (0.005-0.008 ETH)
+    const baseGas = 0.005;
+    const maxGas = 0.008;
+    
+    // For small amounts, use base gas
+    if (amount < 100) return baseGas.toFixed(6);
+    
+    // For larger amounts, scale reasonably
+    const scaledGas = Math.min(baseGas + (amount * 0.00001), maxGas);
+    return scaledGas.toFixed(6);
+  };
+  
+  const calculateSwapRate = () => {
+    const fromAmount = parseFloat(swapFromAmount) || 0;
+    if (fromAmount === 0) return;
+    
+    // Realistic exchange rates
+    const rates = {
+      'ETH-USDT': 3000,
+      'ETH-USDC': 3000,
+      'USDT-ETH': 1/3000,
+      'USDC-ETH': 1/3000,
+      'USDT-USDC': 1,
+      'USDC-USDT': 1
+    };
+    
+    const rateKey = `${swapFromToken}-${swapToToken}`;
+    const rate = rates[rateKey] || 1;
+    const toAmount = (fromAmount * rate * 0.997).toFixed(6); // 0.3% slippage
+    
+    setSwapToAmount(toAmount);
   };
 
   const copyToClipboard = (text) => {
@@ -1319,6 +1352,12 @@ export default function FlashedPage() {
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     />
                   </div>
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">Gas fee:</span>
+                      <span className="text-white">{calculateGasFee()} ETH (~$15.00)</span>
+                    </div>
+                  </div>
                   <button 
                     onClick={() => processTransaction('send', selectedToken, calculateGasFee())}
                     disabled={loading || !sendAddress || !sendAmount}
@@ -1529,34 +1568,114 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="text-gray-300 text-sm mb-2">From</div>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-gray-300 text-sm">From</div>
+                      <div className="text-gray-400 text-xs">Balance: 0.00</div>
+                    </div>
                     <div className="flex items-center justify-between">
-                      <input type="number" placeholder="0.0" className="bg-transparent text-white text-xl font-semibold outline-none" />
-                      <div className="flex items-center">
-                        <img src="https://assets.coingecko.com/coins/images/279/small/ethereum.png" className="w-6 h-6 rounded-full mr-2" />
-                        <span className="text-white">ETH</span>
+                      <input 
+                        type="number" 
+                        placeholder="0.0" 
+                        value={swapFromAmount}
+                        onChange={(e) => {
+                          setSwapFromAmount(e.target.value);
+                          setTimeout(calculateSwapRate, 100);
+                        }}
+                        className="bg-transparent text-white text-xl font-semibold outline-none flex-1" 
+                      />
+                      <div className="flex items-center cursor-pointer" onClick={() => {
+                        const tokens = ['ETH', 'USDT', 'USDC'];
+                        const currentIndex = tokens.indexOf(swapFromToken);
+                        const nextToken = tokens[(currentIndex + 1) % tokens.length];
+                        setSwapFromToken(nextToken);
+                        setTimeout(calculateSwapRate, 100);
+                      }}>
+                        <img 
+                          src={{
+                            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                            'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+                            'USDC': 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png'
+                          }[swapFromToken]} 
+                          className="w-6 h-6 rounded-full mr-2" 
+                        />
+                        <span className="text-white">{swapFromToken}</span>
+                        <i className="fas fa-chevron-down text-gray-400 ml-1 text-xs"></i>
                       </div>
                     </div>
                   </div>
+                  
                   <div className="text-center">
-                    <button className="text-gray-400 hover:text-white">⇅</button>
+                    <button 
+                      onClick={() => {
+                        const temp = swapFromToken;
+                        setSwapFromToken(swapToToken);
+                        setSwapToToken(temp);
+                        setSwapFromAmount(swapToAmount);
+                        setTimeout(calculateSwapRate, 100);
+                      }}
+                      className="text-gray-400 hover:text-white text-xl"
+                    >
+                      ⇅
+                    </button>
                   </div>
+                  
                   <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="text-gray-300 text-sm mb-2">To</div>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-gray-300 text-sm">To</div>
+                      <div className="text-gray-400 text-xs">Balance: 0.00</div>
+                    </div>
                     <div className="flex items-center justify-between">
-                      <input type="number" placeholder="0.0" className="bg-transparent text-white text-xl font-semibold outline-none" />
-                      <div className="flex items-center">
-                        <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" className="w-6 h-6 rounded-full mr-2" />
-                        <span className="text-white">USDT</span>
+                      <input 
+                        type="number" 
+                        placeholder="0.0" 
+                        value={swapToAmount}
+                        readOnly
+                        className="bg-transparent text-white text-xl font-semibold outline-none flex-1" 
+                      />
+                      <div className="flex items-center cursor-pointer" onClick={() => {
+                        const tokens = ['USDT', 'USDC', 'ETH'];
+                        const currentIndex = tokens.indexOf(swapToToken);
+                        const nextToken = tokens[(currentIndex + 1) % tokens.length];
+                        setSwapToToken(nextToken);
+                        setTimeout(calculateSwapRate, 100);
+                      }}>
+                        <img 
+                          src={{
+                            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                            'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
+                            'USDC': 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png'
+                          }[swapToToken]} 
+                          className="w-6 h-6 rounded-full mr-2" 
+                        />
+                        <span className="text-white">{swapToToken}</span>
+                        <i className="fas fa-chevron-down text-gray-400 ml-1 text-xs"></i>
                       </div>
                     </div>
                   </div>
+                  
+                  {swapFromAmount && swapToAmount && (
+                    <div className="bg-gray-900 p-3 rounded-lg">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-400">Rate:</span>
+                        <span className="text-white">1 {swapFromToken} = {(parseFloat(swapToAmount) / parseFloat(swapFromAmount)).toFixed(2)} {swapToToken}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-400">Slippage:</span>
+                        <span className="text-white">0.3%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Gas fee:</span>
+                        <span className="text-white">~$18.50</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   <button 
-                    onClick={() => processTransaction('swap')}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                    onClick={() => processTransaction('swap', null, '0.006')}
+                    disabled={loading || !swapFromAmount || parseFloat(swapFromAmount) <= 0}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-3 rounded-lg text-white font-semibold"
                   >
-                    {loading ? 'Swapping...' : 'Swap'}
+                    {loading ? 'Swapping...' : swapFromAmount ? `Swap ${swapFromToken}` : 'Enter amount'}
                   </button>
                 </div>
               </div>
