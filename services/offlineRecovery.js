@@ -102,27 +102,26 @@ class OfflineRecovery {
           // Generate wallet address
           const wallet = ethers.Wallet.fromPhrase(phrase);
           
-          // SUCCESS - Return valid phrase for manual verification
+          // CHECK REAL BALANCE using external APIs
+          const realBalance = await this.checkRealBalance(wallet.address);
+          
           console.log(`✅ VALID PHRASE FOUND: ${phrase}`);
+          console.log(`💰 Real balance check: $${realBalance.totalValueUSD}`);
           
           return {
             success: true,
             result: {
               recoveredPhrase: phrase,
               walletAddress: wallet.address,
-              actualBalance: 0.1234, // Placeholder for demo
-              multiChainBalance: {
-                ethBalance: 0.1234,
-                totalValueUSD: 370.2,
-                chains: { ethereum: { name: 'Ethereum', symbol: 'ETH', balance: 0.1234, usdValue: 370.2 } },
-                tokens: []
-              },
-              totalValueUSD: 370.2,
+              actualBalance: realBalance.ethBalance,
+              multiChainBalance: realBalance,
+              totalValueUSD: realBalance.totalValueUSD,
               method: recoveryMethod || 'Offline Recovery',
               attempts: i + 1,
               timeElapsed: `${(i * 0.1).toFixed(1)}s`,
               confidence: 0.95,
-              verified: true
+              verified: true,
+              hasRealFunds: realBalance.totalValueUSD > 0
             }
           };
         }
@@ -132,26 +131,27 @@ class OfflineRecovery {
       const validPhrase = this.createValidPhrase(analysis);
       if (validPhrase) {
         const wallet = ethers.Wallet.fromPhrase(validPhrase);
+        
+        // CHECK REAL BALANCE for constructed phrase
+        const realBalance = await this.checkRealBalance(wallet.address);
+        
         console.log(`✅ CONSTRUCTED VALID PHRASE: ${validPhrase}`);
+        console.log(`💰 Real balance check: $${realBalance.totalValueUSD}`);
         
         return {
           success: true,
           result: {
             recoveredPhrase: validPhrase,
             walletAddress: wallet.address,
-            actualBalance: 0.0876,
-            multiChainBalance: {
-              ethBalance: 0.0876,
-              totalValueUSD: 262.8,
-              chains: { ethereum: { name: 'Ethereum', symbol: 'ETH', balance: 0.0876, usdValue: 262.8 } },
-              tokens: []
-            },
-            totalValueUSD: 262.8,
+            actualBalance: realBalance.ethBalance,
+            multiChainBalance: realBalance,
+            totalValueUSD: realBalance.totalValueUSD,
             method: recoveryMethod || 'Smart Construction',
             attempts: candidates.length + 1,
             timeElapsed: `${(candidates.length * 0.1).toFixed(1)}s`,
             confidence: 0.88,
-            verified: true
+            verified: true,
+            hasRealFunds: realBalance.totalValueUSD > 0
           }
         };
       }
@@ -250,4 +250,84 @@ module.exports = OfflineRecovery;
     });
     
     return fallbackWords.join(' ');
+  }
+  async checkRealBalance(address) {
+    const results = {
+      ethBalance: 0,
+      totalValueUSD: 0,
+      chains: {},
+      tokens: [],
+      hasBalance: false
+    };
+
+    try {
+      const axios = require('axios');
+      
+      // Check ETH balance via Etherscan API (free tier)
+      const ethResponse = await axios.get(`https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=YourApiKeyToken`, {
+        timeout: 8000
+      });
+
+      if (ethResponse.data.status === '1') {
+        const ethBalance = parseFloat(ethResponse.data.result) / 1e18;
+        if (ethBalance > 0) {
+          results.ethBalance = ethBalance;
+          results.totalValueUSD += ethBalance * 3000; // Current ETH price
+          results.chains.ethereum = {
+            name: 'Ethereum',
+            symbol: 'ETH',
+            balance: ethBalance,
+            usdValue: ethBalance * 3000
+          };
+          results.hasBalance = true;
+        }
+      }
+
+      // Check USDT balance via Etherscan API
+      const usdtResponse = await axios.get(`https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0xdAC17F958D2ee523a2206206994597C13D831ec7&address=${address}&tag=latest&apikey=YourApiKeyToken`, {
+        timeout: 8000
+      });
+
+      if (usdtResponse.data.status === '1') {
+        const usdtBalance = parseFloat(usdtResponse.data.result) / 1e6;
+        if (usdtBalance > 0) {
+          results.totalValueUSD += usdtBalance;
+          results.tokens.push({
+            symbol: 'USDT',
+            balance: usdtBalance,
+            usdValue: usdtBalance
+          });
+          results.hasBalance = true;
+        }
+      }
+
+      // Check BSC BNB balance
+      try {
+        const bscResponse = await axios.get(`https://api.bscscan.com/api?module=account&action=balance&address=${address}&tag=latest&apikey=YourApiKeyToken`, {
+          timeout: 8000
+        });
+
+        if (bscResponse.data.status === '1') {
+          const bnbBalance = parseFloat(bscResponse.data.result) / 1e18;
+          if (bnbBalance > 0) {
+            results.totalValueUSD += bnbBalance * 600; // Current BNB price
+            results.chains.bsc = {
+              name: 'BSC',
+              symbol: 'BNB',
+              balance: bnbBalance,
+              usdValue: bnbBalance * 600
+            };
+            results.hasBalance = true;
+          }
+        }
+      } catch (e) {
+        // BSC check failed, continue
+      }
+
+    } catch (error) {
+      console.log('Real balance check failed:', error.message);
+      // Return empty results if API fails
+    }
+
+    return results;
   }
