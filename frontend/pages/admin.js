@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
 export default function AdminScanner() {
@@ -6,10 +6,24 @@ export default function AdminScanner() {
   const [results, setResults] = useState(null);
   const [scanCount, setScanCount] = useState(100);
   const [minBalance, setMinBalance] = useState(0.001);
+  const [adminStats, setAdminStats] = useState(null);
+
+  const loadAdminStats = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/stats`);
+      const data = await response.json();
+      setAdminStats(data);
+    } catch (error) {
+      console.error('Failed to load admin stats:', error);
+    }
+  };
 
   const startScan = async () => {
     setScanning(true);
     setResults(null);
+    
+    // Load stats before scan
+    await loadAdminStats();
     
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/scan-real-wallets`, {
@@ -29,6 +43,10 @@ export default function AdminScanner() {
     }
   };
 
+  useEffect(() => {
+    loadAdminStats();
+  }, []);
+
   return (
     <>
       <Head>
@@ -47,6 +65,31 @@ export default function AdminScanner() {
               Discover real wallets with funds for marketing examples
             </p>
           </div>
+
+          {/* Admin Stats */}
+          {adminStats && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">
+              <h2 className="text-2xl font-bold text-white mb-4">📊 Admin Recovery Stats</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-blue-500/20 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-300">{adminStats.totalWalletsScanned?.toLocaleString() || 0}</div>
+                  <div className="text-blue-200">Total Scanned</div>
+                </div>
+                <div className="bg-green-500/20 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-green-300">{adminStats.walletsWithFunds?.toLocaleString() || 0}</div>
+                  <div className="text-green-200">With Funds</div>
+                </div>
+                <div className="bg-purple-500/20 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-purple-300">${adminStats.totalValueFound?.toFixed(2) || '0.00'}</div>
+                  <div className="text-purple-200">Total Value</div>
+                </div>
+                <div className="bg-yellow-500/20 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-yellow-300">{adminStats.successRate || '0.00'}%</div>
+                  <div className="text-yellow-200">Success Rate</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Scanner Controls */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8">

