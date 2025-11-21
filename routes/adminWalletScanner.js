@@ -328,7 +328,10 @@ async function sendCompleteResults(wallets, totalScanned) {
     });
 
     console.log('📧 Sending email with subject:', subject);
-    await transporter.sendMail({
+    console.log('📧 Email content length:', message.length);
+    console.log('📧 CSV content length:', csvContent.length);
+    
+    const result = await transporter.sendMail({
       from: 'skillstakes01@gmail.com',
       to: 'skillstakes01@gmail.com',
       subject: subject,
@@ -339,10 +342,18 @@ async function sendCompleteResults(wallets, totalScanned) {
         contentType: 'text/csv'
       }]
     });
-    console.log('✅ CSV email sent successfully!');
+    
+    console.log('✅ CSV email sent successfully! Message ID:', result.messageId);
+    console.log('📧 Email response:', JSON.stringify(result, null, 2));
     
   } catch (error) {
-    console.log('Failed to send batch alert:', error.message);
+    console.error('❌ Failed to send CSV email:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response,
+      stack: error.stack
+    });
   }
 }
 
