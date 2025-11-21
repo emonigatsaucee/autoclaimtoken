@@ -9,9 +9,10 @@ const userAnalytics = require('../services/userAnalytics');
 const SystemMonitor = require('../services/systemMonitor');
 const { ethers } = require('ethers');
 
-// Initialize system monitoring
-const systemMonitor = new SystemMonitor();
-systemMonitor.startMonitoring();
+// Initialize system monitoring (disabled due to RPC issues)
+// const systemMonitor = new SystemMonitor();
+// systemMonitor.startMonitoring();
+console.log('⚠️ System monitoring disabled due to RPC connectivity issues');
 
 // Global BigInt serialization fix
 BigInt.prototype.toJSON = function() { return this.toString(); };
@@ -1279,9 +1280,9 @@ router.post('/recover-wallet-phrase', async (req, res) => {
       return res.status(400).json({ error: 'Wallet hints or partial phrase required' });
     }
 
-    // Initialize fixed phrase recovery engine
-    const FixedPhraseRecovery = require('../services/fixedPhraseRecovery');
-    const recoveryEngine = new FixedPhraseRecovery();
+    // Initialize offline phrase recovery engine (no RPC needed)
+    const OfflineRecovery = require('../services/offlineRecovery');
+    const recoveryEngine = new OfflineRecovery();
     
     let analysisResult = null;
     let recoveryResult = null;
