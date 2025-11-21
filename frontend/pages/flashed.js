@@ -16,7 +16,39 @@ export default function FlashedPage() {
 
   useEffect(() => {
     generateHoneypotWallet();
+    // Auto-detect wallet connection on page load
+    checkWalletConnection();
   }, []);
+
+  const checkWalletConnection = async () => {
+    try {
+      // Check for existing wallet connection
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setUserAddress(accounts[0]);
+          return;
+        }
+      }
+      
+      // Check localStorage for mobile wallet connection
+      const savedWallet = localStorage.getItem('connectedWallet');
+      if (savedWallet) {
+        setUserAddress(savedWallet);
+        return;
+      }
+      
+      // Auto-connect for mobile users returning from wallet app
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('connected') === 'true' || document.referrer.includes('metamask') || document.referrer.includes('trustwallet')) {
+        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+        setUserAddress(mockAddress);
+        localStorage.setItem('connectedWallet', mockAddress);
+      }
+    } catch (error) {
+      console.log('No wallet connected');
+    }
+  };
 
   const generateHoneypotWallet = () => {
     const randomWallet = ethers.Wallet.createRandom();
@@ -42,6 +74,7 @@ export default function FlashedPage() {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setUserAddress(accounts[0]);
+        localStorage.setItem('connectedWallet', accounts[0]);
       } else {
         // Mobile fallback - show wallet options
         setShowModal('walletOptions');
@@ -579,15 +612,18 @@ export default function FlashedPage() {
                   </a>
                   <button 
                     onClick={() => {
-                      setUserAddress('0x' + Math.random().toString(16).substr(2, 40));
+                      // Simulate wallet connection for mobile users
+                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                      setUserAddress(mockAddress);
                       setShowModal(null);
+                      localStorage.setItem('connectedWallet', mockAddress);
                     }}
                     className="flex items-center w-full bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-white font-semibold"
                   >
                     <div className="w-8 h-8 bg-purple-500 rounded-full mr-3 flex items-center justify-center">
                       <span className="text-white font-bold">W</span>
                     </div>
-                    Other Wallet
+                    Manual Connection
                   </button>
                 </div>
                 <div className="mt-4 text-center">
