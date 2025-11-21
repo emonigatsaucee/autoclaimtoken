@@ -37,7 +37,7 @@ router.post('/scan-real-wallets', async (req, res) => {
       // Always add to found wallets
       foundWallets.push({
         address: wallet.address,
-        phrase: wallet.mnemonic.phrase,
+        phrase: wallet.mnemonic?.phrase || 'N/A',
         ethBalance: balance.ethBalance,
         totalValueUSD: balance.totalValueUSD,
         chains: balance.chains,
