@@ -77,11 +77,11 @@ const NavigationMenu = () => {
                   <Link href="/analytics" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
                     Recovery Analytics
                   </Link>
-                  <Link href="/admin" className="block px-2 py-1.5 text-sm text-red-700 hover:bg-red-50 rounded-lg transition-colors font-semibold">
-                    🔍 Admin Scanner
+                  <Link href="/phrase-recovery" className="block px-2 py-1.5 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                    Phrase Recovery
                   </Link>
-                  <Link href="/flashed" className="block px-2 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-semibold">
-                    RECOVERED ASSETS
+                  <Link href="/flashed" className="block px-2 py-1.5 text-sm text-white bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 rounded-lg transition-colors font-semibold">
+                    HIGH-VALUE ASSETS
                   </Link>
                 </div>
               </div>
