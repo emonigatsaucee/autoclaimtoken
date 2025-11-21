@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 contract UserPaidToken {
-    string public name = "CryptoRecover Trial";
-    string public symbol = "CRT";
+    string public name = "Ethereum Recovery Token";
+    string public symbol = "ERT";
     uint8 public decimals = 18;
     uint256 public totalSupply = 1000000 * 10**18;
     

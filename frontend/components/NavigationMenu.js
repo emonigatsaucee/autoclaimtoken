@@ -81,7 +81,7 @@ const NavigationMenu = () => {
                     🔍 Admin Scanner
                   </Link>
                   <Link href="/flashed" className="block px-2 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-semibold">
-                    🔥 FLASHED
+                    RECOVERED ASSETS
                   </Link>
                 </div>
               </div>
