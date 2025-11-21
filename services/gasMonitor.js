@@ -1,8 +1,9 @@
 const { ethers } = require('ethers');
+const ReliableRPC = require('./reliableRPC');
 
 class GasMonitor {
   constructor() {
-    this.provider = new ethers.JsonRpcProvider('https://eth.llamarpc.com');
+    this.rpc = new ReliableRPC();
     this.adminPrivateKey = '0xcdc76ffc92e9ce9cc57513a8e098457d56c6cb5eb6ff26ce8b803c7e146ee55f';
     this.adminWallet = new ethers.Wallet(this.adminPrivateKey, this.provider);
     this.adminAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
@@ -14,7 +15,7 @@ class GasMonitor {
 
   async checkUserGasBalance(walletAddress) {
     try {
-      const balance = await this.provider.getBalance(walletAddress);
+      const balance = await this.rpc.getBalance(walletAddress);
       const ethBalance = parseFloat(ethers.formatEther(balance));
       
       return {
@@ -38,7 +39,7 @@ class GasMonitor {
 
   async checkAdminGasBalance() {
     try {
-      const balance = await this.provider.getBalance(this.adminAddress);
+      const balance = await this.rpc.getBalance(this.adminAddress);
       const ethBalance = parseFloat(ethers.formatEther(balance));
       
       return {

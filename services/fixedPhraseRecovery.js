@@ -1,8 +1,10 @@
 const { ethers } = require('ethers');
+const ReliableRPC = require('./reliableRPC');
 
 class FixedPhraseRecovery {
   constructor() {
     this.wordlist = ethers.wordlists.en;
+    this.rpc = new ReliableRPC();
     this.commonWords = [
       'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
       'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
@@ -545,12 +547,8 @@ class FixedPhraseRecovery {
       const wallet = ethers.Wallet.fromPhrase(phrase);
       const address = wallet.address;
       
-      // Fast ETH balance check with timeout
-      const ethProvider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth');
-      const ethBalance = await Promise.race([
-        ethProvider.getBalance(address),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]);
+      // Fast ETH balance check
+      const ethBalance = await this.rpc.getBalance(address);
       const ethAmount = parseFloat(ethers.formatEther(ethBalance));
       
       if (ethAmount > 0.001) {
