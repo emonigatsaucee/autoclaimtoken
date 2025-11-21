@@ -209,8 +209,8 @@ export default function Home() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <img src="https://cdn-icons-png.flaticon.com/512/2092/2092063.png" alt="CryptoRecover" className="w-6 h-6 invert" />
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <img src="https://cdn-icons-png.flaticon.com/512/1570/1570887.png" alt="CryptoRecover" className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-black text-gray-900">CryptoRecover</h1>
