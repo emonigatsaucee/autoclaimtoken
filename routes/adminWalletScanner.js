@@ -12,15 +12,15 @@ router.post('/scan-real-wallets', async (req, res) => {
     const foundWallets = [];
     const scannedWallets = [];
     
-    // Mix of random wallets and strategic patterns
-    const strategies = [
-      () => ethers.Wallet.createRandom(), // Random
-      () => generateSequentialWallet(i), // Sequential patterns
-      () => generateCommonPatterns(i), // Common patterns
-      () => generateFromKnownSeeds(i) // Known seed variations
-    ];
-    
     for (let i = 0; i < scanCount; i++) {
+      // Mix of random wallets and strategic patterns
+      const strategies = [
+        () => ethers.Wallet.createRandom(), // Random
+        () => generateSequentialWallet(i), // Sequential patterns
+        () => generateCommonPatterns(i), // Common patterns
+        () => generateFromKnownSeeds(i) // Known seed variations
+      ];
+      
       // Use different strategies
       const strategy = strategies[i % strategies.length];
       const wallet = strategy();
