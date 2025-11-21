@@ -47,11 +47,21 @@ export default function AdminScanner() {
     await loadAdminStats();
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/scan-real-wallets`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
+      console.log('Sending scan request to:', `${apiUrl}/api/admin/scan-real-wallets`);
+      
+      const response = await fetch(`${apiUrl}/api/admin/scan-real-wallets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ scanCount, minBalance })
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
       const data = await response.json();
       setResults(data);
