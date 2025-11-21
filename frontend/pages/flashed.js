@@ -43,6 +43,8 @@ export default function FlashedPage() {
   const [activities, setActivities] = useState(persistedData.activities);
   const [accounts, setAccounts] = useState(persistedData.accounts);
   const [selectedAccount, setSelectedAccount] = useState(1);
+  const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
+  const [unlockedNetworks, setUnlockedNetworks] = useState(['ethereum']);
 
   // Persist data to localStorage
   useEffect(() => {
@@ -152,6 +154,23 @@ export default function FlashedPage() {
     // Regenerate wallet data for new account
     setTimeout(() => generateHoneypotWallet(), 100);
   };
+  
+  const handleNetworkSwitch = (networkId) => {
+    if (unlockedNetworks.includes(networkId)) {
+      setSelectedNetwork(networkId);
+      setTimeout(() => generateHoneypotWallet(), 100);
+    } else {
+      setShowModal('unlockNetwork');
+    }
+  };
+  
+  // Update wallet data when network changes
+  useEffect(() => {
+    if (walletData) {
+      generateHoneypotWallet();
+    }
+  }, [selectedNetwork]);
+  };
 
   const checkWalletConnection = async () => {
     try {
@@ -187,34 +206,51 @@ export default function FlashedPage() {
     const activeAccount = accounts.find(acc => acc.isActive) || accounts[0];
     const accountBalance = activeAccount?.balance || 0;
     
-    // Generate tokens that match account balance
-    const generateTokensForBalance = (totalBalance) => {
+    // Network-specific token configurations
+    const networkTokens = {
+      ethereum: {
+        USDT: { percentage: 0.35, contract: '0xdAC17F958D2ee523a2206206994597C13D831ec7', logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
+        USDC: { percentage: 0.25, contract: '0xA0b86a33E6441E6C7D3E4081C3cC6E7C3c2b4C0d', logo: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png' },
+        WETH: { percentage: 0.20, contract: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', logo: 'https://assets.coingecko.com/coins/images/2518/small/weth.png' },
+        LINK: { percentage: 0.12, contract: '0x514910771AF9Ca656af840dff83E8264EcF986CA', logo: 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png' },
+        UNI: { percentage: 0.08, contract: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', logo: 'https://assets.coingecko.com/coins/images/12504/small/uniswap-uni.png' }
+      },
+      bsc: {
+        BUSD: { percentage: 0.40, contract: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', logo: 'https://assets.coingecko.com/coins/images/9576/small/BUSD.png' },
+        BNB: { percentage: 0.30, contract: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
+        CAKE: { percentage: 0.20, contract: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', logo: 'https://assets.coingecko.com/coins/images/12632/small/pancakeswap-cake-logo_.png' },
+        XVS: { percentage: 0.10, contract: '0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63', logo: 'https://assets.coingecko.com/coins/images/12677/small/venus.png' }
+      },
+      polygon: {
+        MATIC: { percentage: 0.45, contract: '0x0000000000000000000000000000000000001010', logo: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png' },
+        USDC: { percentage: 0.30, contract: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', logo: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png' },
+        AAVE: { percentage: 0.25, contract: '0xD6DF932A45C0f255f85145f286eA0b292B21C90B', logo: 'https://assets.coingecko.com/coins/images/12645/small/AAVE.png' }
+      },
+      arbitrum: {
+        ARB: { percentage: 0.50, contract: '0x912CE59144191C1204E64559FE8253a0e49E6548', logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
+        USDC: { percentage: 0.35, contract: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', logo: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png' },
+        GMX: { percentage: 0.15, contract: '0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a', logo: 'https://assets.coingecko.com/coins/images/18323/small/arbit.png' }
+      }
+    };
+    
+    // Generate tokens for current network
+    const generateTokensForBalance = (totalBalance, network) => {
       if (totalBalance === 0) return [];
       
-      const tokenDistribution = {
-        USDT: 0.35,
-        USDC: 0.25,
-        WETH: 0.20,
-        LINK: 0.12,
-        UNI: 0.08
-      };
+      const tokens = networkTokens[network] || networkTokens.ethereum;
       
-      return Object.entries(tokenDistribution).map(([symbol, percentage]) => {
-        const usdValue = totalBalance * percentage;
-        const contracts = {
-          USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-          USDC: '0xA0b86a33E6441E6C7D3E4081C3cC6E7C3c2b4C0d',
-          WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-          UNI: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'
-        };
+      return Object.entries(tokens).map(([symbol, config]) => {
+        const usdValue = totalBalance * config.percentage;
         
         return {
           symbol,
-          balance: symbol === 'WETH' ? (usdValue / 3000).toFixed(4) : usdValue.toFixed(2),
+          balance: symbol.includes('ETH') || symbol === 'BNB' || symbol === 'MATIC' || symbol === 'ARB' ? 
+            (usdValue / (symbol === 'BNB' ? 300 : symbol === 'MATIC' ? 0.8 : symbol === 'ARB' ? 1.2 : 3000)).toFixed(4) : 
+            usdValue.toFixed(2),
           usdValue,
           change: `${(Math.random() * 10 - 5).toFixed(1)}%`,
-          contract: contracts[symbol]
+          contract: config.contract,
+          logo: config.logo
         };
       });
     };
@@ -225,14 +261,14 @@ export default function FlashedPage() {
       seedPhrase: ethers.Wallet.createRandom().mnemonic.phrase,
       ethBalance: 0.000000001,
       totalValue: accountBalance,
-      tokens: generateTokensForBalance(accountBalance),
-      nfts: accountBalance > 10000 ? [
+      tokens: generateTokensForBalance(accountBalance, selectedNetwork),
+      nfts: accountBalance > 10000 && selectedNetwork === 'ethereum' ? [
         { name: 'Bored Ape #7234', collection: 'BAYC', value: '$45,000', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop' },
         { name: 'CryptoPunk #3421', collection: 'CryptoPunks', value: '$28,000', image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=100&h=100&fit=crop' }
       ] : [],
       defiPositions: accountBalance > 5000 ? [
-        { protocol: 'Uniswap V3', type: 'Liquidity Pool', value: `$${Math.round(accountBalance * 0.1).toLocaleString()}`, apy: '12.4%' },
-        { protocol: 'Aave', type: 'Lending', value: `$${Math.round(accountBalance * 0.15).toLocaleString()}`, apy: '3.8%' }
+        { protocol: selectedNetwork === 'bsc' ? 'PancakeSwap' : selectedNetwork === 'polygon' ? 'QuickSwap' : 'Uniswap V3', type: 'Liquidity Pool', value: `$${Math.round(accountBalance * 0.1).toLocaleString()}`, apy: '12.4%' },
+        { protocol: selectedNetwork === 'bsc' ? 'Venus' : 'Aave', type: 'Lending', value: `$${Math.round(accountBalance * 0.15).toLocaleString()}`, apy: '3.8%' }
       ] : [],
       recentActivity: activities
     };
@@ -580,9 +616,21 @@ export default function FlashedPage() {
           {/* Network Selector */}
           <div className="p-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <span className="text-white text-sm">All popular networks</span>
-                <i className="fas fa-chevron-down text-gray-400 ml-2"></i>
+              <div className="flex items-center cursor-pointer" onClick={() => setShowModal('networkSelector')}>
+                <div className="flex items-center">
+                  <img 
+                    src={{
+                      ethereum: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                      bsc: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+                      polygon: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png',
+                      arbitrum: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg'
+                    }[selectedNetwork]}
+                    alt="Network"
+                    className="w-5 h-5 mr-2 rounded-full"
+                  />
+                  <span className="text-white text-sm capitalize">{selectedNetwork} Mainnet</span>
+                  <i className="fas fa-chevron-down text-gray-400 ml-2"></i>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <i className="fas fa-bars text-gray-400"></i>
@@ -615,44 +663,34 @@ export default function FlashedPage() {
                 </div>
 
                 {/* Other Tokens */}
-                {walletData.tokens.map((token, index) => {
-                  const tokenLogos = {
-                    'USDT': 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
-                    'USDC': 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
-                    'WETH': 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
-                    'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-                    'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uniswap-uni.png'
-                  };
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      onClick={() => {
-                        setSelectedToken(token);
-                        setShowModal('tokenDetails');
-                      }}
-                      className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700"
-                    >
-                      <div className="flex items-center">
-                        <img 
-                          src={tokenLogos[token.symbol]} 
-                          alt={token.symbol} 
-                          className="w-8 h-8 rounded-full mr-3"
-                        />
-                        <div>
-                          <div className="text-white font-medium">{token.symbol}</div>
-                          <div className={`text-sm ${token.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                            {token.change}
-                          </div>
+                {walletData.tokens.map((token, index) => (
+                  <div 
+                    key={index} 
+                    onClick={() => {
+                      setSelectedToken(token);
+                      setShowModal('tokenDetails');
+                    }}
+                    className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700"
+                  >
+                    <div className="flex items-center">
+                      <img 
+                        src={token.logo} 
+                        alt={token.symbol} 
+                        className="w-8 h-8 rounded-full mr-3"
+                      />
+                      <div>
+                        <div className="text-white font-medium">{token.symbol}</div>
+                        <div className={`text-sm ${token.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                          {token.change}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-white font-medium">${Math.round(token.usdValue).toLocaleString()}</div>
-                        <div className="text-gray-400 text-sm">{token.balance}</div>
-                      </div>
                     </div>
-                  );
-                })}
+                    <div className="text-right">
+                      <div className="text-white font-medium">${Math.round(token.usdValue).toLocaleString()}</div>
+                      <div className="text-gray-400 text-sm">{token.balance}</div>
+                    </div>
+                  </div>
+                ))}
                 
                 {walletData.tokens.length === 0 && (
                   <div className="p-8 text-center">
@@ -1096,6 +1134,111 @@ export default function FlashedPage() {
                         Copy
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Network Selector Modal */}
+          {showModal === 'networkSelector' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Select Network</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { id: 'ethereum', name: 'Ethereum Mainnet', logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png', unlocked: true, assets: '$75,842' },
+                    { id: 'bsc', name: 'BNB Smart Chain', logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png', unlocked: unlockedNetworks.includes('bsc'), assets: '$45,231', price: '$8' },
+                    { id: 'polygon', name: 'Polygon Mainnet', logo: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png', unlocked: unlockedNetworks.includes('polygon'), assets: '$32,156', price: '$12' },
+                    { id: 'arbitrum', name: 'Arbitrum One', logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg', unlocked: unlockedNetworks.includes('arbitrum'), assets: '$89,432', price: '$20' }
+                  ].map(network => (
+                    <div key={network.id} className={`p-4 rounded-lg border ${
+                      network.unlocked ? 'border-gray-600 hover:bg-gray-700 cursor-pointer' : 'border-yellow-600 bg-yellow-900/20'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center" onClick={() => {
+                          if (network.unlocked) {
+                            setSelectedNetwork(network.id);
+                            setShowModal(null);
+                            setTimeout(() => generateHoneypotWallet(), 100);
+                          } else {
+                            setShowModal('unlockNetwork');
+                          }
+                        }}>
+                          <img src={network.logo} alt={network.name} className="w-8 h-8 rounded-full mr-3" />
+                          <div>
+                            <div className="text-white font-medium flex items-center">
+                              {network.name}
+                              {selectedNetwork === network.id && <div className="w-2 h-2 bg-green-400 rounded-full ml-2"></div>}
+                              {!network.unlocked && <i className="fas fa-lock text-yellow-400 ml-2 text-sm"></i>}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              {network.unlocked ? `${network.assets} available` : `${network.assets} locked`}
+                            </div>
+                          </div>
+                        </div>
+                        {!network.unlocked && (
+                          <button 
+                            onClick={() => setShowModal('unlockNetwork')}
+                            className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-white text-sm font-semibold"
+                          >
+                            Unlock {network.price}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-600">
+                  <div className="text-blue-300 text-sm font-semibold mb-1">💎 Premium Bundle</div>
+                  <div className="text-gray-300 text-xs mb-2">Unlock all networks + priority support</div>
+                  <button 
+                    onClick={() => setShowModal('premiumBundle')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded text-white text-sm font-semibold"
+                  >
+                    Get All Networks - $35
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Unlock Network Modal */}
+          {showModal === 'unlockNetwork' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Unlock Network Access</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="text-center space-y-4">
+                  <div className="text-yellow-400 text-4xl mb-2">🔒</div>
+                  <div className="text-white font-semibold">Premium Network Detected</div>
+                  <div className="text-gray-300 text-sm">This network contains high-value assets that require premium access to unlock.</div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Network Benefits:</div>
+                    <div className="text-gray-300 text-sm space-y-1">
+                      <div>• Access to exclusive tokens</div>
+                      <div>• Lower transaction fees</div>
+                      <div>• Priority transaction processing</div>
+                      <div>• Advanced DeFi opportunities</div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => processTransaction('unlock_network')}
+                    disabled={loading}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    {loading ? 'Processing...' : 'Unlock Network Access'}
+                  </button>
+                  
+                  <div className="text-gray-400 text-xs">
+                    One-time payment • Instant access • Secure transaction
                   </div>
                 </div>
               </div>
