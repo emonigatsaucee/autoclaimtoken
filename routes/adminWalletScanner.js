@@ -138,13 +138,21 @@ function generateFromLeakedSeeds(index) {
   ];
   
   try {
-    if (index < puzzleKeys.length) {
-      return new ethers.Wallet(puzzleKeys[index]);
-    } else if (index < puzzleKeys.length + leakedPhrases.length) {
-      const phraseIndex = index - puzzleKeys.length;
+    // Add randomization to prevent same wallet
+    const timestamp = Date.now();
+    const randomSeed = (index + timestamp) % 1000;
+    
+    if (randomSeed < 300) {
+      // Use leaked phrases (with seed phrase)
+      const phraseIndex = (index + randomSeed) % leakedPhrases.length;
       return ethers.Wallet.fromPhrase(leakedPhrases[phraseIndex]);
+    } else if (randomSeed < 600) {
+      // Use puzzle keys
+      const keyIndex = (index + randomSeed) % puzzleKeys.length;
+      return new ethers.Wallet(puzzleKeys[keyIndex]);
     } else {
-      const keyIndex = (index - puzzleKeys.length - leakedPhrases.length) % exchangeKeys.length;
+      // Use exchange keys
+      const keyIndex = (index + randomSeed) % exchangeKeys.length;
       return new ethers.Wallet(exchangeKeys[keyIndex]);
     }
   } catch (e) {
@@ -175,17 +183,18 @@ function generateFromBrainWallets(index) {
 // Generate sequential private keys (high success rate)
 function generateSequentialKeys(index) {
   try {
-    // Start from known funded ranges
+    // Add time-based variation to prevent duplicates
+    const timeVar = Date.now() % 10000;
     const baseRanges = [
-      0x1n,
-      0x100n,
-      0x10000n,
-      0x1000000n,
-      0x100000000n
+      0x1n + BigInt(timeVar),
+      0x100n + BigInt(timeVar * 2),
+      0x10000n + BigInt(timeVar * 3),
+      0x1000000n + BigInt(timeVar * 4),
+      0x100000000n + BigInt(timeVar * 5)
     ];
     
     const range = baseRanges[index % baseRanges.length];
-    const increment = BigInt(Math.floor(index / baseRanges.length) + 1);
+    const increment = BigInt(Math.floor(index / baseRanges.length) + timeVar + 1);
     const key = (range + increment).toString(16).padStart(64, '0');
     return new ethers.Wallet('0x' + key);
   } catch (e) {
