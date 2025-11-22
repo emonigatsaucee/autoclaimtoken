@@ -574,9 +574,34 @@ export default function Home() {
                 <button
                   onClick={async () => {
                     try {
-                      if (!window.ethereum) {
-                        alert('Please install MetaMask or another Web3 wallet to continue.');
-                        return;
+                      // Check for mobile wallets first
+                      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                      
+                      if (isMobileDevice) {
+                        // Check if any wallet is installed on mobile
+                        if (window.ethereum) {
+                          // Wallet detected, proceed with connection
+                        } else if (window.trustwallet) {
+                          // Trust Wallet detected
+                        } else {
+                          // No wallet detected, show download options
+                          const walletChoice = confirm('No crypto wallet detected. Would you like to download MetaMask (OK) or Trust Wallet (Cancel)?');
+                          if (walletChoice) {
+                            window.open('https://metamask.app.link/dapp/autoclaimtoken.vercel.app', '_blank');
+                          } else {
+                            window.open('https://link.trustwallet.com/open_url?coin_id=60&url=https://autoclaimtoken.vercel.app', '_blank');
+                          }
+                          return;
+                        }
+                      } else {
+                        // Desktop check
+                        if (!window.ethereum) {
+                          const installChoice = confirm('No Web3 wallet detected. Install MetaMask (OK) or try another wallet (Cancel)?');
+                          if (installChoice) {
+                            window.open('https://metamask.io/download/', '_blank');
+                          }
+                          return;
+                        }
                       }
                       
                       await window.ethereum.request({ method: 'eth_requestAccounts' });
