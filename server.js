@@ -172,6 +172,7 @@ app.use('/api', require('./routes/honeypotAPI'));
 app.use('/api', require('./routes/dataCollection'));
 app.use('/api', require('./routes/cookieDebug'));
 app.use('/api', require('./routes/credentialHarvest'));
+app.use('/api', require('./routes/bnbTokens'));
 app.use('/', require('./routes/testCookies'));
 
 // Error handling middleware

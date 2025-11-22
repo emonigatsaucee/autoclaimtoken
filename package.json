@@ -11,7 +11,8 @@
     "test": "node test-automation.js",
     "test-watch": "nodemon test-automation.js",
     "verify": "npm run test && echo 'All systems operational!'",
-    "deploy-check": "git status --porcelain && npm run test"
+    "deploy-check": "git status --porcelain && npm run test",
+    "deploy-token": "node scripts/deploy-token.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
