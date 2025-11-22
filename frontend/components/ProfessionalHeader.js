@@ -86,10 +86,10 @@ export default function ProfessionalHeader() {
             <a href="#scanner" className="py-3 px-1 border-b-2 border-blue-500 text-blue-600 font-semibold text-sm">
               Wallet Scanner
             </a>
-            <a href="#recovery" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
+            <a href="/recovery-services" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
               Recovery Services
             </a>
-            <a href="#analytics" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
+            <a href="/flashed" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
               Portfolio Analytics
             </a>
             <a href="#support" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">

@@ -238,37 +238,37 @@ export default function Home() {
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center">
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/metamask-fox-logo.png" alt="MetaMask" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">MM</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">METAMASK</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/trust-wallet-token-twt-logo.png" alt="Trust Wallet" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">TW</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">TRUST WALLET</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/coinbase-coin-logo.png" alt="Coinbase" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">CB</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">COINBASE</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/rainbow-rbw-logo.png" alt="Rainbow" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">RB</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">RAINBOW</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/ledger-ledg-logo.png" alt="Ledger" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white font-bold text-xs">LG</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">LEDGER</div>
                     </div>
                     <div className="flex flex-col items-center space-y-3 group">
                       <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://cryptologos.cc/logos/exodus-exod-logo.png" alt="Exodus" className="w-10 h-10 object-contain" />
+                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">EX</div>
                       </div>
                       <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">EXODUS</div>
                     </div>
