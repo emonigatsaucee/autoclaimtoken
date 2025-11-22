@@ -42,7 +42,7 @@ export default function HeroSection({ onGetStarted }) {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-8">
             <div className="space-y-4">
@@ -51,7 +51,7 @@ export default function HeroSection({ onGetStarted }) {
                 <span className="text-green-300 font-semibold text-sm">85,000+ Users Trust Us</span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-black leading-tight">
+              <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black leading-tight">
                 Recover Your
                 <br />
                 <span className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
@@ -60,16 +60,16 @@ export default function HeroSection({ onGetStarted }) {
                 </span>
               </h1>
               
-              <p className="text-xl lg:text-2xl text-blue-100 leading-relaxed">
+              <p className="text-lg sm:text-xl lg:text-2xl text-blue-100 leading-relaxed">
                 Professional multi-chain recovery platform with <span className="text-yellow-400 font-bold">73% success rate</span>. 
                 Scan 50+ blockchains for lost tokens, NFTs, and bridge funds.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
               <button 
                 onClick={onGetStarted}
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl shadow-2xl hover:shadow-green-500/25 transition-all transform hover:scale-105"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl shadow-2xl hover:shadow-green-500/25 transition-all transform hover:scale-105"
               >
                 Start Free Recovery Scan
               </button>
@@ -85,18 +85,18 @@ export default function HeroSection({ onGetStarted }) {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/20">
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-6 sm:pt-8 border-t border-white/20">
               <div className="text-center">
-                <div className="text-3xl font-black text-yellow-400">$127M+</div>
-                <div className="text-blue-200 text-sm">Recovered</div>
+                <div className="text-xl sm:text-3xl font-black text-yellow-400">$127M+</div>
+                <div className="text-blue-200 text-xs sm:text-sm">Recovered</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-green-400">50+</div>
-                <div className="text-blue-200 text-sm">Blockchains</div>
+                <div className="text-xl sm:text-3xl font-black text-green-400">50+</div>
+                <div className="text-blue-200 text-xs sm:text-sm">Blockchains</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-purple-400">24/7</div>
-                <div className="text-blue-200 text-sm">Support</div>
+                <div className="text-xl sm:text-3xl font-black text-purple-400">24/7</div>
+                <div className="text-blue-200 text-xs sm:text-sm">Support</div>
               </div>
             </div>
           </div>

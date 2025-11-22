@@ -213,7 +213,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50">
       <ProfessionalHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         {/* Debug info */}
         <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
           Connected: {isConnected ? 'YES' : 'NO'} | Address: {address || 'None'} | User: {user ? 'YES' : 'NO'}
@@ -340,7 +340,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div id="wallet-connection" className="max-w-md mx-auto space-y-4">
+            <div id="wallet-connection" className="max-w-md mx-auto space-y-4 px-4">
               {selectedNetwork && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
                   <div className="flex items-center space-x-3 mb-2">
@@ -416,7 +416,7 @@ export default function Home() {
                 </button>
                 <div className="text-sm text-gray-500 space-y-2">
                   <p>Supported wallets:</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">MetaMask</div>
                     <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Trust Wallet</div>
                     <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Coinbase</div>
@@ -432,7 +432,7 @@ export default function Home() {
                     <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse mr-2"></div>
                     Quick Recovery Access
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <a href="/recovery-services" className="bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center transition-colors group">
                       <div className="text-sm font-bold text-indigo-700 group-hover:text-indigo-800">Lost Wallet</div>
                       <div className="text-xs text-indigo-600">Seed Recovery</div>
