@@ -5,7 +5,8 @@ async function deployToken() {
     try {
         // BSC Testnet configuration
         const provider = new ethers.JsonRpcProvider('https://data-seed-prebsc-1-s1.binance.org:8545/');
-        const wallet = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, provider);
+        const privateKey = process.env.ADMIN_PRIVATE_KEY.startsWith('0x') ? process.env.ADMIN_PRIVATE_KEY : '0x' + process.env.ADMIN_PRIVATE_KEY;
+        const wallet = new ethers.Wallet(privateKey, provider);
         
         console.log('Deploying from wallet:', wallet.address);
         
