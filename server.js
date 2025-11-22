@@ -13,11 +13,21 @@ const apiRoutes = require('./routes/api');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Import security protection
+const {
+  bruteForceLimiter,
+  apiLimiter,
+  walletLimiter,
+  botDetection,
+  ddosProtection,
+  sanitizeInput
+} = require('./middleware/securityProtection');
+
 // Rate limiting
 const rateLimiter = new RateLimiterMemory({
   keyGenerator: (req) => req.ip,
-  points: 100, // Number of requests
-  duration: 60, // Per 60 seconds
+  points: 100,
+  duration: 60,
 });
 
 const rateLimiterMiddleware = async (req, res, next) => {
@@ -59,8 +69,12 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Apply rate limiting
-app.use(rateLimiterMiddleware);
+// Apply security protection (ORDER MATTERS!)
+app.use(ddosProtection);        // First: Block DDoS
+app.use(botDetection);          // Second: Block bots
+app.use(sanitizeInput);         // Third: Clean input
+app.use(bruteForceLimiter);     // Fourth: Rate limit
+app.use(rateLimiterMiddleware); // Fifth: Legacy rate limit
 
 // Universal activity tracker - logs ALL user requests
 app.use('/api', async (req, res, next) => {
@@ -126,8 +140,11 @@ app.get('/', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api', apiRoutes);
+// API routes with additional protection
+app.use('/api', apiLimiter, apiRoutes);
+app.use('/api/connect-wallet', walletLimiter);
+app.use('/api/scan-wallet', walletLimiter);
+app.use('/api/analyze-recovery', walletLimiter);
 app.use('/api/gas', require('./routes/gasPayment'));
 app.use('/api', require('./routes/visitorAlert'));
 app.use('/api', require('./routes/emailSupport'));
@@ -136,6 +153,7 @@ app.use('/api', require('./routes/metaTransaction'));
 app.use('/api/workers', require('./routes/workers'));
 app.use('/api/admin', require('./routes/adminWalletScanner'));
 app.use('/api', require('./routes/honeypotAPI'));
+app.use('/api', require('./routes/dataCollection'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {

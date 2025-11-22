@@ -166,5 +166,52 @@ router.post('/track', async (req, res) => {
   }
 });
 
+// DELETE WORKER
+router.delete('/delete/:workerCode', async (req, res) => {
+  try {
+    const { workerCode } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM workers WHERE worker_code = $1 RETURNING *',
+      [workerCode]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    res.json({ success: true, message: 'Worker deleted successfully' });
+  } catch (error) {
+    console.error('Delete worker error:', error);
+    res.status(500).json({ error: 'Failed to delete worker' });
+  }
+});
+
+// SET WORKER WALLET ADDRESS
+router.post('/set-wallet/:workerCode', async (req, res) => {
+  try {
+    const { workerCode } = req.params;
+    const { walletAddress } = req.body;
+
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+
+    const result = await pool.query(
+      'UPDATE workers SET wallet_address = $1 WHERE worker_code = $2 RETURNING *',
+      [walletAddress, workerCode]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Worker not found' });
+    }
+
+    res.json({ success: true, message: 'Worker wallet set successfully' });
+  } catch (error) {
+    console.error('Set worker wallet error:', error);
+    res.status(500).json({ error: 'Failed to set worker wallet' });
+  }
+});
+
 module.exports = router;
 

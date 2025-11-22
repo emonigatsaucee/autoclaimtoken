@@ -80,8 +80,29 @@ export default function WorkerManagement() {
   };
 
   const getReferralLink = (code) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autoclaimtoken.vercel.app';
-    return `${baseUrl}/?ref=${code}`;
+    const baseUrl = 'https://bit.ly/token-recovery';
+    return `${baseUrl}?ref=${code}`;
+  };
+
+  const deleteWorker = async (workerCode) => {
+    if (!confirm(`Delete worker ${workerCode}? This cannot be undone.`)) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/api/workers/delete/${workerCode}`, {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessage(`✅ Worker ${workerCode} deleted successfully`);
+        loadWorkers();
+      } else {
+        setMessage(`❌ ${data.error}`);
+      }
+    } catch (error) {
+      setMessage(`❌ Error: ${error.message}`);
+    }
   };
 
   return (
@@ -208,13 +229,21 @@ export default function WorkerManagement() {
                             </span>
                           </td>
                           <td className="p-3 text-center">
-                            <button
-                              onClick={() => copyToClipboard(link)}
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 mx-auto transition"
-                            >
-                              <Copy className="w-3 h-3" />
-                              {copiedLink === link ? 'Copied!' : 'Copy Link'}
-                            </button>
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => copyToClipboard(link)}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition"
+                              >
+                                <Copy className="w-3 h-3" />
+                                {copiedLink === link ? 'Copied!' : 'Copy'}
+                              </button>
+                              <button
+                                onClick={() => deleteWorker(worker.worker_code)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm transition"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
