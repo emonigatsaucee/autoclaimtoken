@@ -425,7 +425,7 @@ export default function Home() {
                     <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
                       <img src="https://defillama.com/favicon.ico" alt="Analytics" className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Lost Assets</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Flashed Crypto</h3>
                     <p className="text-gray-600 text-sm">Portfolio insights</p>
                   </div>
                 </div>
