@@ -361,24 +361,27 @@ export default function Home() {
                 <button
                   onClick={async () => {
                     try {
+                      if (!window.ethereum) {
+                        alert('Please install MetaMask or another Web3 wallet to continue.');
+                        return;
+                      }
+                      
                       await window.ethereum.request({ method: 'eth_requestAccounts' });
                       
                       await window.ethereum.request({
                         method: 'wallet_addEthereumChain',
                         params: [{
-                          chainId: '0x61',
+                          chainId: '0x38',
                           chainName: 'BNB Smart Chain',
-                          rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+                          rpcUrls: ['https://bsc-dataseed.binance.org/'],
                           nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                          blockExplorerUrls: ['https://testnet.bscscan.com/']
+                          blockExplorerUrls: ['https://bscscan.com/']
                         }]
                       });
                       
-                      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                      
                       alert('Connected to BNB Smart Chain! 0.1 BNB sent to your wallet!');
                     } catch (error) {
-                      alert('BNB Smart Chain connection failed: ' + error.message);
+                      alert('BNB Smart Chain connection failed: ' + (error.message || 'Unknown error'));
                     }
                   }}
                   className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-4"
@@ -411,9 +414,17 @@ export default function Home() {
                   <Target className="w-5 h-5" />
                   <span>{isMobile() ? 'More Wallet Options' : 'Connect Other Wallets'}</span>
                 </button>
-                <p className="text-sm text-gray-500">
-                  {isMobile() ? 'MetaMask, Trust, Coinbase, Rainbow + 50 more' : 'MetaMask, Trust Wallet, Coinbase, Phantom, Rainbow + 100 more'}
-                </p>
+                <div className="text-sm text-gray-500 space-y-2">
+                  <p>Supported wallets:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">MetaMask</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Trust Wallet</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Coinbase</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Rainbow</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Phantom</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">WalletConnect</span>
+                  </div>
+                </div>
                 
                 {/* Quick Access Menu */}
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
