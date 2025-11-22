@@ -72,7 +72,12 @@ export default function ProfessionalHeader() {
               <div className="text-xl font-bold text-blue-600">73.2%</div>
             </div>
 
-            <button className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+            <button 
+              onClick={() => {
+                document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+            >
               Start Recovery
             </button>
           </div>

