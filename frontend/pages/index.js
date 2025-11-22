@@ -247,52 +247,50 @@ export default function Home() {
               document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' });
             }} />
             
-            <TrustSignals />
+
               
-              <div className="bg-black text-white py-16 border-t border-gray-800">
-                <div className="max-w-7xl mx-auto px-8">
-                  <div className="text-center mb-12">
-                    <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-bold mb-6">
-                      ENTERPRISE PARTNERSHIPS
-                    </div>
-                    <p className="text-gray-300 text-lg font-semibold">TRUSTED BY LEADING CRYPTO WALLETS</p>
+              <div className="bg-gray-900 text-white py-12">
+                <div className="max-w-6xl mx-auto px-6">
+                  <div className="text-center mb-8">
+                    <h3 className="text-xl font-bold mb-2">Supported Wallets</h3>
+                    <p className="text-gray-400">Compatible with all major crypto wallets</p>
                   </div>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center">
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://metamask.io/favicon.ico" alt="MetaMask" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iI0Y2ODUxQiIvPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NTTwvdGV4dD4KPHN2Zz4='} />
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-6 items-center">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-orange-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">MM</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">METAMASK</div>
+                      <div className="text-xs text-gray-400">MetaMask</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://trustwallet.com/favicon.ico" alt="Trust Wallet" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzMzNzVCQiIvPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UVzwvdGV4dD4KPHN2Zz4='} />
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">TW</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">TRUST WALLET</div>
+                      <div className="text-xs text-gray-400">Trust</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://www.coinbase.com/favicon.ico" alt="Coinbase" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzAwNTJGRiIvPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DQjwvdGV4dD4KPHN2Zz4='} />
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">CB</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">COINBASE</div>
+                      <div className="text-xs text-gray-400">Coinbase</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://rainbow.me/favicon.ico" alt="Rainbow" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0idXJsKCNyYWluYm93KSIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJyYWluYm93IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGNkI2QiIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM5QjU5QjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SQjwvdGV4dD4KPHN2Zz4='} />
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-purple-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">PH</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">RAINBOW</div>
+                      <div className="text-xs text-gray-400">Phantom</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://www.ledger.com/favicon.ico" alt="Ledger" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzAwMDAwMCIvPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MRzwvdGV4dD4KPHN2Zz4='} />
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-black rounded-lg mx-auto mb-2 flex items-center justify-center border border-gray-600">
+                        <span className="text-white font-bold text-sm">LG</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">LEDGER</div>
+                      <div className="text-xs text-gray-400">Ledger</div>
                     </div>
-                    <div className="flex flex-col items-center space-y-3 group">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform p-2">
-                        <img src="https://www.exodus.com/favicon.ico" alt="Exodus" className="w-10 h-10 object-contain" onError={(e) => e.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzlDMjdCMCIvPgo8dGV4dCB4PSIxMiIgeT0iMTYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5FWDwvdGV4dD4KPHN2Zz4='} />
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-purple-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">EX</span>
                       </div>
-                      <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">EXODUS</div>
+                      <div className="text-xs text-gray-400">Exodus</div>
                     </div>
                   </div>
                 </div>
@@ -313,48 +311,44 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-white py-20">
-              <div className="max-w-7xl mx-auto px-8">
-                <div className="text-center mb-16">
-                  <h2 className="text-4xl font-black text-gray-900 mb-4">Complete Recovery Solutions</h2>
-                  <p className="text-xl text-gray-600 max-w-3xl mx-auto">Professional-grade tools for every type of crypto asset recovery</p>
+            <div className="bg-white py-16">
+              <div className="max-w-6xl mx-auto px-6">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-3">Recovery Services</h2>
+                  <p className="text-gray-600">Professional tools for crypto asset recovery</p>
                 </div>
                 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200 hover:border-blue-400 transition-all hover:scale-105">
-                    <div className="w-16 h-16 mb-4">
-                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ethereum.svg" alt="Token Recovery" className="w-full h-full" style={{filter: 'hue-rotate(200deg) saturate(2)'}} />
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 bg-blue-600 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-white font-bold">T</span>
                     </div>
-                    <h3 className="text-xl font-bold text-blue-900 mb-2">Token Recovery</h3>
-                    <p className="text-blue-700 text-sm mb-4">Scan 50+ blockchains for unclaimed tokens, airdrops, and rewards</p>
-                    <div className="text-xs text-blue-600 font-medium">Ethereum • BSC • Polygon • Arbitrum • Optimism</div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Token Recovery</h3>
+                    <p className="text-gray-600 text-sm">Multi-chain token scanning</p>
                   </div>
                   
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 hover:border-purple-400 transition-all hover:scale-105">
-                    <div className="w-16 h-16 mb-4">
-                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/opensea.svg" alt="NFT Recovery" className="w-full h-full" style={{filter: 'hue-rotate(270deg) saturate(2)'}} />
+                  <div className="bg-purple-50 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 bg-purple-600 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-white font-bold">N</span>
                     </div>
-                    <h3 className="text-xl font-bold text-purple-900 mb-2">NFT Recovery</h3>
-                    <p className="text-purple-700 text-sm mb-4">Recover stuck NFTs from failed marketplace transactions</p>
-                    <div className="text-xs text-purple-600 font-medium">OpenSea • LooksRare • X2Y2 • Blur</div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">NFT Recovery</h3>
+                    <p className="text-gray-600 text-sm">Stuck NFT retrieval</p>
                   </div>
                   
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 hover:border-green-400 transition-all hover:scale-105">
-                    <div className="w-16 h-16 mb-4">
-                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/polygon.svg" alt="Bridge Recovery" className="w-full h-full" style={{filter: 'hue-rotate(120deg) saturate(2)'}} />
+                  <div className="bg-green-50 rounded-xl p-6 border border-green-200 hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 bg-green-600 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-white font-bold">B</span>
                     </div>
-                    <h3 className="text-xl font-bold text-green-900 mb-2">Bridge Recovery</h3>
-                    <p className="text-green-700 text-sm mb-4">Recover funds stuck in cross-chain bridge transactions</p>
-                    <div className="text-xs text-green-600 font-medium">Polygon • Arbitrum • Optimism • Base</div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Bridge Recovery</h3>
+                    <p className="text-gray-600 text-sm">Cross-chain fund recovery</p>
                   </div>
                   
-                  <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200 hover:border-orange-400 transition-all hover:scale-105">
-                    <div className="w-16 h-16 mb-4">
-                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/chartdotjs.svg" alt="Wealth Intelligence" className="w-full h-full" style={{filter: 'hue-rotate(30deg) saturate(2)'}} />
+                  <div className="bg-orange-50 rounded-xl p-6 border border-orange-200 hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 bg-orange-600 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-white font-bold">A</span>
                     </div>
-                    <h3 className="text-xl font-bold text-orange-900 mb-2">Wealth Intelligence</h3>
-                    <p className="text-orange-700 text-sm mb-4">AI-powered portfolio optimization and insights</p>
-                    <div className="text-xs text-orange-600 font-medium">Risk Analysis • Yield Optimization • Tax Reports</div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Analytics</h3>
+                    <p className="text-gray-600 text-sm">Portfolio insights</p>
                   </div>
                 </div>
                 
@@ -990,12 +984,16 @@ export default function Home() {
         console.log('Urgency triggered - user has been on site for 30+ seconds');
       }} />
       
-      <div id="support" style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 40 }}>
-        <UltraIntelligentSupport 
-          isConnected={isConnected} 
-          userPortfolio={portfolio}
-          selectedNetwork={selectedNetwork}
-        />
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000 }}>
+        <button 
+          onClick={() => window.open('/support', '_blank')}
+          className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+          title="Get Support"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </button>
       </div>
     </div>
     </>
