@@ -8,6 +8,10 @@ const createRateLimiter = (windowMs, max, message) => rateLimit({
   message: { error: message },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: false,
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress || req.ip;
+  },
   handler: (req, res) => {
     console.log(`🚨 RATE LIMIT HIT: ${req.ip} - ${req.path}`);
     res.status(429).json({ error: message });
