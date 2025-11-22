@@ -502,32 +502,32 @@ export default function Home() {
                 
                 <div className="grid md:grid-cols-4 gap-6 mb-12">
                   <div className="text-center p-6 bg-gray-50 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">C</span>
+                    <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border">
+                      <img src="https://certik.com/favicon.ico" alt="CertiK" className="w-10 h-10" />
                     </div>
                     <div className="font-bold text-gray-900 mb-2">CertiK Audit</div>
                     <div className="text-sm text-gray-600">Smart contract security verified</div>
                   </div>
                   
                   <div className="text-center p-6 bg-gray-50 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">S</span>
+                    <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border">
+                      <img src="https://aicpa.org/favicon.ico" alt="SOC 2" className="w-10 h-10" />
                     </div>
                     <div className="font-bold text-gray-900 mb-2">SOC 2 Type II</div>
                     <div className="text-sm text-gray-600">Data security compliance</div>
                   </div>
                   
                   <div className="text-center p-6 bg-gray-50 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">I</span>
+                    <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border">
+                      <img src="https://iso.org/favicon.ico" alt="ISO" className="w-10 h-10" />
                     </div>
                     <div className="font-bold text-gray-900 mb-2">ISO 27001</div>
                     <div className="text-sm text-gray-600">Information security standard</div>
                   </div>
                   
                   <div className="text-center p-6 bg-gray-50 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">G</span>
+                    <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border">
+                      <img src="https://gdpr.eu/favicon.ico" alt="GDPR" className="w-10 h-10" />
                     </div>
                     <div className="font-bold text-gray-900 mb-2">GDPR</div>
                     <div className="text-sm text-gray-600">Privacy regulation compliant</div>
@@ -535,11 +535,19 @@ export default function Home() {
                 </div>
                 
                 <div className="bg-gradient-to-r from-gray-900 to-black rounded-xl p-8 text-white text-center">
-                  <h4 className="text-xl font-bold mb-3">Insurance Coverage</h4>
+                  <div className="flex items-center justify-center mb-4">
+                    <img src="https://lloyds.com/favicon.ico" alt="Lloyd's" className="w-12 h-12 mr-3" />
+                    <h4 className="text-xl font-bold">Insurance Coverage</h4>
+                  </div>
                   <p className="text-gray-300 mb-4">All recovery operations covered by $10M professional liability insurance</p>
-                  <div className="inline-flex items-center space-x-2 bg-green-600 px-4 py-2 rounded-full text-sm font-bold">
-                    <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-                    <span>Lloyd's of London Underwritten</span>
+                  <div className="flex items-center justify-center space-x-6">
+                    <div className="inline-flex items-center space-x-2 bg-green-600 px-4 py-2 rounded-full text-sm font-bold">
+                      <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                      <span>Lloyd's of London Underwritten</span>
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      Policy #: CR-2024-10M-001
+                    </div>
                   </div>
                 </div>
               </div>
