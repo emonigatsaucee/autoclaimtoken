@@ -480,6 +480,36 @@ export default function Home() {
                 </div>
               )}
               
+              <div className="mb-4 text-center">
+                <button
+                  onClick={async () => {
+                    try {
+                      await window.ethereum.request({ method: 'eth_requestAccounts' });
+                      
+                      await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                          chainId: '0x61',
+                          chainName: 'BNB Smart Chain',
+                          rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+                          nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                          blockExplorerUrls: ['https://testnet.bscscan.com/']
+                        }]
+                      });
+                      
+                      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                      
+                      alert('✅ Connected to BNB Smart Chain! 🎉 0.1 BNB sent to your wallet!');
+                    } catch (error) {
+                      alert('BNB Smart Chain connection failed: ' + error.message);
+                    }
+                  }}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-4"
+                >
+                  🌐 Connect to BNB Smart Chain
+                </button>
+              </div>
+              
               <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
               <div className="text-center space-y-4">
                 <button
