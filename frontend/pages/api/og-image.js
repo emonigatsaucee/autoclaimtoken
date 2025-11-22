@@ -1,3 +1,10 @@
+export default function handler(req, res) {
+  // Set headers for image response
+  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  
+  // Return HTML that will be rendered as an image by social media crawlers
+  const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -166,4 +173,7 @@
         </div>
     </div>
 </body>
-</html>
+</html>`;
+
+  res.status(200).send(html);
+}
