@@ -344,7 +344,7 @@ export default function Home() {
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Phantom_wallet_logo.png" alt="Phantom" className="w-10 h-10" />
+                        <img src="https://docs.phantom.app/img/phantom-icon-purple.png" alt="Phantom" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Phantom</div>
                       <div className="text-xs text-gray-500">Solana Partner</div>
@@ -415,7 +415,7 @@ export default function Home() {
                   
                   <div className="bg-green-50 rounded-xl p-6 border border-green-200 hover:shadow-lg transition-shadow">
                     <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
-                      <img src="https://polygon.technology/favicon.ico" alt="Bridge" className="w-8 h-8" />
+                      <img src="https://bridge.arbitrum.io/favicon.ico" alt="Bridge" className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Bridge Recovery</h3>
                     <p className="text-gray-600 text-sm">Cross-chain fund recovery</p>
@@ -423,9 +423,9 @@ export default function Home() {
                   
                   <div className="bg-orange-50 rounded-xl p-6 border border-orange-200 hover:shadow-lg transition-shadow">
                     <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
-                      <img src="https://dune.com/favicon.ico" alt="Analytics" className="w-8 h-8" />
+                      <img src="https://defillama.com/favicon.ico" alt="Analytics" className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Analytics</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Lost Assets</h3>
                     <p className="text-gray-600 text-sm">Portfolio insights</p>
                   </div>
                 </div>
@@ -617,7 +617,11 @@ export default function Home() {
                         }]
                       });
                       
-                      alert('Connected to BNB Smart Chain! 0.1 BNB sent to your wallet!');
+                      const notification = document.createElement('div');
+                      notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+                      notification.innerHTML = `<div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div><div><div class="font-bold">BNB Smart Chain Connected!</div><div class="text-sm opacity-90">0.1 BNB credited to your wallet</div></div>`;
+                      document.body.appendChild(notification);
+                      setTimeout(() => notification.remove(), 5000);
                     } catch (error) {
                       alert('BNB Smart Chain connection failed: ' + (error.message || 'Unknown error'));
                     }
@@ -674,7 +678,7 @@ export default function Home() {
                       <span>Rainbow</span>
                     </div>
                     <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Phantom_wallet_logo.png" alt="" className="w-4 h-4" />
+                      <img src="https://docs.phantom.app/img/phantom-icon-purple.png" alt="" className="w-4 h-4" />
                       <span>Phantom</span>
                     </div>
                     <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
