@@ -323,42 +323,42 @@ export default function Home() {
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-8 items-center mb-12">
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">🦊</span>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">MetaMask</div>
                       <div className="text-xs text-gray-500">Official Partner</div>
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">🛡️</span>
+                        <img src="https://trustwallet.com/favicon.ico" alt="Trust Wallet" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Trust Wallet</div>
                       <div className="text-xs text-gray-500">Verified Partner</div>
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">💰</span>
+                        <img src="https://coinbase.com/favicon.ico" alt="Coinbase" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Coinbase</div>
                       <div className="text-xs text-gray-500">Enterprise</div>
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">👻</span>
+                        <img src="https://phantom.app/favicon.ico" alt="Phantom" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Phantom</div>
                       <div className="text-xs text-gray-500">Solana Partner</div>
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-black rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">🔐</span>
+                        <img src="https://ledger.com/favicon.ico" alt="Ledger" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Ledger</div>
                       <div className="text-xs text-gray-500">Hardware</div>
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <span className="text-2xl">🚀</span>
+                        <img src="https://exodus.com/favicon.ico" alt="Exodus" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Exodus</div>
                       <div className="text-xs text-gray-500">Multi-Chain</div>
