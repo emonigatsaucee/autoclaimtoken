@@ -416,13 +416,13 @@ export default function Home() {
                 </button>
                 <div className="text-sm text-gray-500 space-y-2">
                   <p>Supported wallets:</p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">MetaMask</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Trust Wallet</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Coinbase</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Rainbow</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Phantom</span>
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">WalletConnect</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">MetaMask</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Trust Wallet</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Coinbase</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Rainbow</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Phantom</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">WalletConnect</div>
                   </div>
                 </div>
                 
@@ -507,7 +507,29 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg">
-                  <WalletConnection onConnectionChange={handleConnectionChange} deviceData={deviceData} />
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">{address?.slice(0, 8)}...{address?.slice(-6)}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUser(null);
+                        setIsConnected(false);
+                        setAddress('');
+                        setScanResults(null);
+                        setAnalysisResults(null);
+                      }}
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                      </svg>
+                      <span>Disconnect</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               
