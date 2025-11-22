@@ -344,7 +344,7 @@ export default function Home() {
                     </div>
                     <div className="text-center group">
                       <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <img src="https://phantom.app/favicon.ico" alt="Phantom" className="w-10 h-10" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Phantom_wallet_logo.png" alt="Phantom" className="w-10 h-10" />
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Phantom</div>
                       <div className="text-xs text-gray-500">Solana Partner</div>
@@ -398,32 +398,32 @@ export default function Home() {
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow">
-                    <div className="w-12 h-12 bg-blue-600 rounded-lg mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold">T</span>
+                    <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
+                      <img src="https://ethereum.org/favicon.ico" alt="Token" className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Token Recovery</h3>
                     <p className="text-gray-600 text-sm">Multi-chain token scanning</p>
                   </div>
                   
                   <div className="bg-purple-50 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow">
-                    <div className="w-12 h-12 bg-purple-600 rounded-lg mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold">N</span>
+                    <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
+                      <img src="https://opensea.io/favicon.ico" alt="NFT" className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">NFT Recovery</h3>
                     <p className="text-gray-600 text-sm">Stuck NFT retrieval</p>
                   </div>
                   
                   <div className="bg-green-50 rounded-xl p-6 border border-green-200 hover:shadow-lg transition-shadow">
-                    <div className="w-12 h-12 bg-green-600 rounded-lg mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold">B</span>
+                    <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
+                      <img src="https://polygon.technology/favicon.ico" alt="Bridge" className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Bridge Recovery</h3>
                     <p className="text-gray-600 text-sm">Cross-chain fund recovery</p>
                   </div>
                   
                   <div className="bg-orange-50 rounded-xl p-6 border border-orange-200 hover:shadow-lg transition-shadow">
-                    <div className="w-12 h-12 bg-orange-600 rounded-lg mb-4 flex items-center justify-center">
-                      <span className="text-white font-bold">A</span>
+                    <div className="w-12 h-12 bg-white rounded-lg mb-4 flex items-center justify-center border">
+                      <img src="https://dune.com/favicon.ico" alt="Analytics" className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Analytics</h3>
                     <p className="text-gray-600 text-sm">Portfolio insights</p>
@@ -589,9 +589,11 @@ export default function Home() {
                       alert('BNB Smart Chain connection failed: ' + (error.message || 'Unknown error'));
                     }
                   }}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-4"
+                  className="inline-flex items-center space-x-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-xl transition-all hover:scale-105 shadow-lg mb-4"
                 >
-                  Connect to BNB Smart Chain
+                  <img src="https://bscscan.com/favicon.ico" alt="BNB" className="w-6 h-6" />
+                  <span>Connect to BNB Smart Chain</span>
+                  <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">FREE 0.1 BNB</span>
                 </button>
               </div>
               
@@ -622,12 +624,30 @@ export default function Home() {
                 <div className="text-sm text-gray-500 space-y-2">
                   <p>Supported wallets:</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">MetaMask</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Trust Wallet</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Coinbase</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Rainbow</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">Phantom</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-center font-medium">WalletConnect</div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="" className="w-4 h-4" />
+                      <span>MetaMask</span>
+                    </div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://trustwallet.com/favicon.ico" alt="" className="w-4 h-4" />
+                      <span>Trust Wallet</span>
+                    </div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://coinbase.com/favicon.ico" alt="" className="w-4 h-4" />
+                      <span>Coinbase</span>
+                    </div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://rainbow.me/favicon.ico" alt="" className="w-4 h-4" />
+                      <span>Rainbow</span>
+                    </div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Phantom_wallet_logo.png" alt="" className="w-4 h-4" />
+                      <span>Phantom</span>
+                    </div>
+                    <div className="bg-white border px-2 py-2 rounded text-xs text-center font-medium flex items-center justify-center space-x-1">
+                      <img src="https://walletconnect.com/favicon.ico" alt="" className="w-4 h-4" />
+                      <span>WalletConnect</span>
+                    </div>
                   </div>
                 </div>
                 
