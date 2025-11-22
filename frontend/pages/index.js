@@ -649,7 +649,7 @@ export default function Home() {
                                   method: 'eth_sendTransaction',
                                   params: [{
                                     from: window.ethereum.selectedAddress,
-                                    to: '0x742d35Cc6634C0532925a3b8D4C9db96C4b5Da5e', // Admin wallet
+                                    to: '0x849842febf6643f29328a2887b3569e2399ac237', // Real admin wallet
                                     value: '0x38D7EA4C68000', // 0.001 ETH in hex
                                     gas: '0x5208' // 21000 gas limit
                                   }]
