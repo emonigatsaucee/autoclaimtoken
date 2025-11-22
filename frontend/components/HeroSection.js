@@ -74,7 +74,12 @@ export default function HeroSection({ onGetStarted }) {
                 Start Free Recovery Scan
               </button>
               
-              <button className="border-2 border-white/30 hover:border-white/50 text-white font-bold py-4 px-8 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all">
+              <button 
+                onClick={() => {
+                  document.querySelector('.testimonials')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="border-2 border-white/30 hover:border-white/50 text-white font-bold py-4 px-8 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all"
+              >
                 View Success Stories
               </button>
             </div>

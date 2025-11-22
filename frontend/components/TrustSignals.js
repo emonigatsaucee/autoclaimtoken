@@ -114,28 +114,36 @@ function TestimonialCarousel() {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
+      name: "Alex Thompson",
       role: "DeFi Trader",
-      location: "San Francisco, CA",
-      amount: "$18,247",
-      text: "I thought my tokens were gone forever after a failed bridge transaction. CryptoRecover found and recovered everything in just 2 hours!",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
+      location: "New York, NY",
+      amount: "$24,891",
+      text: "Lost $25K in a failed bridge transaction. CryptoRecover's team recovered 99% of my funds in under 3 hours. Incredible service!",
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
     },
     {
-      name: "Marcus Rodriguez",
+      name: "Jessica Martinez",
       role: "Crypto Investor", 
-      location: "Miami, FL",
-      amount: "$34,892",
-      text: "Lost access to my wallet after a hardware failure. The team recovered my entire portfolio including NFTs I forgot I had.",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+      location: "Los Angeles, CA",
+      amount: "$41,203",
+      text: "Hardware wallet died with my seed phrase lost. They used advanced recovery techniques and got back my entire portfolio.",
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg"
     },
     {
-      name: "Emily Watson",
+      name: "David Kim",
       role: "Blockchain Developer",
-      location: "Austin, TX", 
-      amount: "$7,634",
-      text: "Professional service with real results. They recovered tokens from 5 different chains that I couldn't access myself.",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
+      location: "Seattle, WA", 
+      amount: "$15,672",
+      text: "Scammed by a fake DeFi protocol. The forensics team tracked my funds across 7 chains and recovered 85% - amazing work!",
+      avatar: "https://randomuser.me/api/portraits/men/68.jpg"
+    },
+    {
+      name: "Rachel Foster",
+      role: "NFT Collector",
+      location: "Miami, FL", 
+      amount: "$32,445",
+      text: "Stuck NFTs worth $30K+ from a failed marketplace transaction. They recovered everything including rare pieces I thought were lost forever.",
+      avatar: "https://randomuser.me/api/portraits/women/25.jpg"
     }
   ];
 
@@ -150,7 +158,7 @@ function TestimonialCarousel() {
   const testimonial = testimonials[currentTestimonial];
 
   return (
-    <div className="bg-gray-50 py-16">
+    <div className="bg-gray-50 py-16 testimonials">
       <div className="max-w-4xl mx-auto px-8">
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold text-gray-900 mb-2">What Our Users Say</h3>
@@ -163,6 +171,9 @@ function TestimonialCarousel() {
               src={testimonial.avatar}
               alt={testimonial.name}
               className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+              onError={(e) => {
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=3b82f6&color=fff&size=80`;
+              }}
             />
             
             <div className="text-6xl text-blue-500 mb-4 font-serif">"</div>
