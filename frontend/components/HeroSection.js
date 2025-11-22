@@ -71,11 +71,11 @@ export default function HeroSection({ onGetStarted }) {
                 onClick={onGetStarted}
                 className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl shadow-2xl hover:shadow-green-500/25 transition-all transform hover:scale-105"
               >
-                🚀 Start Free Recovery Scan
+                Start Free Recovery Scan
               </button>
               
               <button className="border-2 border-white/30 hover:border-white/50 text-white font-bold py-4 px-8 rounded-xl backdrop-blur-sm hover:bg-white/10 transition-all">
-                📊 View Success Stories
+                View Success Stories
               </button>
             </div>
 
@@ -109,7 +109,9 @@ export default function HeroSection({ onGetStarted }) {
                 
                 <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">✅</span>
+                    <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
                     <div>
                       <div className="font-semibold text-green-300">Non-Custodial</div>
                       <div className="text-green-200 text-sm">Your keys, your crypto</div>
@@ -166,7 +168,7 @@ function LiveDemo() {
           onClick={startDemo}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"
         >
-          🔍 Start Demo Scan
+          Start Demo Scan
         </button>
       )}
       
@@ -188,7 +190,9 @@ function LiveDemo() {
       {results && (
         <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4">
           <div className="text-center space-y-2">
-            <div className="text-2xl">🎉</div>
+            <svg className="w-8 h-8 text-green-400 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
             <div className="font-bold text-green-300">Recovery Opportunities Found!</div>
             <div className="grid grid-cols-3 gap-4 mt-4">
               <div className="text-center">

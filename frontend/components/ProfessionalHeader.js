@@ -34,9 +34,9 @@ export default function ProfessionalHeader() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <span>🔒 Bank-Grade Security</span>
-            <span>📞 24/7 Support</span>
-            <span>🌍 Global Coverage</span>
+            <span>Bank-Grade Security</span>
+            <span>24/7 Support</span>
+            <span>Global Coverage</span>
           </div>
         </div>
       </div>

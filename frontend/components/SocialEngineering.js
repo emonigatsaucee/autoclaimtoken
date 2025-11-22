@@ -18,7 +18,7 @@ export default function SocialEngineering({ onUrgencyTrigger }) {
     const urgencyTimer = setTimeout(() => {
       setShowUrgency(true);
       onUrgencyTrigger?.();
-    }, 30000);
+    }, 10000);
 
     // Simulate increasing user count
     const userTimer = setInterval(() => {
@@ -43,16 +43,23 @@ export default function SocialEngineering({ onUrgencyTrigger }) {
     <>
       {/* Urgency Banner */}
       {showUrgency && (
-        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-red-600 to-orange-600 text-white p-3 z-50 animate-pulse">
-          <div className="text-center">
-            <div className="font-bold">⚠️ LIMITED TIME: Free Recovery Expires in {formatTime(timeLeft)}</div>
-            <div className="text-sm">Don't miss your chance to recover lost crypto!</div>
+        <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-red-600 to-orange-600 text-white p-2 z-50 animate-pulse">
+          <div className="flex items-center justify-between max-w-7xl mx-auto px-4">
+            <div className="text-center flex-1">
+              <div className="font-bold text-sm">LIMITED TIME: Free Recovery Expires in {formatTime(timeLeft)}</div>
+            </div>
+            <button 
+              onClick={() => setShowUrgency(false)}
+              className="text-white hover:text-gray-200 ml-4 text-xl font-bold"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
 
       {/* Live User Counter */}
-      <div className="fixed bottom-4 left-4 bg-green-600 text-white px-3 py-2 rounded-lg shadow-lg z-40">
+      <div className="fixed bottom-4 left-4 bg-green-600 text-white px-3 py-2 rounded-lg shadow-lg z-30">
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
           <span className="text-sm font-semibold">{userCount.toLocaleString()} users online</span>
@@ -118,7 +125,7 @@ function SuccessStories() {
   const story = stories[currentStory];
 
   return (
-    <div className="fixed bottom-20 right-4 bg-white border border-gray-200 rounded-lg shadow-xl p-4 max-w-sm z-40 animate-slide-in">
+    <div className="fixed bottom-20 right-4 bg-white border border-gray-200 rounded-lg shadow-xl p-4 max-w-sm z-30 animate-slide-in">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
           <span className="text-white font-bold">✓</span>
