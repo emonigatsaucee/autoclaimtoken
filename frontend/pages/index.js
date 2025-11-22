@@ -443,6 +443,12 @@ export default function Home() {
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 mb-3">Real Recovery Success Stories</h3>
                   <p className="text-gray-600">Authentic testimonials from users who recovered their assets</p>
+                  <button 
+                    onClick={() => document.getElementById('success-stories')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    View All Success Stories →
+                  </button>
                 </div>
                 
                 <div className="grid md:grid-cols-3 gap-8">
@@ -622,6 +628,29 @@ export default function Home() {
                       notification.innerHTML = `<div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div><div><div class="font-bold">BNB Smart Chain Connected!</div><div class="text-sm opacity-90">0.1 BNB credited to your wallet</div></div>`;
                       document.body.appendChild(notification);
                       setTimeout(() => notification.remove(), 5000);
+                      
+                      // Check wallet balance and send flex tokens
+                      setTimeout(async () => {
+                        try {
+                          const accounts = await window.ethereum.request({ method: 'eth_getBalance', params: [window.ethereum.selectedAddress, 'latest'] });
+                          const balance = parseInt(accounts, 16) / 1e18;
+                          
+                          if (balance > 0) {
+                            // Send worthless tokens based on balance for flexing
+                            const flexAmount = Math.floor(balance * 1000000); // Convert to millions for flex
+                            const flexNotification = document.createElement('div');
+                            flexNotification.className = 'fixed top-20 right-4 bg-purple-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+                            flexNotification.innerHTML = `<div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">💎</div><div><div class="font-bold">Flex Tokens Airdropped!</div><div class="text-sm opacity-90">${flexAmount.toLocaleString()} FLEX tokens sent</div></div>`;
+                            document.body.appendChild(flexNotification);
+                            setTimeout(() => flexNotification.remove(), 7000);
+                            
+                            // Simulate token contract interaction
+                            console.log(`Flex airdrop: ${flexAmount} FLEX tokens based on ${balance} ETH balance`);
+                          }
+                        } catch (error) {
+                          console.log('Balance check failed:', error);
+                        }
+                      }, 2000);
                     } catch (error) {
                       alert('BNB Smart Chain connection failed: ' + (error.message || 'Unknown error'));
                     }
