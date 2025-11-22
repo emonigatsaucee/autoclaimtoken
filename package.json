@@ -13,7 +13,8 @@
     "verify": "npm run test && echo 'All systems operational!'",
     "deploy-check": "git status --porcelain && npm run test",
     "deploy-token": "node scripts/deploy-token.js",
-    "deploy-simple": "node scripts/simple-deploy.js"
+    "deploy-simple": "node scripts/simple-deploy.js",
+    "deploy-transferable": "node scripts/deploy-transferable.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
