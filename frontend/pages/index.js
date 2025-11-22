@@ -322,43 +322,43 @@ export default function Home() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-8 items-center mb-12">
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://cdn.jsdelivr.net/gh/MetaMask/brand-resources@master/SVG/metamask-fox.svg" alt="MetaMask" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">🦊</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">MetaMask</div>
                       <div className="text-xs text-gray-500">Official Partner</div>
                     </div>
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust Wallet" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">🛡️</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Trust Wallet</div>
                       <div className="text-xs text-gray-500">Verified Partner</div>
                     </div>
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://images.ctfassets.net/q5ulk4bp65r7/3TBS4oVkD1ghowTqVQJlqj/2dfd4ea3b623a7c0d8deb2ff445dee9e/Consumer_Wordmark.svg" alt="Coinbase" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">💰</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Coinbase</div>
                       <div className="text-xs text-gray-500">Enterprise</div>
                     </div>
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">👻</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Phantom</div>
                       <div className="text-xs text-gray-500">Solana Partner</div>
                     </div>
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://www.ledger.com/wp-content/themes/ledger-v2/public/images/ledger-logo-long.svg" alt="Ledger" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-black rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">🔐</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Ledger</div>
                       <div className="text-xs text-gray-500">Hardware</div>
                     </div>
                     <div className="text-center group">
-                      <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border">
-                        <img src="https://www.exodus.com/img/logo/exodus-logo-blue.svg" alt="Exodus" className="w-10 h-10" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">🚀</span>
                       </div>
                       <div className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Exodus</div>
                       <div className="text-xs text-gray-500">Multi-Chain</div>
