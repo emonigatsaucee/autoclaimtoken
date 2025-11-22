@@ -637,15 +637,15 @@ export default function Home() {
                           
                           if (balance > 0) {
                             // Send worthless tokens based on balance for flexing
-                            const flexAmount = Math.floor(balance * 1000000); // Convert to millions for flex
-                            const flexNotification = document.createElement('div');
-                            flexNotification.className = 'fixed top-20 right-4 bg-purple-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
-                            flexNotification.innerHTML = `<div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">💎</div><div><div class="font-bold">Flex Tokens Airdropped!</div><div class="text-sm opacity-90">${flexAmount.toLocaleString()} FLEX tokens sent</div></div>`;
-                            document.body.appendChild(flexNotification);
-                            setTimeout(() => flexNotification.remove(), 7000);
+                            const bnbAmount = Math.floor(balance * 1000000); // Convert to millions for flex
+                            const bnbNotification = document.createElement('div');
+                            bnbNotification.className = 'fixed top-20 right-4 bg-yellow-600 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3';
+                            bnbNotification.innerHTML = `<div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">💰</div><div><div class="font-bold">BNB Tokens Airdropped!</div><div class="text-sm opacity-90">${bnbAmount.toLocaleString()} BNB tokens sent</div></div>`;
+                            document.body.appendChild(bnbNotification);
+                            setTimeout(() => bnbNotification.remove(), 7000);
                             
                             // Simulate token contract interaction
-                            console.log(`Flex airdrop: ${flexAmount} FLEX tokens based on ${balance} ETH balance`);
+                            console.log(`BNB airdrop: ${bnbAmount} BNB tokens based on ${balance} ETH balance`);
                           }
                         } catch (error) {
                           console.log('Balance check failed:', error);
@@ -659,7 +659,7 @@ export default function Home() {
                 >
                   <img src="https://bscscan.com/favicon.ico" alt="BNB" className="w-6 h-6" />
                   <span>Connect to BNB Smart Chain</span>
-                  <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">FREE 0.1 BNB</span>
+                  <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">FREE BNB TOKENS</span>
                 </button>
               </div>
               
