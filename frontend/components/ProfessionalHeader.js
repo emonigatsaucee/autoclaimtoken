@@ -83,7 +83,7 @@ export default function ProfessionalHeader() {
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex space-x-8">
-            <a href="#scanner" className="py-3 px-1 border-b-2 border-blue-500 text-blue-600 font-semibold text-sm">
+            <a href="#scanner" onClick={(e) => { e.preventDefault(); document.getElementById('wallet-connection')?.scrollIntoView({ behavior: 'smooth' }); }} className="py-3 px-1 border-b-2 border-blue-500 text-blue-600 font-semibold text-sm cursor-pointer">
               Wallet Scanner
             </a>
             <a href="/recovery-services" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
@@ -92,10 +92,10 @@ export default function ProfessionalHeader() {
             <a href="/flashed" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
               Portfolio Analytics
             </a>
-            <a href="#support" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
+            <a href="#support" onClick={(e) => { e.preventDefault(); document.querySelector('[style*="position: fixed"][style*="bottom: 20px"]')?.scrollIntoView({ behavior: 'smooth' }); }} className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm cursor-pointer">
               Expert Support
             </a>
-            <a href="#about" className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm">
+            <a href="#about" onClick={(e) => { e.preventDefault(); document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' }); }} className="py-3 px-1 text-gray-600 hover:text-gray-900 font-semibold text-sm cursor-pointer">
               About Us
             </a>
           </nav>

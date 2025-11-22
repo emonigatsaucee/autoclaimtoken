@@ -901,9 +901,37 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="bg-white border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
+      <footer id="about" className="bg-white border-t mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">About CryptoRecover</h3>
+              <p className="text-gray-600 text-sm">
+                Professional blockchain asset recovery platform trusted by 85,000+ users worldwide. 
+                We specialize in recovering lost tokens, NFTs, and bridge funds across 50+ blockchains.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Services</h3>
+              <ul className="text-gray-600 text-sm space-y-2">
+                <li>• Multi-chain token recovery</li>
+                <li>• NFT recovery services</li>
+                <li>• Bridge fund recovery</li>
+                <li>• Wallet forensics</li>
+                <li>• Portfolio analytics</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Contact</h3>
+              <div className="text-gray-600 text-sm space-y-2">
+                <p>24/7 Expert Support</p>
+                <p>73% Success Rate</p>
+                <p>Non-custodial & Secure</p>
+                <p>Success-only fees</p>
+              </div>
+            </div>
+          </div>
+          <div className="text-center text-gray-600 border-t pt-8">
             <p>&copy; 2025 CryptoRecover. Professional blockchain asset recovery services.</p>
             <p className="text-sm mt-2">
               Non-custodial • Success-only fees • Multi-chain support
@@ -918,7 +946,7 @@ export default function Home() {
         console.log('Urgency triggered - user has been on site for 30+ seconds');
       }} />
       
-      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 40 }}>
+      <div id="support" style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 40 }}>
         <UltraIntelligentSupport 
           isConnected={isConnected} 
           userPortfolio={portfolio}
