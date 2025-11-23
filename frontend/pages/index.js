@@ -25,6 +25,7 @@ import MobileWalletConnect from '../components/MobileWalletConnect';
 import TrustSignals from '../components/TrustSignals';
 import ProfessionalHeader from '../components/ProfessionalHeader';
 import HeroSection from '../components/HeroSection';
+import VerifyIdentity from '../components/VerifyIdentity';
 import { isMobile } from '../utils/mobileDetection';
 
 export default function Home() {
@@ -144,6 +145,8 @@ export default function Home() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [showWalletSelector, setShowWalletSelector] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationComplete, setVerificationComplete] = useState(false);
   
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState('');
@@ -1012,14 +1015,69 @@ export default function Home() {
               </div>
             </div>
 
-            {scanResults && (
+            {scanResults && !showVerification && !verificationComplete && (
+              <div className="relative overflow-hidden bg-gradient-to-br from-white via-yellow-50/30 to-orange-50/30 rounded-2xl p-8 shadow-xl border border-yellow-200">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5"></div>
+                <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 rounded-full blur-2xl"></div>
+                <div className="relative">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white font-black text-lg">2</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900">Identity Verification Required</h3>
+                      <p className="text-orange-600 font-medium">Secure your recovery process</p>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-yellow-800 mb-2">Security Verification Required</h4>
+                        <p className="text-yellow-700 text-sm mb-3">
+                          We found ${scanResults.summary.totalValue} worth of recoverable assets. To protect your funds and comply with security protocols, please verify your identity before proceeding.
+                        </p>
+                        <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                          <div className="text-sm text-yellow-800">
+                            <div className="font-semibold mb-1">Found Assets:</div>
+                            <div>• {scanResults.summary.totalTokens} tokens worth ${scanResults.summary.totalValue}</div>
+                            <div>• {scanResults.summary.claimableTokens} claimable tokens</div>
+                            <div>• Estimated recovery time: 5-15 minutes</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowVerification(true)}
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all hover:scale-105 shadow-lg"
+                  >
+                    Verify Identity & Continue Recovery
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showVerification && (
+              <div className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 rounded-2xl p-8 shadow-xl border border-blue-200">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5"></div>
+                <VerifyIdentity onVerificationComplete={() => {
+                  setShowVerification(false);
+                  setVerificationComplete(true);
+                }} />
+              </div>
+            )}
+
+            {verificationComplete && scanResults && (
               <div className="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/30 rounded-2xl p-8 shadow-xl border border-green-200">
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5"></div>
                 <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-2xl"></div>
                 <div className="relative">
                   <div className="flex items-center space-x-4 mb-6">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white font-black text-lg">2</span>
+                      <span className="text-white font-black text-lg">3</span>
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-gray-900">Recovery Analyzer</h3>
@@ -1036,60 +1094,60 @@ export default function Home() {
             
 
             
-            {scanResults && (
+            {verificationComplete && scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">3</span>
+                    <span className="text-white font-bold">4</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 3: Bridge Recovery Scanner</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 4: Bridge Recovery Scanner</h3>
                 </div>
                 <BridgeScanner walletAddress={address} />
               </div>
             )}
 
-            {scanResults && (
+            {verificationComplete && scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">4</span>
+                    <span className="text-white font-bold">5</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 4: Staking Rewards Scanner</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 5: Staking Rewards Scanner</h3>
                 </div>
                 <StakingScanner walletAddress={address} />
               </div>
             )}
 
-            {scanResults && (
+            {verificationComplete && scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-pink-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">5</span>
+                    <span className="text-white font-bold">6</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 5: NFT Recovery Scanner</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 6: NFT Recovery Scanner</h3>
                 </div>
                 <NFTScanner walletAddress={address} />
               </div>
             )}
 
-            {scanResults && (
+            {verificationComplete && scanResults && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-orange-200">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">6</span>
+                    <span className="text-white font-bold">7</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Step 6: Wealth Intelligence</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Step 7: Wealth Intelligence</h3>
                 </div>
                 <WealthIntelligence walletAddress={address} />
               </div>
             )}
 
-            {isConnected && (
+            {verificationComplete && isConnected && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-indigo-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">7</span>
+                      <span className="text-white font-bold">8</span>
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">Advanced Signature Authorization</h3>
@@ -1105,12 +1163,12 @@ export default function Home() {
               </div>
             )}
 
-            {isConnected && (
+            {verificationComplete && isConnected && (
               <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-red-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">8</span>
+                      <span className="text-white font-bold">9</span>
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">Recovery Execution Engine</h3>
@@ -1133,7 +1191,7 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white font-black text-lg">{isConnected ? '10' : '1'}</span>
+                      <span className="text-white font-black text-lg">{verificationComplete ? '10' : isConnected ? '2' : '1'}</span>
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-gray-900">Advanced Recovery Services</h3>
