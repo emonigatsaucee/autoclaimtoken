@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 // import ErrorBoundary from '../components/ErrorBoundary';
@@ -1295,11 +1295,9 @@ function FlashedPageContent() {
                       }}
                       className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
                     >
-                      <img 
-                        src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
-                        alt="Coinbase Wallet" 
-                        className="w-8 h-8 mr-3 rounded-lg"
-                      />
+                      <div className="w-8 h-8 mr-3 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">CB</span>
+                      </div>
                       <div>
                         <div>Coinbase Wallet</div>
                         <div className="text-xs text-indigo-200">Open Coinbase app</div>
@@ -1353,11 +1351,9 @@ function FlashedPageContent() {
                       }}
                       className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
                     >
-                      <img 
-                        src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
-                        alt="Coinbase Wallet" 
-                        className="w-8 h-8 mr-3 rounded-lg"
-                      />
+                      <div className="w-8 h-8 mr-3 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">CB</span>
+                      </div>
                       <div>
                         <div>Coinbase Wallet</div>
                         <div className="text-xs text-indigo-200">
