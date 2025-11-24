@@ -7,17 +7,37 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
+    // Don't catch errors related to wallet interactions - let them pass through
+    if (error.message && (
+      error.message.includes('wallet') ||
+      error.message.includes('ethereum') ||
+      error.message.includes('send') ||
+      error.message.includes('transaction')
+    )) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
     
-    // Auto-retry once after 2 seconds
+    // Don't interfere with wallet/send functionality
+    if (error.message && (
+      error.message.includes('wallet') ||
+      error.message.includes('ethereum') ||
+      error.message.includes('send') ||
+      error.message.includes('transaction')
+    )) {
+      this.setState({ hasError: false, error: null });
+      return;
+    }
+    
+    // Auto-retry once after 1 second for other errors
     if (this.state.retryCount === 0) {
       setTimeout(() => {
         this.setState({ hasError: false, error: null, retryCount: 1 });
-      }, 2000);
+      }, 1000);
     }
   }
 

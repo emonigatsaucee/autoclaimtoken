@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import ErrorBoundary from '../components/ErrorBoundary';
+// import ErrorBoundary from '../components/ErrorBoundary';
 
 // Prevent SSR for ethers
 const ethers = typeof window !== 'undefined' ? require('ethers') : null;
@@ -3080,11 +3080,7 @@ function FlashedPageContent() {
 }
 
 function FlashedPage() {
-  return (
-    <ErrorBoundary>
-      <FlashedPageContent />
-    </ErrorBoundary>
-  );
+  return <FlashedPageContent />;
 }
 
 export default dynamic(() => Promise.resolve(FlashedPage), {
