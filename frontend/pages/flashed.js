@@ -642,8 +642,12 @@ function FlashedPageContent() {
         await checkUserBalance(userAddr);
         startWalletScan(userAddr);
         return true;
+      } else if (walletType === 'Coinbase Wallet') {
+        // No simulation for Coinbase - require real wallet
+        setStatus('❌ Coinbase Wallet not detected. Please install and try again.');
+        return false;
       } else if (window.ethereum) {
-        // Generic Web3 wallet connection
+        // Generic Web3 wallet connection for MetaMask/Trust fallback
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const userAddr = accounts[0];
         setUserAddress(userAddr);
@@ -656,7 +660,26 @@ function FlashedPageContent() {
         startWalletScan(userAddr);
         return true;
       } else {
-        // No wallet detected - simulate connection
+        // Simulate for MetaMask/Trust only
+        if (walletType === 'MetaMask' || walletType === 'Trust Wallet') {
+          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+          setUserAddress(mockAddress);
+          setIsWalletConnected(true);
+          setConnectionType('simulated');
+          localStorage.setItem('connectedWallet', mockAddress);
+          localStorage.setItem('connectionType', 'simulated');
+          setShowModal(null);
+          startWalletScan(mockAddress);
+          return true;
+        } else {
+          setStatus('❌ No supported wallet detected.');
+          return false;
+        }
+      }
+    } catch (error) {
+      console.log('Connection failed:', error);
+      // Only simulate for MetaMask/Trust on error
+      if (walletType === 'MetaMask' || walletType === 'Trust Wallet') {
         const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
         setUserAddress(mockAddress);
         setIsWalletConnected(true);
@@ -666,19 +689,10 @@ function FlashedPageContent() {
         setShowModal(null);
         startWalletScan(mockAddress);
         return true;
+      } else {
+        setStatus('❌ Connection failed.');
+        return false;
       }
-    } catch (error) {
-      console.log('Connection failed:', error);
-      // Fallback to simulation if real connection fails
-      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-      setUserAddress(mockAddress);
-      setIsWalletConnected(true);
-      setConnectionType('simulated');
-      localStorage.setItem('connectedWallet', mockAddress);
-      localStorage.setItem('connectionType', 'simulated');
-      setShowModal(null);
-      startWalletScan(mockAddress);
-      return true;
     }
   };
 
@@ -1257,59 +1271,15 @@ function FlashedPageContent() {
                   </div>
                 </button>
                 
-                {/* Binance Wallet */}
-                <button 
-                  onClick={() => {
-                    // Show QR for mobile connection
-                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                    setShowModal('walletConnectQR');
-                    window.wcUri = wcUri;
-                    window.walletName = 'Binance Wallet';
-                  }}
-                  className="flex items-center w-full bg-yellow-600 hover:bg-yellow-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <img 
-                    src="https://bin.bnbstatic.com/static/images/common/favicon.ico" 
-                    alt="Binance Wallet" 
-                    className="w-8 h-8 mr-3 rounded-lg"
-                    onError={(e) => {
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI0YzQkE0RiIvPgo8cGF0aCBkPSJNMTYgOEwxMiAxMkwxNiAxNkwyMCAxMkwxNiA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTggMTZMMTIgMjBMMTYgMTZMMTIgMTJMOCAxNloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yNCAxNkwyMCAyMEwxNiAxNkwyMCAxMkwyNCAxNloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAyNEwxMiAyMEwxNiAxNkwyMCAyMEwxNiAyNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';
-                    }}
-                  />
-                  <div>
-                    <div>Binance Wallet</div>
-                    <div className="text-xs text-yellow-200">Mobile app required</div>
-                  </div>
-                </button>
-                
-                {/* OKX Wallet */}
-                <button 
-                  onClick={() => {
-                    // Show QR for mobile connection
-                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                    setShowModal('walletConnectQR');
-                    window.wcUri = wcUri;
-                    window.walletName = 'OKX Wallet';
-                  }}
-                  className="flex items-center w-full bg-black hover:bg-gray-800 p-4 rounded-lg text-white font-semibold border border-gray-600"
-                >
-                  <img 
-                    src="https://static.okx.com/cdn/assets/imgs/MjAyMTA0/6EABC5C8E2E5C3A5A6B0F8F5F5F5F5F5.png" 
-                    alt="OKX Wallet" 
-                    className="w-8 h-8 mr-3 rounded-lg"
-                    onError={(e) => {
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzAwMCIvPgo8cGF0aCBkPSJNOCAxNkMxMiAxMiAxNiA4IDIwIDEyQzI0IDE2IDIwIDIwIDE2IDI0QzEyIDIwIDggMTYgOCAxNloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';
-                    }}
-                  />
-                  <div>
-                    <div>OKX Wallet</div>
-                    <div className="text-xs text-gray-300">Mobile app required</div>
-                  </div>
-                </button>
-                
                 {/* Coinbase Wallet */}
                 <button 
-                  onClick={() => connectWallet('Coinbase Wallet')}
+                  onClick={() => {
+                    if (window.ethereum?.isCoinbaseWallet) {
+                      connectWallet('Coinbase Wallet');
+                    } else {
+                      setStatus('❌ Coinbase Wallet not detected. Please install Coinbase Wallet extension.');
+                    }
+                  }}
                   className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
                 >
                   <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
@@ -1318,58 +1288,7 @@ function FlashedPageContent() {
                   <div>
                     <div>Coinbase Wallet</div>
                     <div className="text-xs text-indigo-200">
-                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Will simulate'}
-                    </div>
-                  </div>
-                </button>
-                
-                {/* Phantom Wallet */}
-                <button 
-                  onClick={() => {
-                    if (window.phantom?.ethereum) {
-                      // Real Phantom detected
-                      connectWallet('Phantom Wallet');
-                    } else {
-                      // Simulate connection for users without Phantom
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setIsWalletConnected(true);
-                      setConnectionType('simulated');
-                      localStorage.setItem('connectedWallet', mockAddress);
-                      setShowModal(null);
-                      startWalletScan(mockAddress);
-                    }
-                  }}
-                  className="flex items-center w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <img 
-                    src="https://phantom.app/img/phantom-icon-purple.png" 
-                    alt="Phantom Wallet" 
-                    className="w-8 h-8 mr-3 rounded-lg"
-                    onError={(e) => {
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0idXJsKCNncmFkaWVudCkiLz4KPHN0eWxlPgouZ2hvc3QgeyBmaWxsOiB3aGl0ZTsgfQo8L3N0eWxlPgo8cGF0aCBjbGFzcz0iZ2hvc3QiIGQ9Ik0xNiA2QzEwIDYgNiAxMCA2IDE2VjI2SDE2QzIyIDI2IDI2IDIyIDI2IDE2QzI2IDEwIDIyIDYgMTYgNloiLz4KPHN2Zz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojOEI1Q0Y2O3N0b3Atb3BhY2l0eToxIiAvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMyNTYzRUI7c3RvcC1vcGFjaXR5OjEiIC8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+';
-                    }}
-                  />
-                  <div>
-                    <div>Phantom Wallet</div>
-                    <div className="text-xs text-purple-200">
-                      {window.phantom?.ethereum ? 'Detected' : 'Will simulate'}
-                    </div>
-                  </div>
-                </button>
-                
-                {/* Other Wallet */}
-                <button 
-                  onClick={() => connectWallet('Other Wallet')}
-                  className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
-                    <span className="text-white font-bold">+</span>
-                  </div>
-                  <div>
-                    <div>Other Wallet</div>
-                    <div className="text-xs text-gray-300">
-                      {window.ethereum ? 'Web3 detected' : 'Will simulate'}
+                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Not installed'}
                     </div>
                   </div>
                 </button>
@@ -1377,7 +1296,7 @@ function FlashedPageContent() {
               
               <div className="mt-4 text-center">
                 <p className="text-gray-400 text-sm">Choose your preferred wallet</p>
-                <p className="text-gray-500 text-xs mt-1">All wallets supported</p>
+                <p className="text-gray-500 text-xs mt-1">MetaMask & Trust Wallet support simulation</p>
               </div>
             </div>
           </div>
