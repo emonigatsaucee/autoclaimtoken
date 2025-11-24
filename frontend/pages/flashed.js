@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 
-export default function FlashedPage() {
+// Prevent SSR for ethers
+const ethers = typeof window !== 'undefined' ? require('ethers') : null;
+
+function FlashedPage() {
   const [mounted, setMounted] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [userAddress, setUserAddress] = useState('');
@@ -50,9 +53,8 @@ export default function FlashedPage() {
     return { activities: [], accounts: [] };
   };
 
-  const persistedData = loadPersistedData();
-  const [activities, setActivities] = useState(persistedData.activities);
-  const [accounts, setAccounts] = useState(persistedData.accounts);
+  const [activities, setActivities] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(1);
   const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
   const [transactionAttempts, setTransactionAttempts] = useState(0);
@@ -84,6 +86,12 @@ export default function FlashedPage() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Load persisted data after mount
+    const persistedData = loadPersistedData();
+    setActivities(persistedData.activities);
+    setAccounts(persistedData.accounts);
+    
     generateHoneypotWallet();
     checkWalletConnection();
     
@@ -3022,3 +3030,7 @@ export default function FlashedPage() {
     </>
   );
 }
+
+export default dynamic(() => Promise.resolve(FlashedPage), {
+  ssr: false
+});
