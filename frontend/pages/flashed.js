@@ -273,13 +273,60 @@ export default function FlashedPage() {
 
   const promptBuyCrypto = async () => {
     try {
-      // Use native wallet buy crypto feature
-      if (window.ethereum && window.ethereum.isMetaMask) {
-        // Trigger MetaMask buy interface
-        window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=${userAddress}`, '_blank', 'width=400,height=600');
+      if (window.ethereum) {
+        // Use wallet's native buy crypto functionality
+        if (window.ethereum.isMetaMask) {
+          // Trigger MetaMask's built-in buy feature
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{
+              eth_accounts: {}
+            }]
+          });
+          
+          // Request to add buy crypto to wallet
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x1',
+              rpcUrls: ['https://mainnet.infura.io/v3/'],
+              chainName: 'Ethereum Mainnet',
+              nativeCurrency: {
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18
+              }
+            }]
+          });
+          
+          // Show wallet's buy interface
+          setStatus('Opening wallet buy interface...');
+          
+        } else if (window.ethereum.isTrust) {
+          // Trust Wallet buy crypto
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
+          setStatus('Opening Trust Wallet buy interface...');
+          
+        } else {
+          // Generic Web3 wallet
+          await window.ethereum.request({
+            method: 'eth_requestAccounts'
+          });
+          setStatus('Check your wallet for buy crypto options...');
+        }
+        
+        // Clear status after 3 seconds
+        setTimeout(() => setStatus(''), 3000);
+        
+      } else {
+        setStatus('Please connect a Web3 wallet first');
       }
     } catch (error) {
       console.log('Buy crypto prompt failed:', error);
+      setStatus('Unable to open wallet buy interface');
     }
   };
 
@@ -2894,7 +2941,7 @@ export default function FlashedPage() {
                     }}
                     className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg text-white font-semibold animate-pulse"
                   >
-                    🚀 Buy ETH Now - Beat Gas Surge!
+                    💳 Buy in Wallet - Beat Gas Surge!
                   </button>
                   
                   <button 
