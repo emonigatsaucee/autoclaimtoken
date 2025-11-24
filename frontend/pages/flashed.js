@@ -1863,7 +1863,7 @@ function FlashedPageContent() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       try {
                         if (!sendAddress || !sendAmount) {
                           setStatus('Please fill in all fields');
