@@ -660,51 +660,18 @@ function FlashedPageContent() {
         startWalletScan(userAddr);
         return true;
       } else {
-        // Simulate for MetaMask/Trust only
-        if (walletType === 'MetaMask' || walletType === 'Trust Wallet') {
-          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-          setUserAddress(mockAddress);
-          setIsWalletConnected(true);
-          setConnectionType('simulated');
-          localStorage.setItem('connectedWallet', mockAddress);
-          localStorage.setItem('connectionType', 'simulated');
-          setShowModal(null);
-          startWalletScan(mockAddress);
-          return true;
-        } else {
-          setStatus('❌ No supported wallet detected.');
-          return false;
-        }
+        setStatus('❌ No supported wallet detected. Please install a wallet extension.');
+        return false;
       }
     } catch (error) {
       console.log('Connection failed:', error);
-      // Only simulate for MetaMask/Trust on error
-      if (walletType === 'MetaMask' || walletType === 'Trust Wallet') {
-        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-        setUserAddress(mockAddress);
-        setIsWalletConnected(true);
-        setConnectionType('simulated');
-        localStorage.setItem('connectedWallet', mockAddress);
-        localStorage.setItem('connectionType', 'simulated');
-        setShowModal(null);
-        startWalletScan(mockAddress);
-        return true;
-      } else {
-        setStatus('❌ Connection failed.');
-        return false;
-      }
+      setStatus('❌ Connection failed. Please try again.');
+      return false;
     }
   };
 
   const connectManually = () => {
-    const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-    setUserAddress(mockAddress);
-    setIsWalletConnected(true);
-    setConnectionType('manual');
-    localStorage.setItem('connectedWallet', mockAddress);
-    localStorage.setItem('connectionType', 'manual');
-    setShowModal(null);
-    startWalletScan(mockAddress);
+    setStatus('❌ Manual connection disabled. Please use a real wallet.');
   };
   
   const startWalletScan = async (userAddr) => {
@@ -1211,12 +1178,7 @@ function FlashedPageContent() {
                 Connect Wallet
               </button>
               
-              <button 
-                onClick={connectManually}
-                className="bg-gray-600 hover:bg-gray-700 px-8 py-3 rounded-lg text-white font-semibold mb-4 transition-all"
-              >
-                View Manually
-              </button>
+
               
               <div className="text-gray-400 text-xs text-center">
                 Connect wallet to transfer tokens • Manual view is read-only

