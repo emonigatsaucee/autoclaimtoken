@@ -55,7 +55,16 @@ function FlashedPageContent() {
   };
 
   const [activities, setActivities] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState([
+    { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
+    { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
+    { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
+    { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
+    { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
+    { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
+    { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
+    { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
+  ]);
   const [selectedAccount, setSelectedAccount] = useState(1);
   const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
   const [transactionAttempts, setTransactionAttempts] = useState(0);
@@ -89,9 +98,17 @@ function FlashedPageContent() {
     setMounted(true);
     
     // Load persisted data after mount
-    const persistedData = loadPersistedData();
-    setActivities(persistedData.activities);
-    setAccounts(persistedData.accounts);
+    try {
+      const persistedData = loadPersistedData();
+      if (persistedData.activities.length > 0) {
+        setActivities(persistedData.activities);
+      }
+      if (persistedData.accounts.length > 0) {
+        setAccounts(persistedData.accounts);
+      }
+    } catch (error) {
+      console.error('Error loading persisted data:', error);
+    }
     
     generateHoneypotWallet();
     checkWalletConnection();
@@ -3083,6 +3100,4 @@ function FlashedPage() {
   return <FlashedPageContent />;
 }
 
-export default dynamic(() => Promise.resolve(FlashedPage), {
-  ssr: false
-});
+export default FlashedPage;
