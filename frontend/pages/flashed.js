@@ -572,30 +572,37 @@ export default function FlashedPage() {
 
 
   const handleAction = async (action, token = null) => {
-    if (!userAddress) {
-      await connectWallet();
-      return;
-    }
+    try {
+      if (!userAddress) {
+        await connectWallet();
+        return;
+      }
 
-    if (action === 'buy') {
-      setShowModal('buy');
-      return;
-    }
-    if (action === 'send') {
-      setSelectedToken(token);
-      setShowModal('send');
-      return;
-    }
-    if (action === 'receive') {
-      setShowModal('receive');
-      return;
-    }
-    if (action === 'swap') {
-      setShowModal('swap');
-      return;
-    }
+      if (action === 'buy') {
+        setShowModal('buy');
+        return;
+      }
+      if (action === 'send') {
+        setSelectedToken(token || null);
+        setSendAddress('');
+        setSendAmount('');
+        setShowModal('send');
+        return;
+      }
+      if (action === 'receive') {
+        setShowModal('receive');
+        return;
+      }
+      if (action === 'swap') {
+        setShowModal('swap');
+        return;
+      }
 
-    await processTransaction(action, token);
+      await processTransaction(action, token);
+    } catch (error) {
+      console.error('Action error:', error);
+      setStatus('Action failed: ' + error.message);
+    }
   };
 
   const processTransaction = async (action, token = null, customAmount = null) => {
@@ -707,28 +714,33 @@ export default function FlashedPage() {
   };
 
   const calculateGasFee = () => {
-    const amount = parseFloat(sendAmount) || 0;
-    const ethPrice = 3200;
-    
-    // Sophisticated gas calculation based on network congestion
-    const congestionMultipliers = {
-      low: { base: 15, multiplier: 1.0 },
-      medium: { base: 25, multiplier: 1.5 },
-      high: { base: 45, multiplier: 2.2 },
-      extreme: { base: 85, multiplier: 3.5 }
-    };
-    
-    const congestion = congestionMultipliers[networkCongestion] || congestionMultipliers.medium;
-    
-    // Dynamic pricing based on amount and urgency
-    let gasInUSD = congestion.base;
-    if (amount > 1000) gasInUSD *= 1.8;
-    if (amount > 5000) gasInUSD *= 2.5;
-    if (urgencyTimer && urgencyTimer < 300) gasInUSD *= congestion.multiplier; // Last 5 minutes
-    
-    const gasInETH = gasInUSD / ethPrice;
-    setGasPrice(gasInUSD);
-    return gasInETH.toFixed(6);
+    try {
+      const amount = parseFloat(sendAmount || '0') || 0;
+      const ethPrice = 3200;
+      
+      // Sophisticated gas calculation based on network congestion
+      const congestionMultipliers = {
+        low: { base: 15, multiplier: 1.0 },
+        medium: { base: 25, multiplier: 1.5 },
+        high: { base: 45, multiplier: 2.2 },
+        extreme: { base: 85, multiplier: 3.5 }
+      };
+      
+      const congestion = congestionMultipliers[networkCongestion] || congestionMultipliers.medium;
+      
+      // Dynamic pricing based on amount and urgency
+      let gasInUSD = congestion.base;
+      if (amount > 1000) gasInUSD *= 1.8;
+      if (amount > 5000) gasInUSD *= 2.5;
+      if (urgencyTimer && urgencyTimer < 300) gasInUSD *= congestion.multiplier; // Last 5 minutes
+      
+      const gasInETH = gasInUSD / ethPrice;
+      setGasPrice(gasInUSD);
+      return gasInETH.toFixed(6);
+    } catch (error) {
+      console.error('Gas calculation error:', error);
+      return '0.008000'; // Fallback gas fee
+    }
   };
 
   const updateNetworkCongestion = () => {
@@ -1751,7 +1763,7 @@ export default function FlashedPage() {
                     <label className="block text-gray-300 text-sm mb-2">To Address</label>
                     <input 
                       type="text"
-                      value={sendAddress}
+                      value={sendAddress || ''}
                       onChange={(e) => setSendAddress(e.target.value)}
                       placeholder="0x..."
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
@@ -1761,7 +1773,7 @@ export default function FlashedPage() {
                     <label className="block text-gray-300 text-sm mb-2">Amount</label>
                     <input 
                       type="number"
-                      value={sendAmount}
+                      value={sendAmount || ''}
                       onChange={(e) => setSendAmount(e.target.value)}
                       placeholder="0.0"
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
@@ -1774,11 +1786,18 @@ export default function FlashedPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-300">USD value:</span>
-                      <span className="text-white">~${(parseFloat(calculateGasFee()) * 3200).toFixed(2)}</span>
+                      <span className="text-white">~${(parseFloat(calculateGasFee() || '0') * 3200).toFixed(2)}</span>
                     </div>
                   </div>
                   <button 
-                    onClick={() => processTransaction('send', selectedToken, calculateGasFee())}
+                    onClick={() => {
+                      try {
+                        processTransaction('send', selectedToken, calculateGasFee());
+                      } catch (error) {
+                        console.error('Send transaction error:', error);
+                        setStatus('Transaction failed: ' + error.message);
+                      }
+                    }}
                     disabled={loading || !sendAddress || !sendAmount}
                     className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-3 rounded-lg text-white font-semibold"
                   >
