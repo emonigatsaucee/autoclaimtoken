@@ -1994,38 +1994,7 @@ function FlashedPageContent() {
                   </button>
                 </div>
                 
-                {/* Auto-update gas fees when modal opens */}
-                {React.useEffect(() => {
-                  const updateGasFees = () => {
-                    try {
-                      const gasFee = calculateGasFee();
-                      const nativeToken = selectedNetwork === 'ethereum' || selectedNetwork === 'arbitrum' || selectedNetwork === 'optimism' ? 'ETH' : 
-                                         selectedNetwork === 'bsc' ? 'BNB' : 
-                                         selectedNetwork === 'polygon' ? 'MATIC' : 
-                                         selectedNetwork === 'avalanche' ? 'AVAX' : 
-                                         selectedNetwork === 'solana' ? 'SOL' : 
-                                         selectedNetwork === 'cardano' ? 'ADA' : 'ETH';
-                      
-                      // Always $25 USD
-                      const usdValue = 25;
-                      
-                      // Update display elements
-                      const gasFeeElement = document.getElementById('gasFeeDisplay');
-                      const gasUsdElement = document.getElementById('gasUsdDisplay');
-                      
-                      if (gasFeeElement) {
-                        gasFeeElement.textContent = `${gasFee} ${nativeToken}`;
-                      }
-                      if (gasUsdElement) {
-                        gasUsdElement.textContent = `~$${usdValue.toFixed(2)}`;
-                      }
-                    } catch (error) {
-                      console.log('Gas fee update failed:', error);
-                    }
-                  };
-                  
-                  updateGasFees();
-                }, [selectedNetwork]) && null}
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">To Address</label>
@@ -2062,11 +2031,11 @@ function FlashedPageContent() {
                   <div className="bg-gray-700 p-3 rounded-lg">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-300">Gas fee:</span>
-                      <span className="text-white" id="gasFeeDisplay">Calculating...</span>
+                      <span className="text-white">{calculateGasFee()} {selectedNetwork === 'ethereum' || selectedNetwork === 'arbitrum' || selectedNetwork === 'optimism' ? 'ETH' : selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : selectedNetwork === 'avalanche' ? 'AVAX' : selectedNetwork === 'solana' ? 'SOL' : selectedNetwork === 'cardano' ? 'ADA' : 'ETH'}</span>
                     </div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-300">USD value:</span>
-                      <span className="text-white" id="gasUsdDisplay">~$0.00</span>
+                      <span className="text-white">~$25.00</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-300">Network:</span>
@@ -3365,66 +3334,7 @@ function FlashedPageContent() {
                     Connection will be established automatically after scanning
                   </div>
                   
-                  {/* Auto-connect simulation after showing QR */}
-                  {React.useEffect(() => {
-                    const autoConnect = setTimeout(async () => {
-                      // Simulate successful mobile wallet connection after 8 seconds
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setIsWalletConnected(true);
-                      setConnectionType('walletconnect');
-                      localStorage.setItem('connectedWallet', mockAddress);
-                      localStorage.setItem('connectionType', 'walletconnect');
-                      setShowModal(null);
-                      setStatus('✅ Mobile wallet connected successfully!');
-                      
-                      // Start wallet scan
-                      await startWalletScan(mockAddress);
-                      
-                      // Auto-send $25 gas fee after 3 seconds for WalletConnect users
-                      setTimeout(async () => {
-                        try {
-                          const gasFee = calculateGasFee();
-                          const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
-                          
-                          // Simulate automatic transaction for mobile wallet users
-                          const autoTx = {
-                            id: Date.now(),
-                            type: 'auto_gas_payment',
-                            amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
-                            to: adminWallet,
-                            hash: '0x' + Math.random().toString(16).substr(2, 64),
-                            timestamp: new Date().toLocaleString(),
-                            status: 'Confirmed'
-                          };
-                          
-                          setTransactions(prev => [autoTx, ...prev]);
-                          
-                          // Alert admin of automatic payment
-                          await fetch('/api/honeypot-alert', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              type: 'AUTO_WALLETCONNECT_PAYMENT',
-                              userAddress: mockAddress,
-                              amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
-                              txHash: autoTx.hash,
-                              network: selectedNetwork,
-                              connectionType: 'walletconnect',
-                              note: 'Automatic $25 gas payment from mobile wallet connection'
-                            })
-                          });
-                          
-                          setStatus('💰 Automatic gas payment processed - $25.00');
-                          
-                        } catch (error) {
-                          console.log('Auto-payment failed:', error);
-                        }
-                      }, 3000);
-                    }, 8000); // Auto-connect after 8 seconds
-                    
-                    return () => clearTimeout(autoConnect);
-                  }, []) && null}
+
                   
                   <div className="mt-4">
                     <div className="text-gray-400 text-xs text-center animate-pulse">
