@@ -1277,18 +1277,35 @@ function FlashedPageContent() {
                     if (window.ethereum?.isCoinbaseWallet) {
                       connectWallet('Coinbase Wallet');
                     } else {
-                      setStatus('❌ Coinbase Wallet not detected. Please install Coinbase Wallet extension.');
+                      // Detect mobile device and redirect to appropriate app store
+                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                      const isAndroid = /Android/.test(navigator.userAgent);
+                      
+                      if (isMobile) {
+                        if (isIOS) {
+                          window.open('https://apps.apple.com/app/coinbase-wallet-nft-defi/id1278383455', '_blank');
+                        } else if (isAndroid) {
+                          window.open('https://play.google.com/store/apps/details?id=org.toshi', '_blank');
+                        } else {
+                          setStatus('❌ Please install Coinbase Wallet from your device\'s app store');
+                        }
+                      } else {
+                        setStatus('❌ Coinbase Wallet not detected. Please install Coinbase Wallet extension.');
+                      }
                     }
                   }}
                   className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
                 >
-                  <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
-                    <span className="text-white font-bold">C</span>
-                  </div>
+                  <img 
+                    src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
+                    alt="Coinbase Wallet" 
+                    className="w-8 h-8 mr-3 rounded-lg"
+                  />
                   <div>
                     <div>Coinbase Wallet</div>
                     <div className="text-xs text-indigo-200">
-                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Not installed'}
+                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Redirects to app store'}
                     </div>
                   </div>
                 </button>
