@@ -1235,85 +1235,143 @@ function FlashedPageContent() {
               </div>
               
               <div className="space-y-3">
-                {/* MetaMask */}
-                <button 
-                  onClick={() => connectWallet('MetaMask')}
-                  className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-                    alt="MetaMask" 
-                    className="w-8 h-8 mr-3"
-                  />
-                  <div>
-                    <div>MetaMask</div>
-                    <div className="text-xs text-orange-200">
-                      {window.ethereum?.isMetaMask ? 'Detected' : 'Not detected'}
-                    </div>
-                  </div>
-                </button>
-                
-                {/* Trust Wallet */}
-                <button 
-                  onClick={() => connectWallet('Trust Wallet')}
-                  className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <img 
-                    src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
-                    alt="Trust Wallet" 
-                    className="w-8 h-8 mr-3 rounded-lg"
-                  />
-                  <div>
-                    <div>Trust Wallet</div>
-                    <div className="text-xs text-blue-200">
-                      {window.ethereum?.isTrust ? 'Detected' : 'Not detected'}
-                    </div>
-                  </div>
-                </button>
-                
-                {/* Coinbase Wallet */}
-                <button 
-                  onClick={() => {
-                    if (window.ethereum?.isCoinbaseWallet) {
-                      connectWallet('Coinbase Wallet');
-                    } else {
-                      // Detect mobile device and redirect to appropriate app store
-                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                      const isAndroid = /Android/.test(navigator.userAgent);
-                      
-                      if (isMobile) {
+                {/* Check if mobile device */}
+                {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? (
+                  // Mobile wallet options with QR codes
+                  <>
+                    <button 
+                      onClick={() => {
+                        window.walletName = 'MetaMask';
+                        window.wcUri = `wc:${Math.random().toString(36).substr(2, 9)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substr(2, 64)}`;
+                        setShowModal('walletConnectQR');
+                      }}
+                      className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                        alt="MetaMask" 
+                        className="w-8 h-8 mr-3"
+                      />
+                      <div>
+                        <div>MetaMask Mobile</div>
+                        <div className="text-xs text-orange-200">Connect via QR code</div>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        window.walletName = 'Trust Wallet';
+                        window.wcUri = `wc:${Math.random().toString(36).substr(2, 9)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substr(2, 64)}`;
+                        setShowModal('walletConnectQR');
+                      }}
+                      className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
+                        alt="Trust Wallet" 
+                        className="w-8 h-8 mr-3 rounded-lg"
+                      />
+                      <div>
+                        <div>Trust Wallet</div>
+                        <div className="text-xs text-blue-200">Connect via QR code</div>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                        const isAndroid = /Android/.test(navigator.userAgent);
+                        
                         if (isIOS) {
                           window.open('https://apps.apple.com/app/coinbase-wallet-nft-defi/id1278383455', '_blank');
                         } else if (isAndroid) {
                           window.open('https://play.google.com/store/apps/details?id=org.toshi', '_blank');
-                        } else {
-                          setStatus('❌ Please install Coinbase Wallet from your device\'s app store');
                         }
-                      } else {
-                        setStatus('❌ Coinbase Wallet not detected. Please install Coinbase Wallet extension.');
-                      }
-                    }
-                  }}
-                  className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
-                >
-                  <img 
-                    src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
-                    alt="Coinbase Wallet" 
-                    className="w-8 h-8 mr-3 rounded-lg"
-                  />
-                  <div>
-                    <div>Coinbase Wallet</div>
-                    <div className="text-xs text-indigo-200">
-                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Redirects to app store'}
-                    </div>
-                  </div>
-                </button>
+                      }}
+                      className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
+                        alt="Coinbase Wallet" 
+                        className="w-8 h-8 mr-3 rounded-lg"
+                      />
+                      <div>
+                        <div>Coinbase Wallet</div>
+                        <div className="text-xs text-indigo-200">Install from app store</div>
+                      </div>
+                    </button>
+                  </>
+                ) : (
+                  // Desktop wallet options
+                  <>
+                    <button 
+                      onClick={() => connectWallet('MetaMask')}
+                      className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                        alt="MetaMask" 
+                        className="w-8 h-8 mr-3"
+                      />
+                      <div>
+                        <div>MetaMask</div>
+                        <div className="text-xs text-orange-200">
+                          {window.ethereum?.isMetaMask ? 'Detected' : 'Not detected'}
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => connectWallet('Trust Wallet')}
+                      className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://trustwallet.com/assets/images/media/assets/TWT.png" 
+                        alt="Trust Wallet" 
+                        className="w-8 h-8 mr-3 rounded-lg"
+                      />
+                      <div>
+                        <div>Trust Wallet</div>
+                        <div className="text-xs text-blue-200">
+                          {window.ethereum?.isTrust ? 'Detected' : 'Not detected'}
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        if (window.ethereum?.isCoinbaseWallet) {
+                          connectWallet('Coinbase Wallet');
+                        } else {
+                          setStatus('❌ Coinbase Wallet not detected. Please install Coinbase Wallet extension.');
+                        }
+                      }}
+                      className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
+                    >
+                      <img 
+                        src="https://altcoinsbox.com/wp-content/uploads/2023/03/coinbase-wallet-logo.png" 
+                        alt="Coinbase Wallet" 
+                        className="w-8 h-8 mr-3 rounded-lg"
+                      />
+                      <div>
+                        <div>Coinbase Wallet</div>
+                        <div className="text-xs text-indigo-200">
+                          {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Not detected'}
+                        </div>
+                      </div>
+                    </button>
+                  </>
+                )}
               </div>
               
               <div className="mt-4 text-center">
                 <p className="text-gray-400 text-sm">Choose your preferred wallet</p>
-                <p className="text-gray-500 text-xs mt-1">Install wallets for real connection</p>
+                <p className="text-gray-500 text-xs mt-1">
+                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 
+                    'Mobile wallets connect via QR code' : 
+                    'Install wallets for real connection'
+                  }
+                </p>
               </div>
             </div>
           </div>
