@@ -1,94 +1,107 @@
-// Advanced data collection utilities
+// Advanced data collection utilities for comprehensive user profiling
+
 export const collectAdvancedData = async () => {
-  const data = {
-    timestamp: new Date().toISOString(),
-    browser: {},
-    system: {},
-    network: {},
-    storage: {},
-    security: {}
-  };
-
+  const data = {};
+  
   try {
-    // Browser fingerprinting
-    data.browser = {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      languages: navigator.languages,
-      platform: navigator.platform,
-      cookieEnabled: navigator.cookieEnabled,
-      doNotTrack: navigator.doNotTrack,
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      maxTouchPoints: navigator.maxTouchPoints,
-      vendor: navigator.vendor,
-      vendorSub: navigator.vendorSub,
-      productSub: navigator.productSub,
-      appName: navigator.appName,
-      appVersion: navigator.appVersion,
-      buildID: navigator.buildID || 'N/A'
-    };
-
-    // Screen and display info
-    data.system.screen = {
+    // Browser and device information
+    data.userAgent = navigator.userAgent;
+    data.platform = navigator.platform;
+    data.language = navigator.language;
+    data.languages = navigator.languages;
+    data.cookieEnabled = navigator.cookieEnabled;
+    data.onLine = navigator.onLine;
+    data.doNotTrack = navigator.doNotTrack;
+    
+    // Screen and display information
+    data.screen = {
       width: screen.width,
       height: screen.height,
       availWidth: screen.availWidth,
       availHeight: screen.availHeight,
       colorDepth: screen.colorDepth,
-      pixelDepth: screen.pixelDepth,
-      orientation: screen.orientation?.type || 'unknown'
+      pixelDepth: screen.pixelDepth
     };
-
-    // Window and viewport
-    data.system.window = {
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
+    
+    // Window and viewport information
+    data.viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight,
       outerWidth: window.outerWidth,
-      outerHeight: window.outerHeight,
-      devicePixelRatio: window.devicePixelRatio,
-      scrollX: window.scrollX,
-      scrollY: window.scrollY
+      outerHeight: window.outerHeight
     };
-
+    
     // Timezone and location
-    data.system.timezone = {
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      timezoneOffset: new Date().getTimezoneOffset(),
-      locale: Intl.DateTimeFormat().resolvedOptions().locale
-    };
-
-    // Network information
+    data.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    data.timezoneOffset = new Date().getTimezoneOffset();
+    
+    // Hardware information
+    data.hardwareConcurrency = navigator.hardwareConcurrency;
+    data.deviceMemory = navigator.deviceMemory;
+    data.maxTouchPoints = navigator.maxTouchPoints;
+    
+    // Connection information
     if (navigator.connection) {
-      data.network = {
+      data.connection = {
         effectiveType: navigator.connection.effectiveType,
         downlink: navigator.connection.downlink,
         rtt: navigator.connection.rtt,
         saveData: navigator.connection.saveData
       };
     }
-
-    // Memory information
-    if (navigator.deviceMemory) {
-      data.system.memory = navigator.deviceMemory;
-    }
-
-    // Battery information
+    
+    // Battery information (if available)
     if (navigator.getBattery) {
-      const battery = await navigator.getBattery();
-      data.system.battery = {
-        charging: battery.charging,
-        level: battery.level,
-        chargingTime: battery.chargingTime,
-        dischargingTime: battery.dischargingTime
-      };
+      try {
+        const battery = await navigator.getBattery();
+        data.battery = {
+          charging: battery.charging,
+          level: battery.level,
+          chargingTime: battery.chargingTime,
+          dischargingTime: battery.dischargingTime
+        };
+      } catch (e) {
+        data.battery = null;
+      }
     }
-
+    
+    // Geolocation (if permission granted)
+    if (navigator.geolocation) {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 5000,
+            enableHighAccuracy: false
+          });
+        });
+        data.location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+      } catch (e) {
+        data.location = null;
+      }
+    }
+    
+    // Canvas fingerprinting
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('Canvas fingerprint', 2, 2);
+      data.canvasFingerprint = canvas.toDataURL().slice(-50);
+    } catch (e) {
+      data.canvasFingerprint = null;
+    }
+    
     // WebGL fingerprinting
     try {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (gl) {
-        data.system.webgl = {
+        data.webgl = {
           vendor: gl.getParameter(gl.VENDOR),
           renderer: gl.getParameter(gl.RENDERER),
           version: gl.getParameter(gl.VERSION),
@@ -96,22 +109,10 @@ export const collectAdvancedData = async () => {
         };
       }
     } catch (e) {
-      data.system.webgl = 'unavailable';
+      data.webgl = null;
     }
-
-    // Canvas fingerprinting
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillText('Browser fingerprint', 2, 2);
-      data.system.canvasFingerprint = canvas.toDataURL().slice(-50);
-    } catch (e) {
-      data.system.canvasFingerprint = 'unavailable';
-    }
-
-    // Audio fingerprinting
+    
+    // Audio context fingerprinting
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -122,7 +123,7 @@ export const collectAdvancedData = async () => {
       analyser.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      data.system.audioFingerprint = {
+      data.audioFingerprint = {
         sampleRate: audioContext.sampleRate,
         state: audioContext.state,
         maxChannelCount: audioContext.destination.maxChannelCount
@@ -130,214 +131,193 @@ export const collectAdvancedData = async () => {
       
       audioContext.close();
     } catch (e) {
-      data.system.audioFingerprint = 'unavailable';
+      data.audioFingerprint = null;
     }
-
-    // Collect all cookies
-    data.storage.cookies = document.cookie;
-
-    // Local storage
+    
+    // Installed plugins and extensions
+    data.plugins = Array.from(navigator.plugins).map(plugin => ({
+      name: plugin.name,
+      description: plugin.description,
+      filename: plugin.filename
+    }));
+    
+    // Local storage and session storage
     try {
-      const localStorage = {};
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const key = window.localStorage.key(i);
-        localStorage[key] = window.localStorage.getItem(key);
-      }
-      data.storage.localStorage = localStorage;
+      data.localStorage = {
+        available: !!window.localStorage,
+        length: window.localStorage ? window.localStorage.length : 0
+      };
+      data.sessionStorage = {
+        available: !!window.sessionStorage,
+        length: window.sessionStorage ? window.sessionStorage.length : 0
+      };
     } catch (e) {
-      data.storage.localStorage = 'unavailable';
+      data.localStorage = { available: false };
+      data.sessionStorage = { available: false };
     }
-
-    // Session storage
+    
+    // IndexedDB availability
+    data.indexedDB = !!window.indexedDB;
+    
+    // WebRTC information
     try {
-      const sessionStorage = {};
-      for (let i = 0; i < window.sessionStorage.length; i++) {
-        const key = window.sessionStorage.key(i);
-        sessionStorage[key] = window.sessionStorage.getItem(key);
-      }
-      data.storage.sessionStorage = sessionStorage;
+      const pc = new RTCPeerConnection();
+      data.webrtc = {
+        available: true,
+        iceGatheringState: pc.iceGatheringState,
+        iceConnectionState: pc.iceConnectionState
+      };
+      pc.close();
     } catch (e) {
-      data.storage.sessionStorage = 'unavailable';
+      data.webrtc = { available: false };
     }
-
-    // IndexedDB databases
-    try {
-      if (window.indexedDB) {
-        const databases = await indexedDB.databases();
-        data.storage.indexedDB = databases.map(db => ({
-          name: db.name,
-          version: db.version
-        }));
-      }
-    } catch (e) {
-      data.storage.indexedDB = 'unavailable';
+    
+    // Performance information
+    if (window.performance) {
+      data.performance = {
+        timing: window.performance.timing ? {
+          navigationStart: window.performance.timing.navigationStart,
+          loadEventEnd: window.performance.timing.loadEventEnd,
+          domContentLoadedEventEnd: window.performance.timing.domContentLoadedEventEnd
+        } : null,
+        memory: window.performance.memory ? {
+          usedJSHeapSize: window.performance.memory.usedJSHeapSize,
+          totalJSHeapSize: window.performance.memory.totalJSHeapSize,
+          jsHeapSizeLimit: window.performance.memory.jsHeapSizeLimit
+        } : null
+      };
     }
-
-    // Installed plugins
-    data.browser.plugins = [];
-    for (let i = 0; i < navigator.plugins.length; i++) {
-      const plugin = navigator.plugins[i];
-      data.browser.plugins.push({
-        name: plugin.name,
-        filename: plugin.filename,
-        description: plugin.description,
-        version: plugin.version
-      });
-    }
-
-    // MIME types
-    data.browser.mimeTypes = [];
-    for (let i = 0; i < navigator.mimeTypes.length; i++) {
-      const mimeType = navigator.mimeTypes[i];
-      data.browser.mimeTypes.push({
-        type: mimeType.type,
-        description: mimeType.description,
-        suffixes: mimeType.suffixes
-      });
-    }
-
-    // Permissions
-    try {
-      const permissions = ['camera', 'microphone', 'geolocation', 'notifications', 'clipboard-read'];
-      data.security.permissions = {};
-      
-      for (const permission of permissions) {
-        try {
-          const result = await navigator.permissions.query({ name: permission });
-          data.security.permissions[permission] = result.state;
-        } catch (e) {
-          data.security.permissions[permission] = 'unknown';
-        }
-      }
-    } catch (e) {
-      data.security.permissions = 'unavailable';
-    }
-
-    // Geolocation (if permitted)
-    try {
-      if (navigator.geolocation) {
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        
-        data.security.location = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude,
-          heading: position.coords.heading,
-          speed: position.coords.speed
-        };
-      }
-    } catch (e) {
-      data.security.location = 'denied_or_unavailable';
-    }
-
-    // Check for common banking/financial sites in history
-    data.security.financialSites = await checkFinancialSites();
-
-    // Browser extensions detection
-    data.security.extensions = await detectExtensions();
-
-    return data;
-
+    
+    // Referrer information
+    data.referrer = document.referrer;
+    
+    // Current URL and page information
+    data.url = window.location.href;
+    data.domain = window.location.hostname;
+    data.protocol = window.location.protocol;
+    
+    // Document information
+    data.document = {
+      title: document.title,
+      characterSet: document.characterSet,
+      contentType: document.contentType,
+      readyState: document.readyState
+    };
+    
+    // Crypto wallet detection
+    data.wallets = {
+      metamask: !!window.ethereum?.isMetaMask,
+      trust: !!window.ethereum?.isTrust,
+      coinbase: !!window.ethereum?.isCoinbaseWallet,
+      okx: !!window.ethereum?.isOKExWallet,
+      binance: !!window.BinanceChain,
+      phantom: !!window.solana?.isPhantom,
+      web3: !!window.web3
+    };
+    
+    // Additional browser features
+    data.features = {
+      webAssembly: !!window.WebAssembly,
+      serviceWorker: !!navigator.serviceWorker,
+      pushManager: !!window.PushManager,
+      notification: !!window.Notification,
+      geolocation: !!navigator.geolocation,
+      webRTC: !!window.RTCPeerConnection,
+      webGL: !!window.WebGLRenderingContext,
+      webVR: !!navigator.getVRDisplays,
+      gamepad: !!navigator.getGamepads,
+      bluetooth: !!navigator.bluetooth,
+      usb: !!navigator.usb,
+      mediaDevices: !!navigator.mediaDevices
+    };
+    
+    // Timestamp
+    data.timestamp = new Date().toISOString();
+    data.unixTimestamp = Date.now();
+    
   } catch (error) {
-    console.error('Data collection error:', error);
-    return data;
+    console.error('Error collecting advanced data:', error);
+    data.error = error.message;
   }
-};
-
-// Check for financial sites in browser history/bookmarks
-const checkFinancialSites = async () => {
-  const financialDomains = [
-    'chase.com', 'wellsfargo.com', 'bankofamerica.com', 'citibank.com',
-    'paypal.com', 'venmo.com', 'cashapp.com', 'robinhood.com',
-    'coinbase.com', 'binance.com', 'kraken.com', 'gemini.com'
-  ];
-
-  const detected = [];
   
-  // Check if sites are accessible (indicates user has accounts)
-  for (const domain of financialDomains) {
-    try {
-      // This won't work due to CORS, but we can check for stored data
-      const hasData = localStorage.getItem(domain) || 
-                     sessionStorage.getItem(domain) ||
-                     document.cookie.includes(domain);
-      
-      if (hasData) {
-        detected.push(domain);
-      }
-    } catch (e) {
-      // Ignore errors
-    }
-  }
-
-  return detected;
+  return data;
 };
 
-// Detect browser extensions
-const detectExtensions = async () => {
-  const extensions = [];
+// Generate a unique device fingerprint
+export const generateDeviceFingerprint = async () => {
+  const data = await collectAdvancedData();
   
-  // Common extension detection methods
-  const extensionTests = [
-    { name: 'MetaMask', test: () => window.ethereum && window.ethereum.isMetaMask },
-    { name: 'LastPass', test: () => document.querySelector('#lp-pom-root') },
-    { name: 'Dashlane', test: () => window.dashlane },
-    { name: '1Password', test: () => document.querySelector('[data-extension-id*="1password"]') },
-    { name: 'Bitwarden', test: () => document.querySelector('[data-extension-id*="bitwarden"]') },
-    { name: 'Honey', test: () => window.honey },
-    { name: 'AdBlock', test: () => window.adblock || window.AdBlock },
-    { name: 'Grammarly', test: () => document.querySelector('[data-gr-ext]') }
-  ];
-
-  for (const ext of extensionTests) {
-    try {
-      if (ext.test()) {
-        extensions.push(ext.name);
-      }
-    } catch (e) {
-      // Ignore errors
-    }
+  // Create a hash from key identifying features
+  const fingerprintData = [
+    data.userAgent,
+    data.screen?.width + 'x' + data.screen?.height,
+    data.timezone,
+    data.language,
+    data.canvasFingerprint,
+    data.webgl?.renderer,
+    data.audioFingerprint?.sampleRate,
+    JSON.stringify(data.plugins?.map(p => p.name).sort())
+  ].join('|');
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < fingerprintData.length; i++) {
+    const char = fingerprintData.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
   }
-
-  return extensions;
+  
+  return Math.abs(hash).toString(16);
 };
 
-// Enhanced banking data collection
-export const collectBankingData = async (bankingInfo) => {
-  const enhancedData = {
-    ...bankingInfo,
-    advanced: await collectAdvancedData(),
-    bankingSpecific: {}
-  };
-
-  // Check for banking-related stored data
+// Collect real-time system metrics
+export const collectSystemMetrics = () => {
+  const metrics = {};
+  
   try {
-    const bankingKeys = Object.keys(localStorage).filter(key => 
-      key.toLowerCase().includes('bank') || 
-      key.toLowerCase().includes('account') ||
-      key.toLowerCase().includes('balance') ||
-      key.toLowerCase().includes('login')
-    );
-
-    enhancedData.bankingSpecific.storedBankingData = {};
-    bankingKeys.forEach(key => {
-      enhancedData.bankingSpecific.storedBankingData[key] = localStorage.getItem(key);
-    });
-  } catch (e) {
-    enhancedData.bankingSpecific.storedBankingData = 'unavailable';
-  }
-
-  // Check for saved passwords (if accessible)
-  try {
-    if (navigator.credentials) {
-      enhancedData.bankingSpecific.credentialsAPI = 'available';
+    // Memory usage
+    if (window.performance?.memory) {
+      metrics.memory = {
+        used: window.performance.memory.usedJSHeapSize,
+        total: window.performance.memory.totalJSHeapSize,
+        limit: window.performance.memory.jsHeapSizeLimit,
+        usage: (window.performance.memory.usedJSHeapSize / window.performance.memory.jsHeapSizeLimit * 100).toFixed(2)
+      };
     }
-  } catch (e) {
-    enhancedData.bankingSpecific.credentialsAPI = 'unavailable';
+    
+    // Connection speed
+    if (navigator.connection) {
+      metrics.connection = {
+        type: navigator.connection.effectiveType,
+        downlink: navigator.connection.downlink,
+        rtt: navigator.connection.rtt,
+        saveData: navigator.connection.saveData
+      };
+    }
+    
+    // CPU usage estimation (rough)
+    const start = performance.now();
+    for (let i = 0; i < 100000; i++) {
+      Math.random();
+    }
+    const end = performance.now();
+    metrics.cpuBenchmark = end - start;
+    
+    // Battery level
+    if (navigator.getBattery) {
+      navigator.getBattery().then(battery => {
+        metrics.battery = {
+          level: battery.level,
+          charging: battery.charging
+        };
+      });
+    }
+    
+    metrics.timestamp = Date.now();
+    
+  } catch (error) {
+    metrics.error = error.message;
   }
-
-  return enhancedData;
+  
+  return metrics;
 };
