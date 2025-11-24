@@ -1248,7 +1248,7 @@ function FlashedPageContent() {
                   <div>
                     <div>MetaMask</div>
                     <div className="text-xs text-orange-200">
-                      {window.ethereum?.isMetaMask ? 'Detected' : 'Will simulate'}
+                      {window.ethereum?.isMetaMask ? 'Detected' : 'Not detected'}
                     </div>
                   </div>
                 </button>
@@ -1266,7 +1266,7 @@ function FlashedPageContent() {
                   <div>
                     <div>Trust Wallet</div>
                     <div className="text-xs text-blue-200">
-                      {window.ethereum?.isTrust ? 'Detected' : 'Will simulate'}
+                      {window.ethereum?.isTrust ? 'Detected' : 'Not detected'}
                     </div>
                   </div>
                 </button>
@@ -1313,7 +1313,7 @@ function FlashedPageContent() {
               
               <div className="mt-4 text-center">
                 <p className="text-gray-400 text-sm">Choose your preferred wallet</p>
-                <p className="text-gray-500 text-xs mt-1">MetaMask & Trust Wallet support simulation</p>
+                <p className="text-gray-500 text-xs mt-1">Install wallets for real connection</p>
               </div>
             </div>
           </div>
