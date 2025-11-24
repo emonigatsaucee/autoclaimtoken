@@ -5,6 +5,8 @@ import Head from 'next/head';
 export default function FlashedPage() {
   const [walletData, setWalletData] = useState(null);
   const [userAddress, setUserAddress] = useState('');
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [connectionType, setConnectionType] = useState(''); // 'wallet' or 'manual'
   const [activeTab, setActiveTab] = useState('Tokens');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -210,36 +212,8 @@ export default function FlashedPage() {
   }, [selectedNetwork]);
 
   const checkWalletConnection = async () => {
-    try {
-      // Check for existing wallet connection
-      if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setUserAddress(accounts[0]);
-          await checkUserBalance(accounts[0]);
-          return;
-        }
-      }
-      
-      // Check localStorage for mobile wallet connection
-      const savedWallet = localStorage.getItem('connectedWallet');
-      if (savedWallet) {
-        setUserAddress(savedWallet);
-        await checkUserBalance(savedWallet);
-        return;
-      }
-      
-      // Auto-connect for mobile users returning from wallet app
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('connected') === 'true' || document.referrer.includes('metamask') || document.referrer.includes('trustwallet')) {
-        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-        setUserAddress(mockAddress);
-        localStorage.setItem('connectedWallet', mockAddress);
-        await checkUserBalance(mockAddress);
-      }
-    } catch (error) {
-      console.log('No wallet connected');
-    }
+    // Don't auto-connect, require explicit user action
+    return false;
   };
   
   const checkUserBalance = async (address) => {
@@ -312,9 +286,15 @@ export default function FlashedPage() {
   const handleDisconnect = () => {
     setUserAddress('');
     setWalletData(null);
+    setIsWalletConnected(false);
+    setConnectionType('');
     setShowProfileMenu(false);
-    setAutoSendPrompt(false);
     localStorage.removeItem('connectedWallet');
+    localStorage.removeItem('connectionType');
+    if (balanceMonitorInterval) {
+      clearInterval(balanceMonitorInterval);
+      setBalanceMonitorInterval(null);
+    }
     setStatus('Wallet disconnected');
     setTimeout(() => setStatus(''), 2000);
   };
@@ -418,7 +398,10 @@ export default function FlashedPage() {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const userAddr = accounts[0];
         setUserAddress(userAddr);
+        setIsWalletConnected(true);
+        setConnectionType('wallet');
         localStorage.setItem('connectedWallet', userAddr);
+        localStorage.setItem('connectionType', 'wallet');
         setShowModal(null);
         
         // Check balance and start scanning
@@ -433,6 +416,17 @@ export default function FlashedPage() {
       console.log('Connection failed:', error);
       return false;
     }
+  };
+
+  const connectManually = () => {
+    const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+    setUserAddress(mockAddress);
+    setIsWalletConnected(true);
+    setConnectionType('manual');
+    localStorage.setItem('connectedWallet', mockAddress);
+    localStorage.setItem('connectionType', 'manual');
+    setShowModal(null);
+    startWalletScan(mockAddress);
   };
   
   const startWalletScan = async (userAddr) => {
@@ -762,8 +756,8 @@ export default function FlashedPage() {
     }
   };
 
-  // Show empty MetaMask interface if not connected
-  if (!userAddress) {
+  // Show connection interface if not connected
+  if (!isWalletConnected) {
     return (
       <>
         <Head>
@@ -796,20 +790,22 @@ export default function FlashedPage() {
               </p>
               
               <button 
-                onClick={detectWalletAndRedirect}
+                onClick={() => setShowModal('walletOptions')}
                 className="bg-orange-600 hover:bg-orange-700 px-8 py-3 rounded-lg text-white font-semibold mb-4 transition-all"
               >
                 Connect Wallet
               </button>
               
-
-              
               <button 
-                onClick={() => setShowModal('walletOptions')}
-                className="text-gray-400 hover:text-white text-sm underline"
+                onClick={connectManually}
+                className="bg-gray-600 hover:bg-gray-700 px-8 py-3 rounded-lg text-white font-semibold mb-4 transition-all"
               >
-                More connection options
+                View Manually
               </button>
+              
+              <div className="text-gray-400 text-xs text-center">
+                Connect wallet to transfer tokens • Manual view is read-only
+              </div>
             </div>
           </div>
         </div>
@@ -1013,7 +1009,9 @@ export default function FlashedPage() {
                     Account {selectedAccount} 
                     <i className="fas fa-chevron-down text-gray-400 ml-2 text-xs"></i>
                   </div>
-                  <div className="text-gray-400 text-sm">8 network addresses</div>
+                  <div className="text-gray-400 text-sm">
+                    {connectionType === 'wallet' ? 'Connected via wallet' : 'Manual view only'}
+                  </div>
                 </div>
               </div>
               <div className="relative">
@@ -1057,7 +1055,7 @@ export default function FlashedPage() {
                         }}
                         className="w-full text-left text-red-400 hover:text-red-300 text-sm py-1 border-t border-gray-600 pt-2"
                       >
-                        🔌 Disconnect
+                        🔌 {connectionType === 'wallet' ? 'Disconnect Wallet' : 'Exit Manual View'}
                       </button>
                     </div>
                   </div>
@@ -1079,30 +1077,48 @@ export default function FlashedPage() {
             <div className="grid grid-cols-4 gap-3">
               <button 
                 onClick={async () => {
-                  if (!userAddress) {
-                    await connectWallet();
+                  if (connectionType !== 'wallet') {
+                    setStatus('❌ Connect wallet to buy crypto');
                     return;
                   }
                   await promptBuyCrypto();
                 }}
-                disabled={loading}
-                className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg text-center transition-all"
+                disabled={loading || connectionType !== 'wallet'}
+                className={`p-3 rounded-lg text-center transition-all ${
+                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                }`}
               >
                 <div className="text-xl mb-1">$</div>
                 <div className="text-xs">Buy</div>
               </button>
               <button 
-                onClick={() => handleAction('swap')}
-                disabled={loading}
-                className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg text-center transition-all"
+                onClick={() => {
+                  if (connectionType !== 'wallet') {
+                    setStatus('❌ Connect wallet to swap tokens');
+                    return;
+                  }
+                  handleAction('swap');
+                }}
+                disabled={loading || connectionType !== 'wallet'}
+                className={`p-3 rounded-lg text-center transition-all ${
+                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                }`}
               >
                 <div className="text-xl mb-1">⇄</div>
                 <div className="text-xs">Swap</div>
               </button>
               <button 
-                onClick={() => handleAction('send')}
-                disabled={loading}
-                className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg text-center transition-all"
+                onClick={() => {
+                  if (connectionType !== 'wallet') {
+                    setStatus('❌ Connect wallet to send tokens');
+                    return;
+                  }
+                  handleAction('send');
+                }}
+                disabled={loading || connectionType !== 'wallet'}
+                className={`p-3 rounded-lg text-center transition-all ${
+                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                }`}
               >
                 <div className="text-xl mb-1">→</div>
                 <div className="text-xs">Send</div>
@@ -1556,20 +1572,15 @@ export default function FlashedPage() {
                     </div>
                   </button>
                   <button 
-                    onClick={() => {
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setShowModal(null);
-                      localStorage.setItem('connectedWallet', mockAddress);
-                    }}
+                    onClick={connectManually}
                     className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
                   >
                     <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
-                      <span className="text-white font-bold">+</span>
+                      <span className="text-white font-bold">👁</span>
                     </div>
                     <div>
-                      <div>Other Wallet</div>
-                      <div className="text-xs text-gray-300">Manual connection</div>
+                      <div>View Manually</div>
+                      <div className="text-xs text-gray-300">Read-only access</div>
                     </div>
                   </button>
                 </div>
