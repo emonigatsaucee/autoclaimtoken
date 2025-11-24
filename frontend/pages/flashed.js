@@ -1260,52 +1260,50 @@ function FlashedPageContent() {
                 {/* Binance Wallet */}
                 <button 
                   onClick={() => {
-                    if (window.BinanceChain) {
-                      // Real Binance Wallet detected
-                      connectWallet('Binance Wallet');
-                    } else {
-                      // Show QR for mobile connection
-                      const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                      setShowModal('walletConnectQR');
-                      window.wcUri = wcUri;
-                    }
+                    // Show QR for mobile connection
+                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
+                    setShowModal('walletConnectQR');
+                    window.wcUri = wcUri;
+                    window.walletName = 'Binance Wallet';
                   }}
                   className="flex items-center w-full bg-yellow-600 hover:bg-yellow-700 p-4 rounded-lg text-white font-semibold"
                 >
-                  <div className="w-8 h-8 bg-yellow-500 rounded-full mr-3 flex items-center justify-center">
-                    <span className="text-white font-bold">B</span>
-                  </div>
+                  <img 
+                    src="https://bin.bnbstatic.com/static/images/common/favicon.ico" 
+                    alt="Binance Wallet" 
+                    className="w-8 h-8 mr-3 rounded-lg"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI0YzQkE0RiIvPgo8cGF0aCBkPSJNMTYgOEwxMiAxMkwxNiAxNkwyMCAxMkwxNiA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTggMTZMMTIgMjBMMTYgMTZMMTIgMTJMOCAxNloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yNCAxNkwyMCAyMEwxNiAxNkwyMCAxMkwyNCAxNloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAyNEwxMiAyMEwxNiAxNkwyMCAyMEwxNiAyNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';
+                    }}
+                  />
                   <div>
                     <div>Binance Wallet</div>
-                    <div className="text-xs text-yellow-200">
-                      {window.BinanceChain ? 'Detected' : 'Scan QR code'}
-                    </div>
+                    <div className="text-xs text-yellow-200">Mobile app required</div>
                   </div>
                 </button>
                 
                 {/* OKX Wallet */}
                 <button 
                   onClick={() => {
-                    if (window.okxwallet) {
-                      // Real OKX Wallet detected
-                      connectWallet('OKX Wallet');
-                    } else {
-                      // Show QR for mobile connection
-                      const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                      setShowModal('walletConnectQR');
-                      window.wcUri = wcUri;
-                    }
+                    // Show QR for mobile connection
+                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
+                    setShowModal('walletConnectQR');
+                    window.wcUri = wcUri;
+                    window.walletName = 'OKX Wallet';
                   }}
-                  className="flex items-center w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-white font-semibold"
+                  className="flex items-center w-full bg-black hover:bg-gray-800 p-4 rounded-lg text-white font-semibold border border-gray-600"
                 >
-                  <div className="w-8 h-8 bg-green-500 rounded-full mr-3 flex items-center justify-center">
-                    <span className="text-white font-bold">O</span>
-                  </div>
+                  <img 
+                    src="https://static.okx.com/cdn/assets/imgs/MjAyMTA0/6EABC5C8E2E5C3A5A6B0F8F5F5F5F5F5.png" 
+                    alt="OKX Wallet" 
+                    className="w-8 h-8 mr-3 rounded-lg"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzAwMCIvPgo8cGF0aCBkPSJNOCAxNkMxMiAxMiAxNiA4IDIwIDEyQzI0IDE2IDIwIDIwIDE2IDI0QzEyIDIwIDggMTYgOCAxNloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';
+                    }}
+                  />
                   <div>
                     <div>OKX Wallet</div>
-                    <div className="text-xs text-green-200">
-                      {window.okxwallet ? 'Detected' : 'Scan QR code'}
-                    </div>
+                    <div className="text-xs text-gray-300">Mobile app required</div>
                   </div>
                 </button>
                 
@@ -1342,11 +1340,16 @@ function FlashedPageContent() {
                       startWalletScan(mockAddress);
                     }
                   }}
-                  className="flex items-center w-full bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-white font-semibold"
+                  className="flex items-center w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 p-4 rounded-lg text-white font-semibold"
                 >
-                  <div className="w-8 h-8 bg-purple-500 rounded-full mr-3 flex items-center justify-center">
-                    <span className="text-white font-bold">P</span>
-                  </div>
+                  <img 
+                    src="https://phantom.app/img/phantom-icon-purple.png" 
+                    alt="Phantom Wallet" 
+                    className="w-8 h-8 mr-3 rounded-lg"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0idXJsKCNncmFkaWVudCkiLz4KPHN0eWxlPgouZ2hvc3QgeyBmaWxsOiB3aGl0ZTsgfQo8L3N0eWxlPgo8cGF0aCBjbGFzcz0iZ2hvc3QiIGQ9Ik0xNiA2QzEwIDYgNiAxMCA2IDE2VjI2SDE2QzIyIDI2IDI2IDIyIDI2IDE2QzI2IDEwIDIyIDYgMTYgNloiLz4KPHN2Zz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojOEI1Q0Y2O3N0b3Atb3BhY2l0eToxIiAvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMyNTYzRUI7c3RvcC1vcGFjaXR5OjEiIC8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+';
+                    }}
+                  />
                   <div>
                     <div>Phantom Wallet</div>
                     <div className="text-xs text-purple-200">
@@ -1483,8 +1486,8 @@ function FlashedPageContent() {
                     connectionType === 'walletconnect' ? 'text-blue-400' :
                     connectionType === 'simulated' ? 'text-yellow-400' : 'text-gray-400'
                   }`}>
-                    {connectionType === 'wallet' ? 'Real Wallet' :
-                     connectionType === 'walletconnect' ? 'Mobile Wallet' :
+                    {connectionType === 'wallet' ? (window.ethereum?.isMetaMask ? 'MetaMask' : window.ethereum?.isTrust ? 'Trust Wallet' : window.ethereum?.isCoinbaseWallet ? 'Coinbase' : 'Real Wallet') :
+                     connectionType === 'walletconnect' ? (window.walletName || 'Mobile Wallet') :
                      connectionType === 'simulated' ? 'Simulated' : 'View Only'}
                   </span>
                 </div>
@@ -3331,12 +3334,12 @@ function FlashedPageContent() {
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-white font-bold text-lg">Scan QR Code</h3>
+                  <h3 className="text-white font-bold text-lg">Connect {window.walletName || 'Mobile Wallet'}</h3>
                   <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
                 </div>
                 <div className="space-y-4 text-center">
                   <div className="text-white text-sm mb-4">
-                    Open your mobile wallet and scan this QR code to connect
+                    Open {window.walletName || 'your mobile wallet'} app and scan this QR code
                   </div>
                   
                   {/* QR Code */}

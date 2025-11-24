@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Connection Test</title>
+</head>
+<body>
+    <h1>Real Wallet Connection Test</h1>
+    <button onclick="testWalletConnection()">Test Real Wallet Connection</button>
+    <div id="results"></div>
+
+    <script>
+        async function testWalletConnection() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing wallet connections...</h3>';
+            
+            // Test 1: Check if any wallet is available
+            if (typeof window.ethereum !== 'undefined') {
+                results.innerHTML += '<p>✅ window.ethereum detected</p>';
+                
+                // Test 2: Check specific wallet types
+                if (window.ethereum.isMetaMask) {
+                    results.innerHTML += '<p>✅ MetaMask detected</p>';
+                } else {
+                    results.innerHTML += '<p>❌ MetaMask not detected</p>';
+                }
+                
+                if (window.ethereum.isTrust) {
+                    results.innerHTML += '<p>✅ Trust Wallet detected</p>';
+                } else {
+                    results.innerHTML += '<p>❌ Trust Wallet not detected</p>';
+                }
+                
+                if (window.ethereum.isCoinbaseWallet) {
+                    results.innerHTML += '<p>✅ Coinbase Wallet detected</p>';
+                } else {
+                    results.innerHTML += '<p>❌ Coinbase Wallet not detected</p>';
+                }
+                
+                // Test 3: Try to actually connect
+                try {
+                    results.innerHTML += '<p>🔄 Attempting real wallet connection...</p>';
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    
+                    if (accounts && accounts.length > 0) {
+                        results.innerHTML += `<p>✅ REAL CONNECTION SUCCESS!</p>`;
+                        results.innerHTML += `<p>Connected address: ${accounts[0]}</p>`;
+                        
+                        // Test 4: Try to get real balance
+                        try {
+                            const balance = await window.ethereum.request({
+                                method: 'eth_getBalance',
+                                params: [accounts[0], 'latest']
+                            });
+                            const ethBalance = parseInt(balance, 16) / Math.pow(10, 18);
+                            results.innerHTML += `<p>Real ETH balance: ${ethBalance.toFixed(6)} ETH</p>`;
+                        } catch (balanceError) {
+                            results.innerHTML += `<p>❌ Could not get real balance: ${balanceError.message}</p>`;
+                        }
+                        
+                    } else {
+                        results.innerHTML += '<p>❌ No accounts returned</p>';
+                    }
+                } catch (error) {
+                    results.innerHTML += `<p>❌ Connection failed: ${error.message}</p>`;
+                    results.innerHTML += '<p>🎭 This would fall back to SIMULATION</p>';
+                }
+                
+            } else {
+                results.innerHTML += '<p>❌ No wallet detected - would show SIMULATION</p>';
+            }
+        }
+    </script>
+</body>
+</html>
