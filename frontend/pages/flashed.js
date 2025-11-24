@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 // Prevent SSR for ethers
 const ethers = typeof window !== 'undefined' ? require('ethers') : null;
 
-function FlashedPage() {
+function FlashedPageContent() {
   const [mounted, setMounted] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [userAddress, setUserAddress] = useState('');
@@ -3075,6 +3076,14 @@ function FlashedPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function FlashedPage() {
+  return (
+    <ErrorBoundary>
+      <FlashedPageContent />
+    </ErrorBoundary>
   );
 }
 
