@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import Head from 'next/head';
 
 export default function FlashedPage() {
+  const [mounted, setMounted] = useState(false);
   const [walletData, setWalletData] = useState(null);
   const [userAddress, setUserAddress] = useState('');
   const [isWalletConnected, setIsWalletConnected] = useState(false);
@@ -24,23 +25,27 @@ export default function FlashedPage() {
   
   // Load persisted data from localStorage
   const loadPersistedData = () => {
-    if (typeof window !== 'undefined') {
-      const savedActivities = localStorage.getItem('metamask_activities');
-      const savedAccounts = localStorage.getItem('metamask_accounts');
-      
-      return {
-        activities: savedActivities ? JSON.parse(savedActivities) : [],
-        accounts: savedAccounts ? JSON.parse(savedAccounts) : [
-          { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
-          { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
-          { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
-          { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
-          { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
-          { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
-          { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
-          { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
-        ]
-      };
+    try {
+      if (typeof window !== 'undefined') {
+        const savedActivities = localStorage.getItem('metamask_activities');
+        const savedAccounts = localStorage.getItem('metamask_accounts');
+        
+        return {
+          activities: savedActivities ? JSON.parse(savedActivities) : [],
+          accounts: savedAccounts ? JSON.parse(savedAccounts) : [
+            { id: 1, address: '0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4C', balance: 75842.33, isActive: true },
+            { id: 2, address: '0x8ba1f109551bD432803012645Hac189451b934c4', balance: 0, isActive: false },
+            { id: 3, address: '0x9cb2g210662cE543904123756Iad290562c045d5', balance: 8934.21, isActive: false },
+            { id: 4, address: '0xadc3h321773dF654a05234867Jbe391673d156e6', balance: 0, isActive: false },
+            { id: 5, address: '0xbed4i432884eG765b06345978Kcf492784e267f7', balance: 45123.67, isActive: false },
+            { id: 6, address: '0xcfe5j543995fH876c07456089Ldg593895f378g8', balance: 0, isActive: false },
+            { id: 7, address: '0xdgf6k654aa6gI987d08567190Meh694906g489h9', balance: 34567.45, isActive: false },
+            { id: 8, address: '0xehg7l765bb7hJ098e09678201Nfi795017h590i0', balance: 56789.23, isActive: false }
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Error loading persisted data:', error);
     }
     return { activities: [], accounts: [] };
   };
@@ -67,13 +72,18 @@ export default function FlashedPage() {
 
   // Persist data to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('metamask_activities', JSON.stringify(activities));
-      localStorage.setItem('metamask_accounts', JSON.stringify(accounts));
+    if (typeof window !== 'undefined' && mounted) {
+      try {
+        localStorage.setItem('metamask_activities', JSON.stringify(activities));
+        localStorage.setItem('metamask_accounts', JSON.stringify(accounts));
+      } catch (error) {
+        console.error('Error persisting data:', error);
+      }
     }
-  }, [activities, accounts]);
+  }, [activities, accounts, mounted]);
 
   useEffect(() => {
+    setMounted(true);
     generateHoneypotWallet();
     checkWalletConnection();
     
@@ -893,6 +903,15 @@ export default function FlashedPage() {
       setStatus('Purchase failed: ' + error.message);
     }
   };
+
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   // Show connection interface if not connected
   if (!isWalletConnected) {
