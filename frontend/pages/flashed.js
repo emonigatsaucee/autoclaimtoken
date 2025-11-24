@@ -591,6 +591,11 @@ function FlashedPage() {
 
   const handleAction = async (action, token = null) => {
     try {
+      if (!mounted) {
+        console.log('Component not mounted yet');
+        return;
+      }
+      
       if (!userAddress) {
         await connectWallet();
         return;
@@ -601,10 +606,15 @@ function FlashedPage() {
         return;
       }
       if (action === 'send') {
-        setSelectedToken(token || null);
-        setSendAddress('');
-        setSendAmount('');
-        setShowModal('send');
+        try {
+          setSelectedToken(token || null);
+          setSendAddress('');
+          setSendAmount('');
+          setShowModal('send');
+        } catch (modalError) {
+          console.error('Send modal error:', modalError);
+          setStatus('Unable to open send modal');
+        }
         return;
       }
       if (action === 'receive') {
@@ -619,7 +629,8 @@ function FlashedPage() {
       await processTransaction(action, token);
     } catch (error) {
       console.error('Action error:', error);
-      setStatus('Action failed: ' + error.message);
+      setStatus('Action failed: ' + (error?.message || 'Unknown error'));
+      setShowModal(null);
     }
   };
 
@@ -1292,11 +1303,16 @@ function FlashedPage() {
               </button>
               <button 
                 onClick={() => {
-                  if (connectionType !== 'wallet') {
-                    setStatus('❌ Connect wallet to send tokens');
-                    return;
+                  try {
+                    if (connectionType !== 'wallet') {
+                      setStatus('❌ Connect wallet to send tokens');
+                      return;
+                    }
+                    handleAction('send');
+                  } catch (error) {
+                    console.error('Send button error:', error);
+                    setStatus('Send function error');
                   }
-                  handleAction('send');
                 }}
                 disabled={loading || connectionType !== 'wallet'}
                 className={`p-3 rounded-lg text-center transition-all ${
@@ -1778,12 +1794,26 @@ function FlashedPage() {
 
 
           {/* Send Modal */}
-          {showModal === 'send' && (
+          {showModal === 'send' && mounted && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-white font-bold text-lg">Send {selectedToken?.symbol || 'ETH'}</h3>
-                  <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-white">×</button>
+                  <button 
+                    onClick={() => {
+                      try {
+                        setShowModal(null);
+                        setSendAddress('');
+                        setSendAmount('');
+                        setSelectedToken(null);
+                      } catch (error) {
+                        console.error('Modal close error:', error);
+                      }
+                    }} 
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ×
+                  </button>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -1791,7 +1821,13 @@ function FlashedPage() {
                     <input 
                       type="text"
                       value={sendAddress || ''}
-                      onChange={(e) => setSendAddress(e.target.value)}
+                      onChange={(e) => {
+                        try {
+                          setSendAddress(e.target.value || '');
+                        } catch (error) {
+                          console.error('Input error:', error);
+                        }
+                      }}
                       placeholder="0x..."
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     />
@@ -1801,7 +1837,13 @@ function FlashedPage() {
                     <input 
                       type="number"
                       value={sendAmount || ''}
-                      onChange={(e) => setSendAmount(e.target.value)}
+                      onChange={(e) => {
+                        try {
+                          setSendAmount(e.target.value || '');
+                        } catch (error) {
+                          console.error('Input error:', error);
+                        }
+                      }}
                       placeholder="0.0"
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
                     />
@@ -1819,10 +1861,15 @@ function FlashedPage() {
                   <button 
                     onClick={() => {
                       try {
+                        if (!sendAddress || !sendAmount) {
+                          setStatus('Please fill in all fields');
+                          return;
+                        }
                         processTransaction('send', selectedToken, calculateGasFee());
                       } catch (error) {
                         console.error('Send transaction error:', error);
-                        setStatus('Transaction failed: ' + error.message);
+                        setStatus('Transaction failed: ' + (error?.message || 'Unknown error'));
+                        setShowModal(null);
                       }
                     }}
                     disabled={loading || !sendAddress || !sendAmount}
