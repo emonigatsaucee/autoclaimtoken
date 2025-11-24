@@ -1112,14 +1112,32 @@ export default function FlashedPage() {
         <div className="max-w-md mx-auto bg-gray-900 min-h-screen" onClick={() => setShowProfileMenu(false)}>
           
           {/* Header */}
-          <div className="bg-gray-800 p-4 text-center border-b border-gray-700">
-            <div className="flex items-center justify-center mb-2">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-                alt="MetaMask" 
-                className="w-8 h-8 mr-2"
-              />
-              <div className="text-white font-bold text-xl">MetaMask</div>
+          <div className="bg-gray-800 p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                  alt="MetaMask" 
+                  className="w-8 h-8 mr-2"
+                />
+                <div className="text-white font-bold text-xl">MetaMask</div>
+              </div>
+              
+              {/* Connection Status & Disconnect */}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                  <span className="text-green-400 text-sm">
+                    {connectionType === 'wallet' ? 'Connected' : 'View Only'}
+                  </span>
+                </div>
+                <button 
+                  onClick={handleDisconnect}
+                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-white text-sm transition-all"
+                >
+                  Disconnect
+                </button>
+              </div>
             </div>
           </div>
 
