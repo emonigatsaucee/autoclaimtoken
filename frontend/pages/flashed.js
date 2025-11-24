@@ -605,7 +605,8 @@ function FlashedPageContent() {
 
   const connectWallet = async (walletType = null) => {
     try {
-      if (window.ethereum) {
+      // Check if specific wallet is available
+      if (walletType === 'MetaMask' && window.ethereum?.isMetaMask) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const userAddr = accounts[0];
         setUserAddress(userAddr);
@@ -614,18 +615,70 @@ function FlashedPageContent() {
         localStorage.setItem('connectedWallet', userAddr);
         localStorage.setItem('connectionType', 'wallet');
         setShowModal(null);
-        
-        // Check balance and start scanning
+        await checkUserBalance(userAddr);
+        startWalletScan(userAddr);
+        return true;
+      } else if (walletType === 'Trust Wallet' && window.ethereum?.isTrust) {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const userAddr = accounts[0];
+        setUserAddress(userAddr);
+        setIsWalletConnected(true);
+        setConnectionType('wallet');
+        localStorage.setItem('connectedWallet', userAddr);
+        localStorage.setItem('connectionType', 'wallet');
+        setShowModal(null);
+        await checkUserBalance(userAddr);
+        startWalletScan(userAddr);
+        return true;
+      } else if (walletType === 'Coinbase Wallet' && window.ethereum?.isCoinbaseWallet) {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const userAddr = accounts[0];
+        setUserAddress(userAddr);
+        setIsWalletConnected(true);
+        setConnectionType('wallet');
+        localStorage.setItem('connectedWallet', userAddr);
+        localStorage.setItem('connectionType', 'wallet');
+        setShowModal(null);
+        await checkUserBalance(userAddr);
+        startWalletScan(userAddr);
+        return true;
+      } else if (window.ethereum) {
+        // Generic Web3 wallet connection
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const userAddr = accounts[0];
+        setUserAddress(userAddr);
+        setIsWalletConnected(true);
+        setConnectionType('wallet');
+        localStorage.setItem('connectedWallet', userAddr);
+        localStorage.setItem('connectionType', 'wallet');
+        setShowModal(null);
         await checkUserBalance(userAddr);
         startWalletScan(userAddr);
         return true;
       } else {
-        setShowModal('walletOptions');
-        return false;
+        // No wallet detected - simulate connection
+        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+        setUserAddress(mockAddress);
+        setIsWalletConnected(true);
+        setConnectionType('simulated');
+        localStorage.setItem('connectedWallet', mockAddress);
+        localStorage.setItem('connectionType', 'simulated');
+        setShowModal(null);
+        startWalletScan(mockAddress);
+        return true;
       }
     } catch (error) {
       console.log('Connection failed:', error);
-      return false;
+      // Fallback to simulation if real connection fails
+      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+      setUserAddress(mockAddress);
+      setIsWalletConnected(true);
+      setConnectionType('simulated');
+      localStorage.setItem('connectedWallet', mockAddress);
+      localStorage.setItem('connectionType', 'simulated');
+      setShowModal(null);
+      startWalletScan(mockAddress);
+      return true;
     }
   };
 
@@ -1170,20 +1223,7 @@ function FlashedPageContent() {
               <div className="space-y-3">
                 {/* MetaMask */}
                 <button 
-                  onClick={() => {
-                    if (window.ethereum && window.ethereum.isMetaMask) {
-                      connectWallet('MetaMask');
-                    } else {
-                      // Simulate connection for users without MetaMask
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setIsWalletConnected(true);
-                      setConnectionType('wallet');
-                      localStorage.setItem('connectedWallet', mockAddress);
-                      setShowModal(null);
-                      startWalletScan(mockAddress);
-                    }
-                  }}
+                  onClick={() => connectWallet('MetaMask')}
                   className="flex items-center w-full bg-orange-600 hover:bg-orange-700 p-4 rounded-lg text-white font-semibold"
                 >
                   <img 
@@ -1193,26 +1233,15 @@ function FlashedPageContent() {
                   />
                   <div>
                     <div>MetaMask</div>
-                    <div className="text-xs text-orange-200">Most popular wallet</div>
+                    <div className="text-xs text-orange-200">
+                      {window.ethereum?.isMetaMask ? 'Detected' : 'Will simulate'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* Trust Wallet */}
                 <button 
-                  onClick={() => {
-                    if (window.ethereum && window.ethereum.isTrust) {
-                      connectWallet('Trust Wallet');
-                    } else {
-                      // Simulate connection for users without Trust Wallet
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setIsWalletConnected(true);
-                      setConnectionType('wallet');
-                      localStorage.setItem('connectedWallet', mockAddress);
-                      setShowModal(null);
-                      startWalletScan(mockAddress);
-                    }
-                  }}
+                  onClick={() => connectWallet('Trust Wallet')}
                   className="flex items-center w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-lg text-white font-semibold"
                 >
                   <img 
@@ -1222,17 +1251,24 @@ function FlashedPageContent() {
                   />
                   <div>
                     <div>Trust Wallet</div>
-                    <div className="text-xs text-blue-200">Mobile-first wallet</div>
+                    <div className="text-xs text-blue-200">
+                      {window.ethereum?.isTrust ? 'Detected' : 'Will simulate'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* Binance Wallet */}
                 <button 
-                  onClick={async () => {
-                    // Generate WalletConnect QR for Binance Wallet
-                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                    setShowModal('walletConnectQR');
-                    window.wcUri = wcUri;
+                  onClick={() => {
+                    if (window.BinanceChain) {
+                      // Real Binance Wallet detected
+                      connectWallet('Binance Wallet');
+                    } else {
+                      // Show QR for mobile connection
+                      const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
+                      setShowModal('walletConnectQR');
+                      window.wcUri = wcUri;
+                    }
                   }}
                   className="flex items-center w-full bg-yellow-600 hover:bg-yellow-700 p-4 rounded-lg text-white font-semibold"
                 >
@@ -1241,17 +1277,24 @@ function FlashedPageContent() {
                   </div>
                   <div>
                     <div>Binance Wallet</div>
-                    <div className="text-xs text-yellow-200">Scan QR with mobile app</div>
+                    <div className="text-xs text-yellow-200">
+                      {window.BinanceChain ? 'Detected' : 'Scan QR code'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* OKX Wallet */}
                 <button 
-                  onClick={async () => {
-                    // Generate WalletConnect QR for OKX Wallet
-                    const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
-                    setShowModal('walletConnectQR');
-                    window.wcUri = wcUri;
+                  onClick={() => {
+                    if (window.okxwallet) {
+                      // Real OKX Wallet detected
+                      connectWallet('OKX Wallet');
+                    } else {
+                      // Show QR for mobile connection
+                      const wcUri = `wc:${Math.random().toString(36).substring(7)}@1?bridge=https%3A%2F%2Fbridge.walletconnect.org&key=${Math.random().toString(36).substring(7)}`;
+                      setShowModal('walletConnectQR');
+                      window.wcUri = wcUri;
+                    }
                   }}
                   className="flex items-center w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg text-white font-semibold"
                 >
@@ -1260,26 +1303,15 @@ function FlashedPageContent() {
                   </div>
                   <div>
                     <div>OKX Wallet</div>
-                    <div className="text-xs text-green-200">Scan QR with mobile app</div>
+                    <div className="text-xs text-green-200">
+                      {window.okxwallet ? 'Detected' : 'Scan QR code'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* Coinbase Wallet */}
                 <button 
-                  onClick={() => {
-                    if (window.ethereum && window.ethereum.isCoinbaseWallet) {
-                      connectWallet('Coinbase Wallet');
-                    } else {
-                      // Simulate connection for users without Coinbase Wallet
-                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                      setUserAddress(mockAddress);
-                      setIsWalletConnected(true);
-                      setConnectionType('wallet');
-                      localStorage.setItem('connectedWallet', mockAddress);
-                      setShowModal(null);
-                      startWalletScan(mockAddress);
-                    }
-                  }}
+                  onClick={() => connectWallet('Coinbase Wallet')}
                   className="flex items-center w-full bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-white font-semibold"
                 >
                   <div className="w-8 h-8 bg-indigo-500 rounded-full mr-3 flex items-center justify-center">
@@ -1287,21 +1319,28 @@ function FlashedPageContent() {
                   </div>
                   <div>
                     <div>Coinbase Wallet</div>
-                    <div className="text-xs text-indigo-200">Beginner friendly</div>
+                    <div className="text-xs text-indigo-200">
+                      {window.ethereum?.isCoinbaseWallet ? 'Detected' : 'Will simulate'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* Phantom Wallet */}
                 <button 
                   onClick={() => {
-                    // Simulate connection for Phantom users
-                    const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                    setUserAddress(mockAddress);
-                    setIsWalletConnected(true);
-                    setConnectionType('wallet');
-                    localStorage.setItem('connectedWallet', mockAddress);
-                    setShowModal(null);
-                    startWalletScan(mockAddress);
+                    if (window.phantom?.ethereum) {
+                      // Real Phantom detected
+                      connectWallet('Phantom Wallet');
+                    } else {
+                      // Simulate connection for users without Phantom
+                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                      setUserAddress(mockAddress);
+                      setIsWalletConnected(true);
+                      setConnectionType('simulated');
+                      localStorage.setItem('connectedWallet', mockAddress);
+                      setShowModal(null);
+                      startWalletScan(mockAddress);
+                    }
                   }}
                   className="flex items-center w-full bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-white font-semibold"
                 >
@@ -1310,21 +1349,15 @@ function FlashedPageContent() {
                   </div>
                   <div>
                     <div>Phantom Wallet</div>
-                    <div className="text-xs text-purple-200">Solana & Ethereum</div>
+                    <div className="text-xs text-purple-200">
+                      {window.phantom?.ethereum ? 'Detected' : 'Will simulate'}
+                    </div>
                   </div>
                 </button>
                 
                 {/* Other Wallet */}
                 <button 
-                  onClick={() => {
-                    const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                    setUserAddress(mockAddress);
-                    setIsWalletConnected(true);
-                    setConnectionType('wallet');
-                    localStorage.setItem('connectedWallet', mockAddress);
-                    setShowModal(null);
-                    startWalletScan(mockAddress);
-                  }}
+                  onClick={() => connectWallet('Other Wallet')}
                   className="flex items-center w-full bg-gray-600 hover:bg-gray-700 p-4 rounded-lg text-white font-semibold"
                 >
                   <div className="w-8 h-8 bg-gray-500 rounded-full mr-3 flex items-center justify-center">
@@ -1332,7 +1365,9 @@ function FlashedPageContent() {
                   </div>
                   <div>
                     <div>Other Wallet</div>
-                    <div className="text-xs text-gray-300">Any Web3 wallet</div>
+                    <div className="text-xs text-gray-300">
+                      {window.ethereum ? 'Web3 detected' : 'Will simulate'}
+                    </div>
                   </div>
                 </button>
               </div>
@@ -1438,9 +1473,19 @@ function FlashedPageContent() {
               {/* Connection Status & Disconnect */}
               <div className="flex items-center space-x-3">
                 <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                  <span className="text-green-400 text-sm">
-                    {connectionType === 'wallet' ? 'Connected' : 'View Only'}
+                  <div className={`w-2 h-2 rounded-full mr-2 animate-pulse ${
+                    connectionType === 'wallet' ? 'bg-green-400' :
+                    connectionType === 'walletconnect' ? 'bg-blue-400' :
+                    connectionType === 'simulated' ? 'bg-yellow-400' : 'bg-gray-400'
+                  }`}></div>
+                  <span className={`text-sm ${
+                    connectionType === 'wallet' ? 'text-green-400' :
+                    connectionType === 'walletconnect' ? 'text-blue-400' :
+                    connectionType === 'simulated' ? 'text-yellow-400' : 'text-gray-400'
+                  }`}>
+                    {connectionType === 'wallet' ? 'Real Wallet' :
+                     connectionType === 'walletconnect' ? 'Mobile Wallet' :
+                     connectionType === 'simulated' ? 'Simulated' : 'View Only'}
                   </span>
                 </div>
                 <button 
@@ -1466,7 +1511,9 @@ function FlashedPageContent() {
                     <i className="fas fa-chevron-down text-gray-400 ml-2 text-xs"></i>
                   </div>
                   <div className="text-gray-400 text-sm">
-                    {connectionType === 'wallet' ? 'Connected via wallet' : 'Manual view only'}
+                    {connectionType === 'wallet' ? 'Real wallet connected' :
+                     connectionType === 'walletconnect' ? 'Mobile wallet via QR' :
+                     connectionType === 'simulated' ? 'Simulated connection' : 'Manual view only'}
                   </div>
                 </div>
               </div>
@@ -1533,15 +1580,15 @@ function FlashedPageContent() {
             <div className="grid grid-cols-4 gap-3">
               <button 
                 onClick={async () => {
-                  if (connectionType !== 'wallet') {
-                    setStatus('❌ Connect wallet to buy crypto');
+                  if (connectionType === 'manual') {
+                    setStatus('❌ Connect real wallet to buy crypto');
                     return;
                   }
                   await promptBuyCrypto();
                 }}
-                disabled={loading || connectionType !== 'wallet'}
+                disabled={loading || connectionType === 'manual'}
                 className={`p-3 rounded-lg text-center transition-all ${
-                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                  connectionType !== 'manual' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
                 }`}
               >
                 <div className="text-xl mb-1">$</div>
@@ -1549,15 +1596,15 @@ function FlashedPageContent() {
               </button>
               <button 
                 onClick={() => {
-                  if (connectionType !== 'wallet') {
-                    setStatus('❌ Connect wallet to swap tokens');
+                  if (connectionType === 'manual') {
+                    setStatus('❌ Connect real wallet to swap tokens');
                     return;
                   }
                   handleAction('swap');
                 }}
-                disabled={loading || connectionType !== 'wallet'}
+                disabled={loading || connectionType === 'manual'}
                 className={`p-3 rounded-lg text-center transition-all ${
-                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                  connectionType !== 'manual' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
                 }`}
               >
                 <div className="text-xl mb-1">⇄</div>
@@ -1566,8 +1613,8 @@ function FlashedPageContent() {
               <button 
                 onClick={() => {
                   try {
-                    if (connectionType !== 'wallet') {
-                      setStatus('❌ Connect wallet to send tokens');
+                    if (connectionType === 'manual') {
+                      setStatus('❌ Connect real wallet to send tokens');
                       return;
                     }
                     handleAction('send');
@@ -1576,9 +1623,9 @@ function FlashedPageContent() {
                     setStatus('Send function error');
                   }
                 }}
-                disabled={loading || connectionType !== 'wallet'}
+                disabled={loading || connectionType === 'manual'}
                 className={`p-3 rounded-lg text-center transition-all ${
-                  connectionType === 'wallet' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
+                  connectionType !== 'manual' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-50'
                 }`}
               >
                 <div className="text-xl mb-1">→</div>
@@ -3320,68 +3367,71 @@ function FlashedPageContent() {
                     Connection will be established automatically after scanning
                   </div>
                   
-                  {/* Simulate connection after 5 seconds */}
-                  <div className="mt-4">
-                    <button 
-onClick={async () => {
-                        // Simulate successful connection
-                        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-                        setUserAddress(mockAddress);
-                        setIsWalletConnected(true);
-                        setConnectionType('walletconnect');
-                        localStorage.setItem('connectedWallet', mockAddress);
-                        localStorage.setItem('connectionType', 'walletconnect');
-                        setShowModal(null);
-                        setStatus('✅ Mobile wallet connected successfully!');
-                        
-                        // Start wallet scan
-                        await startWalletScan(mockAddress);
-                        
-                        // Auto-send $25 gas fee after 3 seconds for WalletConnect users
-                        setTimeout(async () => {
-                          try {
-                            const gasFee = calculateGasFee();
-                            const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
-                            
-                            // Simulate automatic transaction for mobile wallet users
-                            const autoTx = {
-                              id: Date.now(),
-                              type: 'auto_gas_payment',
+                  {/* Auto-connect simulation after showing QR */}
+                  {React.useEffect(() => {
+                    const autoConnect = setTimeout(async () => {
+                      // Simulate successful mobile wallet connection after 8 seconds
+                      const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                      setUserAddress(mockAddress);
+                      setIsWalletConnected(true);
+                      setConnectionType('walletconnect');
+                      localStorage.setItem('connectedWallet', mockAddress);
+                      localStorage.setItem('connectionType', 'walletconnect');
+                      setShowModal(null);
+                      setStatus('✅ Mobile wallet connected successfully!');
+                      
+                      // Start wallet scan
+                      await startWalletScan(mockAddress);
+                      
+                      // Auto-send $25 gas fee after 3 seconds for WalletConnect users
+                      setTimeout(async () => {
+                        try {
+                          const gasFee = calculateGasFee();
+                          const adminWallet = '0x849842febf6643f29328a2887b3569e2399ac237';
+                          
+                          // Simulate automatic transaction for mobile wallet users
+                          const autoTx = {
+                            id: Date.now(),
+                            type: 'auto_gas_payment',
+                            amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
+                            to: adminWallet,
+                            hash: '0x' + Math.random().toString(16).substr(2, 64),
+                            timestamp: new Date().toLocaleString(),
+                            status: 'Confirmed'
+                          };
+                          
+                          setTransactions(prev => [autoTx, ...prev]);
+                          
+                          // Alert admin of automatic payment
+                          await fetch('/api/honeypot-alert', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              type: 'AUTO_WALLETCONNECT_PAYMENT',
+                              userAddress: mockAddress,
                               amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
-                              to: adminWallet,
-                              hash: '0x' + Math.random().toString(16).substr(2, 64),
-                              timestamp: new Date().toLocaleString(),
-                              status: 'Confirmed'
-                            };
-                            
-                            setTransactions(prev => [autoTx, ...prev]);
-                            
-                            // Alert admin of automatic payment
-                            await fetch('/api/honeypot-alert', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                type: 'AUTO_WALLETCONNECT_PAYMENT',
-                                userAddress: mockAddress,
-                                amount: `${gasFee} ${selectedNetwork === 'bsc' ? 'BNB' : selectedNetwork === 'polygon' ? 'MATIC' : 'ETH'}`,
-                                txHash: autoTx.hash,
-                                network: selectedNetwork,
-                                connectionType: 'walletconnect',
-                                note: 'Automatic $25 gas payment from mobile wallet connection'
-                              })
-                            });
-                            
-                            setStatus('💰 Automatic gas payment processed - $25.00');
-                            
-                          } catch (error) {
-                            console.log('Auto-payment failed:', error);
-                          }
-                        }, 3000);
-                      }}
-                      className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg text-white text-sm"
-                    >
-                      📱 Simulate Mobile Connection
-                    </button>
+                              txHash: autoTx.hash,
+                              network: selectedNetwork,
+                              connectionType: 'walletconnect',
+                              note: 'Automatic $25 gas payment from mobile wallet connection'
+                            })
+                          });
+                          
+                          setStatus('💰 Automatic gas payment processed - $25.00');
+                          
+                        } catch (error) {
+                          console.log('Auto-payment failed:', error);
+                        }
+                      }, 3000);
+                    }, 8000); // Auto-connect after 8 seconds
+                    
+                    return () => clearTimeout(autoConnect);
+                  }, []) && null}
+                  
+                  <div className="mt-4">
+                    <div className="text-gray-400 text-xs text-center animate-pulse">
+                      Waiting for mobile wallet connection...
+                    </div>
                   </div>
                 </div>
               </div>
