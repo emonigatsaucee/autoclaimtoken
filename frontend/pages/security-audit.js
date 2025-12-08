@@ -650,9 +650,14 @@ export default function SecurityAuditPanel() {
                 <button 
                   onClick={async () => {
                     if (!results.length) return alert('No credentials to test');
+                    if (!confirm(`Test ALL ${results.length} credentials? This may take several minutes.`)) return;
                     const btn = event.target;
                     btn.disabled = true;
-                    btn.textContent = 'Testing...';
+                    let count = 0;
+                    const interval = setInterval(() => {
+                      count++;
+                      btn.textContent = `Testing... ${count}s`;
+                    }, 1000);
                     try {
                       const response = await fetch(`${API_URL}/api/exploit/test-all`, {
                         method: 'POST',
@@ -667,6 +672,7 @@ export default function SecurityAuditPanel() {
                     } catch (error) {
                       alert('Test failed: ' + error.message);
                     } finally {
+                      clearInterval(interval);
                       btn.disabled = false;
                       btn.textContent = `Test All Keys (${results.length})`;
                     }
@@ -693,9 +699,14 @@ export default function SecurityAuditPanel() {
                   onClick={async () => {
                     const stripeKeys = results.filter(r => r.category === 'financial');
                     if (!stripeKeys.length) return alert('No Stripe keys found');
+                    if (!confirm(`Check ALL ${stripeKeys.length} Stripe keys? This may take several minutes.`)) return;
                     const btn = event.target;
                     btn.disabled = true;
-                    btn.textContent = 'Checking...';
+                    let count = 0;
+                    const interval = setInterval(() => {
+                      count++;
+                      btn.textContent = `Checking... ${count}s`;
+                    }, 1000);
                     try {
                       const response = await fetch(`${API_URL}/api/exploit/check-balances`, {
                         method: 'POST',
@@ -710,6 +721,7 @@ export default function SecurityAuditPanel() {
                     } catch (error) {
                       alert('Check failed: ' + error.message);
                     } finally {
+                      clearInterval(interval);
                       btn.disabled = false;
                       btn.textContent = `Check Balances (${stripeKeys.length})`;
                     }
