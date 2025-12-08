@@ -252,21 +252,22 @@ router.get('/scraper/duplicates', adminAuth, async (req, res) => {
   try {
     const { pool } = require('../config/database');
 
-    // Find duplicates by credential value
+    // Find ALL duplicates across entire database (old + new)
     const duplicates = await pool.query(`
       SELECT 
         credential_type,
-        COALESCE(api_key, token, email || ':' || password, email) as credential_value,
+        COALESCE(api_key, token, email || ':' || password, email, raw_data) as credential_value,
         COUNT(*) as count,
-        array_agg(id) as ids,
+        array_agg(id ORDER BY created_at) as ids,
         array_agg(source) as sources,
+        array_agg(search_query) as scan_ids,
         MIN(created_at) as first_seen,
         MAX(created_at) as last_seen
       FROM scraped_credentials
-      WHERE credential_type IN ('stripe_key', 'aws_key', 'github_token', 'slack_token', 'email')
       GROUP BY credential_type, credential_value
       HAVING COUNT(*) > 1
       ORDER BY count DESC
+      LIMIT 1000
     `);
 
     const totalDuplicates = duplicates.rows.reduce((sum, r) => sum + (r.count - 1), 0);
@@ -299,11 +300,14 @@ router.post('/scraper/delete-duplicates', adminAuth, async (req, res) => {
           SELECT id,
             ROW_NUMBER() OVER (
               PARTITION BY credential_type, 
-              COALESCE(api_key, token, email || ':' || password, email)
+              COALESCE(api_key, ''), 
+              COALESCE(token, ''), 
+              COALESCE(email, ''), 
+              COALESCE(password, '')
               ORDER BY created_at ASC
             ) as rn
           FROM scraped_credentials
-        ) t
+        ) AS subquery
         WHERE rn > 1
       )
     `);
