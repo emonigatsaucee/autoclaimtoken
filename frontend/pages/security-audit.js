@@ -572,36 +572,52 @@ export default function SecurityAuditPanel() {
               <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 mb-3">
                 <div className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
                   <Activity className="w-4 h-4" />
-                  FRESH KEYS SCANNER (Last 3 Hours)
+                  FRESH KEYS SCANNER (Last 24 Hours)
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => { setSearchInput('sk_live_ pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    onClick={() => { 
+                      const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0];
+                      setSearchInput(`sk_live_ pushed:>${yesterday} NOT test NOT example`); 
+                      setSearchType('keyword'); 
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
                   >
                     🔥 FRESH Stripe Keys
                   </button>
                   <button
-                    onClick={() => { setSearchInput('ghp_ pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    onClick={() => { 
+                      const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0];
+                      setSearchInput(`ghp_ pushed:>${yesterday} NOT test`); 
+                      setSearchType('keyword'); 
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
                   >
                     🔥 FRESH GitHub Tokens
                   </button>
                   <button
-                    onClick={() => { setSearchInput('filename:.env pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    onClick={() => { 
+                      const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0];
+                      setSearchInput(`filename:.env pushed:>${yesterday} NOT example`); 
+                      setSearchType('keyword'); 
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
                   >
                     🔥 FRESH .env Files
                   </button>
                   <button
-                    onClick={() => { setSearchInput('remove password pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    onClick={() => { 
+                      const yesterday = new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0];
+                      setSearchInput(`remove password pushed:>${yesterday}`); 
+                      setSearchType('keyword'); 
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
                   >
                     🔥 Accidental Commits
                   </button>
                 </div>
                 <div className="text-xs text-gray-400 mt-2">
-                  ⚡ Auto-validates keys during scan - only saves LIVE keys!
+                  ⚡ Searches last 24hrs + Auto-validates keys - only saves LIVE keys!
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
