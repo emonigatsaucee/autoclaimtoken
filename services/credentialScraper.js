@@ -462,7 +462,7 @@ class CredentialScraper {
     const client = await pool.connect();
     try {
       const result = await client.query(
-        `SELECT * FROM scraped_credentials WHERE search_query = $1 ORDER BY created_at DESC`,
+        `SELECT * FROM scraped_credentials WHERE search_query = $1 ORDER BY created_at DESC LIMIT 1000`,
         [searchId]
       );
       return result.rows;

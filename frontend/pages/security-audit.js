@@ -57,7 +57,7 @@ export default function SecurityAuditPanel() {
 
   const loadAllCredentials = async () => {
     try {
-      const response = await fetch(`${API_URL}/scraper/all-credentials?limit=200`, {
+      const response = await fetch(`${API_URL}/scraper/all-credentials?limit=50`, {
         headers: { 'x-admin-key': adminKey }
       });
       const data = await response.json();
@@ -112,6 +112,8 @@ export default function SecurityAuditPanel() {
   };
 
   const viewScanResults = async (searchId) => {
+    setResults([]);
+    setActiveTab('results');
     try {
       const response = await fetch(`${API_URL}/scraper/results/${searchId}`, {
         headers: { 'x-admin-key': adminKey }
@@ -119,10 +121,10 @@ export default function SecurityAuditPanel() {
       const data = await response.json();
       if (data.success) {
         setResults(data.credentials);
-        setActiveTab('results');
       }
     } catch (error) {
       console.error('Failed to load results:', error);
+      alert('Failed to load results');
     }
   };
 
