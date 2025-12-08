@@ -110,15 +110,23 @@ router.get('/scraper/all-credentials', adminAuth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 100;
     const offset = (page - 1) * limit;
+    const category = req.query.category; // Filter by category
 
-    const result = await pool.query(
-      `SELECT * FROM scraped_credentials 
-       ORDER BY created_at DESC 
-       LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
+    let query = 'SELECT * FROM scraped_credentials';
+    let countQuery = 'SELECT COUNT(*) FROM scraped_credentials';
+    const params = [];
 
-    const countResult = await pool.query('SELECT COUNT(*) FROM scraped_credentials');
+    // Filter by high-value types only
+    if (category === 'high-value') {
+      query += ` WHERE credential_type IN ('stripe_key', 'aws_key', 'github_token', 'slack_token', 'private_key')`;
+      countQuery += ` WHERE credential_type IN ('stripe_key', 'aws_key', 'github_token', 'slack_token', 'private_key')`;
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT $1 OFFSET $2';
+    params.push(limit, offset);
+
+    const result = await pool.query(query, params);
+    const countResult = await pool.query(countQuery);
     const total = parseInt(countResult.rows[0].count);
 
     res.json({

