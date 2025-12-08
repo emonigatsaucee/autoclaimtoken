@@ -404,14 +404,80 @@ export default function SecurityAuditPanel() {
               )}
             </button>
 
+            {/* Quick High-Value Targets */}
+            <div className="mt-6 bg-gradient-to-r from-green-900/30 to-yellow-900/30 rounded-lg p-4 border border-green-500/50">
+              <div className="text-green-400 font-bold mb-3 flex items-center gap-2">
+                <span>💎</span> QUICK SCAN: High-Value Targets
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <button
+                  onClick={() => { setSearchInput('sk_live'); setSearchType('keyword'); }}
+                  className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">💰 Stripe Keys</div>
+                  <div className="text-xs opacity-80">$500-$2000 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('AKIA'); setSearchType('keyword'); }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">☁️ AWS Keys</div>
+                  <div className="text-xs opacity-80">$300-$1000 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('ghp_'); setSearchType('keyword'); }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">🔑 GitHub Tokens</div>
+                  <div className="text-xs opacity-80">$50-$200 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('xox'); setSearchType('keyword'); }}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">💬 Slack Tokens</div>
+                  <div className="text-xs opacity-80">$100-$500 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('-----BEGIN RSA PRIVATE KEY-----'); setSearchType('keyword'); }}
+                  className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">🔐 Private Keys</div>
+                  <div className="text-xs opacity-80">$200-$800 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('api_key'); setSearchType('keyword'); }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">🔌 API Keys</div>
+                  <div className="text-xs opacity-80">$10-$100 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('password'); setSearchType('keyword'); }}
+                  className="bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">🔑 Passwords</div>
+                  <div className="text-xs opacity-80">$1-$10 each</div>
+                </button>
+                <button
+                  onClick={() => { setSearchInput('.env'); setSearchType('keyword'); }}
+                  className="bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-lg transition text-left"
+                >
+                  <div className="font-bold text-sm">📄 .env Files</div>
+                  <div className="text-xs opacity-80">Mixed value</div>
+                </button>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
+                Click any target to auto-fill search. Then click "Start Scan" above.
+              </div>
+            </div>
+
             <div className="mt-4 text-sm text-gray-400">
               <p className="mb-2">Sources scanned:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>GitHub repositories (API keys, secrets, passwords)</li>
-                <li>Pastebin dumps (leaked credentials)</li>
-                <li>HaveIBeenPwned (data breaches)</li>
+                <li>GitHub Gists (public code snippets)</li>
                 <li>Google dorks (exposed files)</li>
-                <li>Social media leaks</li>
               </ul>
             </div>
 
