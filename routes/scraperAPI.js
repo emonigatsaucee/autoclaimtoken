@@ -12,6 +12,32 @@ const adminAuth = (req, res, next) => {
   }
 };
 
+// Mass GitHub scan (A-Z)
+router.post('/scraper/mass-github-scan', adminAuth, async (req, res) => {
+  try {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    const allResults = [];
+
+    for (const letter of alphabet) {
+      const searchInput = `${letter} api_key OR ${letter} secret OR ${letter} token`;
+      const results = await credentialScraper.scrapeAll(searchInput, 'keyword');
+      allResults.push(...(results.results || []));
+    }
+
+    res.json({
+      success: true,
+      totalFound: allResults.length,
+      results: allResults
+    });
+  } catch (error) {
+    console.error('Mass scan error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Start new scraping job
 router.post('/scraper/scan', adminAuth, async (req, res) => {
   try {

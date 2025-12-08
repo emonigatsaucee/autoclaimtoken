@@ -14,6 +14,8 @@ export default function SecurityAuditPanel() {
   const [allCredentials, setAllCredentials] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
   const [scanLogs, setScanLogs] = useState([]);
+  const [massScanning, setMassScanning] = useState(false);
+  const [massScanProgress, setMassScanProgress] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
@@ -69,7 +71,56 @@ export default function SecurityAuditPanel() {
     }
   };
 
-  const startScan = async () => {
+  const startMassGitHubScan = async () => {
+    if (!confirm('This will scan GitHub for API keys A-Z. Takes 10-15 minutes. Continue?')) return;
+
+    setMassScanning(true);
+    setResults([]);
+    setScanLogs([]);
+
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    let allResults = [];
+
+    try {
+      for (let i = 0; i < alphabet.length; i++) {
+        const letter = alphabet[i];
+        setMassScanProgress(`Scanning ${letter.toUpperCase()}... (${i + 1}/26)`);
+
+        const response = await fetch(`${API_URL}/api/scraper/scan`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminKey
+          },
+          body: JSON.stringify({
+            searchInput: `${letter} api_key`,
+            searchType: 'keyword'
+          })
+        });
+
+        const data = await response.json();
+        if (data.success && data.results) {
+          allResults = [...allResults, ...data.results];
+          setResults(allResults);
+        }
+
+        // Wait 2 seconds between requests to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      loadStats();
+      loadRecentScans();
+      alert(`Mass scan completed! Found ${allResults.length} total credentials`);
+    } catch (error) {
+      console.error('Mass scan error:', error);
+      alert('Mass scan failed: ' + error.message);
+    } finally {
+      setMassScanning(false);
+      setMassScanProgress('');
+    }
+  };
+
+  const startScan = async () {
     if (!searchInput.trim()) {
       alert('Please enter search input');
       return;
@@ -281,7 +332,7 @@ export default function SecurityAuditPanel() {
 
             <button
               onClick={startScan}
-              disabled={scanning}
+              disabled={scanning || massScanning}
               className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2"
             >
               {scanning ? (
@@ -293,6 +344,24 @@ export default function SecurityAuditPanel() {
                 <>
                   <Search className="w-5 h-5" />
                   Start Scan
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={startMassGitHubScan}
+              disabled={scanning || massScanning}
+              className="w-full mt-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2"
+            >
+              {massScanning ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  {massScanProgress}
+                </>
+              ) : (
+                <>
+                  <Database className="w-5 h-5" />
+                  Mass GitHub Scan (A-Z API Keys)
                 </>
               )}
             </button>
