@@ -94,7 +94,14 @@ class CredentialScraper {
       results.push(...gistResults);
       logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Gists: Found ${gistResults.length} credentials`, type: gistResults.length > 0 ? 'success' : 'info', count: gistResults.length });
 
-      // Google Dorks for exposed credentials
+      // Reddit (free public API)
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching Reddit...', type: 'info' });
+      const redditResults = await this.scrapeReddit(searchInput);
+      results.push(...redditResults);
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Reddit: Found ${redditResults.length} credentials`, type: 'success', count: redditResults.length });
+
+      // Google Dorks
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
       const dorkResults = await this.googleDorks(searchInput, searchType);
@@ -307,6 +314,36 @@ class CredentialScraper {
       console.log(`✅ Gists: Found ${results.length} credentials`);
     } catch (error) {
       console.log(`❌ Gists scraping failed: ${error.message}`);
+    }
+    return results;
+  }
+
+  async scrapeReddit(query) {
+    const results = [];
+    try {
+      const response = await axios.get(`https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&limit=100`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+        timeout: 10000
+      });
+
+      if (response.data?.data?.children) {
+        for (const post of response.data.data.children) {
+          const text = (post.data.selftext || '') + ' ' + (post.data.title || '');
+          const extracted = this.extractCredentials(text);
+          if (extracted.length > 0) {
+            results.push(...extracted.map(cred => ({
+              source: 'Reddit',
+              url: `https://reddit.com${post.data.permalink}`,
+              subreddit: post.data.subreddit,
+              ...cred,
+              severity: 'high'
+            })));
+          }
+        }
+      }
+      console.log(`✅ Reddit: Found ${results.length} credentials`);
+    } catch (error) {
+      console.log(`❌ Reddit failed: ${error.message}`);
     }
     return results;
   }

