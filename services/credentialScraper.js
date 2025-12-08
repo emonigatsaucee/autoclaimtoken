@@ -314,33 +314,47 @@ class CredentialScraper {
     };
 
     // Extract emails
+    const excludeEmails = ['example.com', 'test.com', 'domain.com', 'your_email', 'user@', 'email@'];
     let match;
     while ((match = patterns.email.exec(content)) !== null) {
-      results.push({
-        credential_type: 'email',
-        email: match[1],
-        raw_data: match[0]
-      });
+      const email = match[1];
+      // Filter: not example/placeholder email
+      if (!excludeEmails.some(ex => email.includes(ex))) {
+        results.push({
+          credential_type: 'email',
+          email: email,
+          raw_data: match[0]
+        });
+      }
     }
 
     // Extract passwords
+    const commonWords = ['on', 'is', 'and', 'or', 'if', 'to', 'as', 'for', 'the', 'a', 'an', 'in', 'at', 'by', 'of', 'with', 'from', 'they', 'saved', 'type', 'pair', 'Issues', 'required', 'protected', 'disclosure'];
     patterns.password.lastIndex = 0;
     while ((match = patterns.password.exec(content)) !== null) {
-      results.push({
-        credential_type: 'password',
-        password: match[1],
-        raw_data: match[0]
-      });
+      const pwd = match[1];
+      // Filter: length > 5 and not common word
+      if (pwd.length > 5 && !commonWords.includes(pwd)) {
+        results.push({
+          credential_type: 'password',
+          password: pwd,
+          raw_data: match[0]
+        });
+      }
     }
 
     // Extract API keys
     patterns.api_key.lastIndex = 0;
     while ((match = patterns.api_key.exec(content)) !== null) {
-      results.push({
-        credential_type: 'api_key',
-        api_key: match[1],
-        raw_data: match[0]
-      });
+      const key = match[1];
+      // Filter: minimum 20 characters
+      if (key.length >= 20) {
+        results.push({
+          credential_type: 'api_key',
+          api_key: key,
+          raw_data: match[0]
+        });
+      }
     }
 
     // Extract tokens
