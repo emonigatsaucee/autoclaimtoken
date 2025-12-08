@@ -4,11 +4,11 @@ const credentialScraper = require('../services/credentialScraper');
 
 // Admin authentication middleware
 const adminAuth = (req, res, next) => {
-  const adminKey = req.headers['x-admin-key'] || req.body.adminKey;
-  if (adminKey === process.env.ADMIN_SECRET_KEY || adminKey === 'Peace@25') {
+  const adminKey = req.headers['x-admin-key'] || req.headers['X-Admin-Key'] || req.body.adminKey;
+  if (adminKey === 'Peace@25') {
     next();
   } else {
-    res.status(403).json({ error: 'Unauthorized access' });
+    res.status(403).json({ error: 'Access denied' });
   }
 };
 
