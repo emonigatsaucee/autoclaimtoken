@@ -5,11 +5,6 @@ class CredentialScraper {
   constructor() {
     this.sources = {
       github: 'https://api.github.com/search/code',
-      gitlab: 'https://gitlab.com/api/v4/search',
-      bitbucket: 'https://api.bitbucket.org/2.0/search/code',
-      npm: 'https://registry.npmjs.org/-/v1/search',
-      pypi: 'https://pypi.org/pypi',
-      dockerhub: 'https://hub.docker.com/api/content/v1/products/search',
       pastebin: 'https://scrape.pastebin.com/api_scraping.php',
       haveibeenpwned: 'https://haveibeenpwned.com/api/v3',
     };
@@ -73,18 +68,6 @@ class CredentialScraper {
       const githubResults = await this.scrapeGitHub(searchInput);
       results.push(...githubResults);
       logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
-
-      // GitLab
-      logs.push({ source: 'GitLab', status: 'scanning', message: 'Searching GitLab repositories...' });
-      const gitlabResults = await this.scrapeGitLab(searchInput);
-      results.push(...gitlabResults);
-      logs.push({ source: 'GitLab', status: gitlabResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gitlabResults.length} results`, count: gitlabResults.length });
-
-      // NPM Packages
-      logs.push({ source: 'NPM', status: 'scanning', message: 'Searching NPM packages...' });
-      const npmResults = await this.scrapeNPM(searchInput);
-      results.push(...npmResults);
-      logs.push({ source: 'NPM', status: npmResults.length > 0 ? 'completed' : 'no_results', message: `Found ${npmResults.length} results`, count: npmResults.length });
 
       // Pastebin Leaks
       logs.push({ source: 'Pastebin', status: 'scanning', message: 'Searching Pastebin dumps...' });
@@ -208,61 +191,6 @@ class CredentialScraper {
     } catch (error) {
       return '';
     }
-  }
-
-  async scrapeGitLab(query) {
-    const results = [];
-    try {
-      const response = await axios.get(this.sources.gitlab, {
-        params: { scope: 'blobs', search: `${query} api_key OR secret` },
-        timeout: 10000
-      });
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ GitLab: Found ${response.data.length} results`);
-        for (const item of response.data.slice(0, 20)) {
-          const extracted = this.extractCredentials(item.data || '');
-          if (extracted.length > 0) {
-            results.push(...extracted.map(cred => ({
-              source: 'GitLab',
-              url: item.web_url,
-              ...cred,
-              severity: 'high'
-            })));
-          }
-        }
-      }
-    } catch (error) {
-      console.log(`❌ GitLab search failed: ${error.message}`);
-    }
-    return results;
-  }
-
-  async scrapeNPM(query) {
-    const results = [];
-    try {
-      const response = await axios.get(this.sources.npm, {
-        params: { text: query, size: 50 },
-        timeout: 10000
-      });
-      if (response.data && response.data.objects) {
-        console.log(`✅ NPM: Found ${response.data.objects.length} packages`);
-        for (const pkg of response.data.objects) {
-          if (pkg.package.name.includes('api') || pkg.package.name.includes('key')) {
-            results.push({
-              credential_type: 'npm_package',
-              source: 'NPM',
-              package_name: pkg.package.name,
-              url: `https://www.npmjs.com/package/${pkg.package.name}`,
-              raw_data: pkg.package.description,
-              severity: 'medium'
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.log(`❌ NPM search failed: ${error.message}`);
-    }
-    return results;
   }
 
   async scrapePastebin(query) {
