@@ -69,18 +69,6 @@ class CredentialScraper {
       results.push(...githubResults);
       logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
 
-      // GitLab
-      logs.push({ source: 'GitLab', status: 'scanning', message: 'Searching GitLab...' });
-      const gitlabResults = await this.scrapeGitLab(searchInput);
-      results.push(...gitlabResults);
-      logs.push({ source: 'GitLab', status: gitlabResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gitlabResults.length} results`, count: gitlabResults.length });
-
-      // Bitbucket
-      logs.push({ source: 'Bitbucket', status: 'scanning', message: 'Searching Bitbucket...' });
-      const bitbucketResults = await this.scrapeBitbucket(searchInput);
-      results.push(...bitbucketResults);
-      logs.push({ source: 'Bitbucket', status: bitbucketResults.length > 0 ? 'completed' : 'no_results', message: `Found ${bitbucketResults.length} results`, count: bitbucketResults.length });
-
       // Pastebin Leaks
       logs.push({ source: 'Pastebin', status: 'scanning', message: 'Searching Pastebin dumps...' });
       const pastebinResults = await this.scrapePastebin(searchInput);
