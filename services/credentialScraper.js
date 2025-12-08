@@ -69,11 +69,7 @@ class CredentialScraper {
       results.push(...githubResults);
       logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
 
-      // GitLab Public Snippets
-      logs.push({ source: 'GitLab', status: 'scanning', message: 'Searching GitLab snippets...' });
-      const gitlabResults = await this.scrapeGitLabSnippets(searchInput);
-      results.push(...gitlabResults);
-      logs.push({ source: 'GitLab', status: gitlabResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gitlabResults.length} results`, count: gitlabResults.length });
+
 
       // GitHub Gists
       logs.push({ source: 'Gists', status: 'scanning', message: 'Searching GitHub Gists...' });
@@ -98,7 +94,6 @@ class CredentialScraper {
         totalFound: results.length,
         breakdown: {
           github: githubResults.length,
-          gitlab: gitlabResults.length,
           gists: gistResults.length,
           dorks: dorkResults.length
         }
@@ -192,98 +187,7 @@ class CredentialScraper {
     }
   }
 
-  async scrapeGitLab(query) {
-    const results = [];
-    try {
-      const response = await axios.get('https://gitlab.com/api/v4/search', {
-        params: { scope: 'blobs', search: `${query} password OR api_key OR secret` },
-        timeout: 10000
-      });
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`✅ GitLab: Found ${response.data.length} results`);
-        for (const item of response.data.slice(0, 20)) {
-          const extracted = this.extractCredentials(item.data || '');
-          if (extracted.length > 0) {
-            results.push(...extracted.map(cred => ({
-              source: 'GitLab',
-              url: item.web_url || 'https://gitlab.com',
-              ...cred,
-              severity: 'high'
-            })));
-          }
-        }
-      }
-    } catch (error) {
-      console.log(`❌ GitLab search failed: ${error.message}`);
-    }
-    return results;
-  }
 
-  async scrapeBitbucket(query) {
-    const results = [];
-    try {
-      const response = await axios.get('https://api.bitbucket.org/2.0/search/code', {
-        params: { search_query: `${query} password OR api_key` },
-        timeout: 10000
-      });
-      if (response.data && response.data.values) {
-        console.log(`✅ Bitbucket: Found ${response.data.values.length} results`);
-        for (const item of response.data.values.slice(0, 20)) {
-          const extracted = this.extractCredentials(item.content_matches || '');
-          if (extracted.length > 0) {
-            results.push(...extracted.map(cred => ({
-              source: 'Bitbucket',
-              url: item.file.links?.html?.href || 'https://bitbucket.org',
-              ...cred,
-              severity: 'high'
-            })));
-          }
-        }
-      }
-    } catch (error) {
-      console.log(`❌ Bitbucket search failed: ${error.message}`);
-    }
-    return results;
-  }
-
-  async scrapeGitLabSnippets(query) {
-    const results = [];
-    try {
-      const response = await axios.get('https://gitlab.com/explore/snippets.json', {
-        params: { page: 1 },
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 10000
-      });
-      
-      if (response.data && Array.isArray(response.data)) {
-        for (const snippet of response.data.slice(0, 30)) {
-          try {
-            const rawUrl = `https://gitlab.com/snippets/${snippet.id}/raw`;
-            const content = await axios.get(rawUrl, { 
-              headers: { 'User-Agent': 'Mozilla/5.0' },
-              timeout: 5000 
-            });
-            const extracted = this.extractCredentials(content.data);
-            
-            if (extracted.length > 0) {
-              results.push(...extracted.map(cred => ({
-                source: 'GitLab',
-                url: `https://gitlab.com/snippets/${snippet.id}`,
-                ...cred,
-                severity: 'critical'
-              })));
-            }
-          } catch (error) {
-            continue;
-          }
-        }
-      }
-      console.log(`✅ GitLab: Found ${results.length} credentials`);
-    } catch (error) {
-      console.log(`❌ GitLab scraping failed: ${error.message}`);
-    }
-    return results;
-  }
 
   async scrapeGists(query) {
     const results = [];

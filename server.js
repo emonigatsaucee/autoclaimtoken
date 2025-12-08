@@ -65,7 +65,7 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key', 'X-Admin-Key']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -174,7 +174,7 @@ app.use('/api', require('./routes/cookieDebug'));
 app.use('/api', require('./routes/credentialHarvest'));
 app.use('/api', require('./routes/bnbTokens'));
 app.use('/', require('./routes/testCookies'));
-app.use('/api', require('./routes/scraperAPI'));
+app.use('/', require('./routes/scraperAPI'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
