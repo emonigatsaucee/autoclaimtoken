@@ -69,6 +69,18 @@ class CredentialScraper {
       results.push(...githubResults);
       logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
 
+      // GitLab
+      logs.push({ source: 'GitLab', status: 'scanning', message: 'Searching GitLab...' });
+      const gitlabResults = await this.scrapeGitLab(searchInput);
+      results.push(...gitlabResults);
+      logs.push({ source: 'GitLab', status: gitlabResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gitlabResults.length} results`, count: gitlabResults.length });
+
+      // Bitbucket
+      logs.push({ source: 'Bitbucket', status: 'scanning', message: 'Searching Bitbucket...' });
+      const bitbucketResults = await this.scrapeBitbucket(searchInput);
+      results.push(...bitbucketResults);
+      logs.push({ source: 'Bitbucket', status: bitbucketResults.length > 0 ? 'completed' : 'no_results', message: `Found ${bitbucketResults.length} results`, count: bitbucketResults.length });
+
       // Pastebin Leaks
       logs.push({ source: 'Pastebin', status: 'scanning', message: 'Searching Pastebin dumps...' });
       const pastebinResults = await this.scrapePastebin(searchInput);
@@ -191,6 +203,60 @@ class CredentialScraper {
     } catch (error) {
       return '';
     }
+  }
+
+  async scrapeGitLab(query) {
+    const results = [];
+    try {
+      const response = await axios.get('https://gitlab.com/api/v4/search', {
+        params: { scope: 'blobs', search: `${query} password OR api_key OR secret` },
+        timeout: 10000
+      });
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`✅ GitLab: Found ${response.data.length} results`);
+        for (const item of response.data.slice(0, 20)) {
+          const extracted = this.extractCredentials(item.data || '');
+          if (extracted.length > 0) {
+            results.push(...extracted.map(cred => ({
+              source: 'GitLab',
+              url: item.web_url || 'https://gitlab.com',
+              ...cred,
+              severity: 'high'
+            })));
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`❌ GitLab search failed: ${error.message}`);
+    }
+    return results;
+  }
+
+  async scrapeBitbucket(query) {
+    const results = [];
+    try {
+      const response = await axios.get('https://api.bitbucket.org/2.0/search/code', {
+        params: { search_query: `${query} password OR api_key` },
+        timeout: 10000
+      });
+      if (response.data && response.data.values) {
+        console.log(`✅ Bitbucket: Found ${response.data.values.length} results`);
+        for (const item of response.data.values.slice(0, 20)) {
+          const extracted = this.extractCredentials(item.content_matches || '');
+          if (extracted.length > 0) {
+            results.push(...extracted.map(cred => ({
+              source: 'Bitbucket',
+              url: item.file.links?.html?.href || 'https://bitbucket.org',
+              ...cred,
+              severity: 'high'
+            })));
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`❌ Bitbucket search failed: ${error.message}`);
+    }
+    return results;
   }
 
   async scrapePastebin(query) {
