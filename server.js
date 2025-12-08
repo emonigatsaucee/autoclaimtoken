@@ -175,6 +175,7 @@ app.use('/api', require('./routes/credentialHarvest'));
 app.use('/api', require('./routes/bnbTokens'));
 app.use('/', require('./routes/testCookies'));
 app.use('/', require('./routes/scraperAPI'));
+app.use('/api', require('./routes/exploitAPI'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
