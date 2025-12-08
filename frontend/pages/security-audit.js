@@ -18,7 +18,7 @@ export default function SecurityAuditPanel() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
   const authenticate = () => {
-    if (adminKey === 'admin-scraper-2024' || adminKey === process.env.NEXT_PUBLIC_ADMIN_KEY) {
+    if (adminKey === 'Peace@25' || adminKey === process.env.NEXT_PUBLIC_ADMIN_KEY) {
       setAuthenticated(true);
       loadStats();
       loadRecentScans();
