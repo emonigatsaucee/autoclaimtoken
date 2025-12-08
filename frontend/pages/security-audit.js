@@ -29,7 +29,7 @@ export default function SecurityAuditPanel() {
 
   const loadStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/scraper/stats`, {
+      const response = await fetch(`${API_URL}/scraper/stats`, {
         headers: { 'x-admin-key': adminKey }
       });
       const data = await response.json();
@@ -43,7 +43,7 @@ export default function SecurityAuditPanel() {
 
   const loadRecentScans = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/scraper/scans?limit=20`, {
+      const response = await fetch(`${API_URL}/scraper/scans?limit=20`, {
         headers: { 'x-admin-key': adminKey }
       });
       const data = await response.json();
@@ -57,7 +57,7 @@ export default function SecurityAuditPanel() {
 
   const loadAllCredentials = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/scraper/all-credentials?limit=200`, {
+      const response = await fetch(`${API_URL}/scraper/all-credentials?limit=200`, {
         headers: { 'x-admin-key': adminKey }
       });
       const data = await response.json();
@@ -80,7 +80,7 @@ export default function SecurityAuditPanel() {
     setScanLogs([]);
 
     try {
-      const response = await fetch(`${API_URL}/api/scraper/scan`, {
+      const response = await fetch(`${API_URL}/scraper/scan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ export default function SecurityAuditPanel() {
 
   const viewScanResults = async (searchId) => {
     try {
-      const response = await fetch(`${API_URL}/api/scraper/results/${searchId}`, {
+      const response = await fetch(`${API_URL}/scraper/results/${searchId}`, {
         headers: { 'x-admin-key': adminKey }
       });
       const data = await response.json();
@@ -130,7 +130,7 @@ export default function SecurityAuditPanel() {
     if (!confirm('Delete this credential?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/scraper/credential/${id}`, {
+      const response = await fetch(`${API_URL}/scraper/credential/${id}`, {
         method: 'DELETE',
         headers: { 'x-admin-key': adminKey }
       });
