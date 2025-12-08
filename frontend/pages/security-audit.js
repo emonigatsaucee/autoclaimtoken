@@ -266,17 +266,19 @@ export default function SecurityAuditPanel() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
-          {['scan', 'results', 'history', 'database'].map(tab => (
+          {['scan', 'results', 'critical', 'history', 'database'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-3 rounded-lg font-semibold transition ${
                 activeTab === tab
                   ? 'bg-purple-600 text-white'
+                  : tab === 'critical'
+                  ? 'bg-red-900 text-red-300 hover:bg-red-800'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'critical' ? '🔥 CRITICAL' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -364,6 +366,61 @@ export default function SecurityAuditPanel() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Critical Tab */}
+        {activeTab === 'critical' && (
+          <div className="bg-red-900/20 rounded-2xl p-6 border border-red-500">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-red-400">🔥 CRITICAL ONLY ({results.filter(r => r.severity === 'critical').length})</h2>
+              {results.filter(r => r.severity === 'critical').length > 0 && (
+                <div className="flex gap-2">
+                  <button onClick={() => {
+                    const critical = results.filter(r => r.severity === 'critical');
+                    const dataStr = JSON.stringify(critical, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `CRITICAL-${Date.now()}.json`;
+                    link.click();
+                  }} className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm">
+                    <Download className="w-4 h-4" />CRITICAL JSON
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {results.filter(r => r.severity === 'critical').length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                <p>No critical vulnerabilities found</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {results.filter(r => r.severity === 'critical').map((result, index) => (
+                  <div key={index} className="p-4 rounded-lg border bg-red-900/30 border-red-500">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2 py-1 rounded text-xs font-semibold bg-red-600 text-white animate-pulse">CRITICAL</span>
+                          <span className="text-red-400 text-sm font-semibold">{result.source}</span>
+                          <span className="text-gray-300 text-sm">{result.credential_type}</span>
+                        </div>
+                        <div className="text-white text-sm space-y-1">
+                          {result.email && <div>📧 <span className="text-yellow-300 font-mono">{result.email}</span></div>}
+                          {result.password && <div>🔑 <span className="text-green-300 font-mono text-lg">{result.password}</span></div>}
+                          {result.api_key && <div>🔐 <span className="text-yellow-300 font-mono break-all">{result.api_key}</span></div>}
+                          {result.token && <div>🎫 <span className="text-blue-300 font-mono break-all">{result.token}</span></div>}
+                        </div>
+                        {result.url && <a href={result.url} target="_blank" className="text-xs text-purple-400 hover:underline mt-2 block">🔗 {result.url}</a>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
