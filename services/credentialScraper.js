@@ -80,19 +80,19 @@ class CredentialScraper {
     try {
       // GitHub API Keys & Secrets
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ source: 'GitHub', status: 'scanning', message: 'Searching GitHub repositories...' });
-      const githubResults = await this.scrapeGitHub(searchInput);
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching GitHub repositories...', type: 'info' });
+      const githubResults = await this.scrapeGitHub(searchInput, logs);
       results.push(...githubResults);
-      logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ GitHub: Found ${githubResults.length} results`, type: 'success', count: githubResults.length });
 
 
 
       // GitHub Gists
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ source: 'Gists', status: 'scanning', message: 'Searching GitHub Gists...' });
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching GitHub Gists...', type: 'info' });
       const gistResults = await this.scrapeGists(searchInput);
       results.push(...gistResults);
-      logs.push({ source: 'Gists', status: gistResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gistResults.length} results`, count: gistResults.length });
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Gists: Found ${gistResults.length} credentials`, type: gistResults.length > 0 ? 'success' : 'info', count: gistResults.length });
 
       // Google Dorks for exposed credentials
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
@@ -187,7 +187,7 @@ class CredentialScraper {
     return Array.from(this.activeScans.keys());
   }
 
-  async scrapeGitHub(query) {
+  async scrapeGitHub(query, logs = []) {
     const results = [];
     const searches = [
       `${query} password`,
@@ -224,7 +224,15 @@ class CredentialScraper {
             const extracted = this.extractCredentials(content);
             
             if (extracted.length > 0) {
-              console.log(`🔑 Extracted ${extracted.length} credentials from ${item.repository.full_name}`);
+              const logMsg = `🔑 Extracted ${extracted.length} credentials from ${item.repository.full_name}`;
+              console.log(logMsg);
+              logs.push({ 
+                time: new Date().toLocaleTimeString(), 
+                msg: logMsg, 
+                type: 'extract',
+                count: extracted.length,
+                repo: item.repository.full_name
+              });
               results.push(...extracted.map(cred => ({
                 source: 'GitHub',
                 url: item.html_url,

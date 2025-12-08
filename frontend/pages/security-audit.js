@@ -16,6 +16,7 @@ export default function SecurityAuditPanel() {
   const [scanLogs, setScanLogs] = useState([]);
   const [totalValue, setTotalValue] = useState(0);
   const [liveProgress, setLiveProgress] = useState([]);
+  const [terminalLogs, setTerminalLogs] = useState([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
@@ -80,6 +81,10 @@ export default function SecurityAuditPanel() {
     setScanning(true);
     setResults([]);
     setScanLogs([]);
+    setTerminalLogs([]);
+    
+    // Add initial log
+    setTerminalLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg: `🚀 Starting scan for "${searchInput.trim()}"...`, type: 'info' }]);
 
     try {
       const response = await fetch(`${API_URL}/scraper/scan`, {
@@ -100,10 +105,26 @@ export default function SecurityAuditPanel() {
         setResults(data.results || []);
         setScanLogs(data.logs || []);
         setTotalValue(data.totalValue || 0);
+        
+        // Display all backend logs in terminal
+        if (data.logs && data.logs.length > 0) {
+          setTerminalLogs(prev => [...prev, ...data.logs]);
+        }
+        
+        // Add completion logs
+        setTerminalLogs(prev => [
+          ...prev,
+          { time: new Date().toLocaleTimeString(), msg: `✅ Scan completed!`, type: 'success' },
+          { time: new Date().toLocaleTimeString(), msg: `📊 Total found: ${data.totalFound} credentials`, type: 'success' },
+          { time: new Date().toLocaleTimeString(), msg: `💰 Total value: $${data.totalValue || 0}`, type: 'success' },
+          { time: new Date().toLocaleTimeString(), msg: `🔥 Financial: ${data.breakdown?.financial || 0} | Cloud: ${data.breakdown?.cloud || 0} | API: ${data.breakdown?.api || 0}`, type: 'info' }
+        ]);
+        
         loadStats();
         loadRecentScans();
         alert(`Scan completed! Found ${data.totalFound} credentials worth $${data.totalValue || 0}`);
       } else {
+        setTerminalLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg: `❌ Scan failed: ${data.error}`, type: 'error' }]);
         alert('Scan failed: ' + data.error);
       }
     } catch (error) {
@@ -536,30 +557,36 @@ export default function SecurityAuditPanel() {
               </ul>
             </div>
 
-            {/* Real-Time Scan Logs */}
-            {(scanning || scanLogs.length > 0) && (
-              <div className="mt-6 bg-gray-900 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-semibold">🔍 Live Scan Progress</h3>
-                  {scanning && <Loader className="w-5 h-5 text-purple-400 animate-spin" />}
+            {/* Terminal-Style Live Progress */}
+            {(scanning || terminalLogs.length > 0) && (
+              <div className="mt-6 bg-black rounded-lg p-4 border border-green-500/50 font-mono text-sm">
+                <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-gray-400 ml-3">Live Scan Terminal</span>
+                  </div>
+                  {scanning && <Loader className="w-4 h-4 text-green-400 animate-spin" />}
                 </div>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {scanLogs.map((log, index) => (
-                    <div key={index} className="flex items-center gap-3 text-sm animate-fade-in">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        log.status === 'completed' ? 'bg-green-600 text-white' :
-                        log.status === 'scanning' ? 'bg-blue-600 text-white animate-pulse' :
-                        log.status === 'no_results' ? 'bg-yellow-600 text-white' :
-                        'bg-gray-600 text-white'
-                      }`}>
-                        {log.source}
-                      </span>
-                      <span className="text-gray-300">{log.message}</span>
-                      {log.count !== undefined && (
-                        <span className="text-purple-400 font-semibold">({log.count})</span>
-                      )}
+                <div className="space-y-1 max-h-96 overflow-y-auto" style={{scrollBehavior: 'smooth'}}>
+                  {terminalLogs.map((log, index) => (
+                    <div key={index} className={`flex gap-2 text-xs ${
+                      log.type === 'success' ? 'text-green-400' :
+                      log.type === 'error' ? 'text-red-400' :
+                      log.type === 'extract' ? 'text-yellow-400' :
+                      'text-gray-300'
+                    }`}>
+                      <span className="text-gray-500">[{log.time}]</span>
+                      <span>{log.msg}</span>
                     </div>
                   ))}
+                  {scanning && (
+                    <div className="flex gap-2 text-xs text-green-400 animate-pulse">
+                      <span className="text-gray-500">[{new Date().toLocaleTimeString()}]</span>
+                      <span>⏳ Scanning GitHub repositories...</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
