@@ -8,7 +8,21 @@ class CredentialScraper {
       pastebin: 'https://scrape.pastebin.com/api_scraping.php',
       haveibeenpwned: 'https://haveibeenpwned.com/api/v3',
     };
+    this.activeScans = new Map(); // Track running scans
     this.initTables();
+  }
+
+  stopScan(searchId) {
+    if (this.activeScans.has(searchId)) {
+      this.activeScans.set(searchId, { stopped: true });
+      return true;
+    }
+    return false;
+  }
+
+  isScanStopped(searchId) {
+    const scan = this.activeScans.get(searchId);
+    return scan && scan.stopped;
   }
 
   async initTables() {
@@ -61,9 +75,11 @@ class CredentialScraper {
     const results = [];
     const logs = [];
     const searchId = await this.createSearchRecord(searchInput, searchType);
+    this.activeScans.set(searchId, { stopped: false });
 
     try {
       // GitHub API Keys & Secrets
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'GitHub', status: 'scanning', message: 'Searching GitHub repositories...' });
       const githubResults = await this.scrapeGitHub(searchInput);
       results.push(...githubResults);
@@ -72,12 +88,14 @@ class CredentialScraper {
 
 
       // GitHub Gists
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'Gists', status: 'scanning', message: 'Searching GitHub Gists...' });
       const gistResults = await this.scrapeGists(searchInput);
       results.push(...gistResults);
       logs.push({ source: 'Gists', status: gistResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gistResults.length} results`, count: gistResults.length });
 
       // Google Dorks for exposed credentials
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
       const dorkResults = await this.googleDorks(searchInput, searchType);
       results.push(...dorkResults);
@@ -139,10 +157,31 @@ class CredentialScraper {
         }
       };
     } catch (error) {
+      this.activeScans.delete(searchId);
+      if (error.message === 'Scan stopped by admin') {
+        await this.updateSearchStatus(searchId, 'stopped', results.length);
+        console.log('⏹️ SCAN STOPPED BY ADMIN:', searchId);
+        return {
+          success: true,
+          searchId,
+          stopped: true,
+          totalFound: results.length,
+          totalValue: results.reduce((sum, r) => sum + (r.marketValue || 0), 0),
+          results: results,
+          logs: logs,
+          message: 'Scan stopped by admin'
+        };
+      }
       await this.updateSearchStatus(searchId, 'failed', 0);
       console.error('❌ SCRAPER ERROR:', error.message);
       throw error;
+    } finally {
+      this.activeScans.delete(searchId);
     }
+  }
+
+  getActiveScans() {
+    return Array.from(this.activeScans.keys());
   }
 
   async scrapeGitHub(query) {

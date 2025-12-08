@@ -195,6 +195,50 @@ router.delete('/scraper/credential/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Stop running scan
+router.post('/scraper/stop/:searchId', adminAuth, async (req, res) => {
+  try {
+    const { searchId } = req.params;
+    const stopped = credentialScraper.stopScan(parseInt(searchId));
+    
+    if (stopped) {
+      res.json({
+        success: true,
+        message: 'Scan stop signal sent',
+        searchId
+      });
+    } else {
+      res.json({
+        success: false,
+        message: 'Scan not found or already completed'
+      });
+    }
+  } catch (error) {
+    console.error('Stop scan error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get active scans
+router.get('/scraper/active', adminAuth, async (req, res) => {
+  try {
+    const activeScans = credentialScraper.getActiveScans();
+    res.json({
+      success: true,
+      activeScans
+    });
+  } catch (error) {
+    console.error('Get active scans error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Get statistics
 router.get('/scraper/stats', adminAuth, async (req, res) => {
   try {

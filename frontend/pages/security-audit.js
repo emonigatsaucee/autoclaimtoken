@@ -678,6 +678,31 @@ export default function SecurityAuditPanel() {
                         }`}>
                           {scan.status}
                         </span>
+                        {scan.status === 'running' && (
+                          <button
+                            onClick={async () => {
+                              if (confirm('Stop this scan?')) {
+                                try {
+                                  const response = await fetch(`${API_URL}/scraper/stop/${scan.id}`, {
+                                    method: 'POST',
+                                    headers: { 'x-admin-key': adminKey }
+                                  });
+                                  const data = await response.json();
+                                  if (data.success) {
+                                    alert('Scan stopped!');
+                                    loadRecentScans();
+                                  }
+                                } catch (error) {
+                                  alert('Failed to stop scan');
+                                }
+                              }
+                            }}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition flex items-center gap-1"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Stop
+                          </button>
+                        )}
                         {scan.status === 'completed' && scan.results_count > 0 && (
                           <button
                             onClick={() => viewScanResults(scan.id)}
