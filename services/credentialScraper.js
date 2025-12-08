@@ -110,12 +110,19 @@ class CredentialScraper {
 
     for (const search of searches) {
       try {
+        const headers = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'Mozilla/5.0'
+        };
+        
+        // Add GitHub token if available
+        if (process.env.GITHUB_TOKEN) {
+          headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+        }
+        
         const response = await axios.get(this.sources.github, {
           params: { q: search, per_page: 100 },
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'Mozilla/5.0'
-          },
+          headers: headers,
           timeout: 10000
         });
 
