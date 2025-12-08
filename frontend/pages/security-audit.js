@@ -342,27 +342,51 @@ export default function SecurityAuditPanel() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-800 rounded-xl p-4 border border-purple-500/30">
-              <div className="text-gray-400 text-sm mb-1">Total Credentials</div>
-              <div className="text-3xl font-bold text-white">{stats.totalCredentials}</div>
-            </div>
-            <div className="bg-gray-800 rounded-xl p-4 border border-green-500/30">
-              <div className="text-gray-400 text-sm mb-1">Total Scans</div>
-              <div className="text-3xl font-bold text-white">{stats.totalScans}</div>
-            </div>
-            <div className="bg-gray-800 rounded-xl p-4 border border-red-500/30">
-              <div className="text-gray-400 text-sm mb-1">Critical</div>
-              <div className="text-3xl font-bold text-white">
-                {stats.bySeverity.find(s => s.severity === 'critical')?.count || 0}
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-gray-800 rounded-xl p-4 border border-purple-500/30">
+                <div className="text-gray-400 text-sm mb-1">Total Credentials</div>
+                <div className="text-3xl font-bold text-white">{stats.totalCredentials}</div>
+              </div>
+              <div className="bg-gray-800 rounded-xl p-4 border border-green-500/30">
+                <div className="text-gray-400 text-sm mb-1">Total Scans</div>
+                <div className="text-3xl font-bold text-white">{stats.totalScans}</div>
+              </div>
+              <div className="bg-gray-800 rounded-xl p-4 border border-red-500/30">
+                <div className="text-gray-400 text-sm mb-1">Critical</div>
+                <div className="text-3xl font-bold text-white">
+                  {stats.bySeverity.find(s => s.severity === 'critical')?.count || 0}
+                </div>
+              </div>
+              <div className="bg-gray-800 rounded-xl p-4 border border-yellow-500/30">
+                <div className="text-gray-400 text-sm mb-1">High</div>
+                <div className="text-3xl font-bold text-white">
+                  {stats.bySeverity.find(s => s.severity === 'high')?.count || 0}
+                </div>
               </div>
             </div>
-            <div className="bg-gray-800 rounded-xl p-4 border border-yellow-500/30">
-              <div className="text-gray-400 text-sm mb-1">High</div>
-              <div className="text-3xl font-bold text-white">
-                {stats.bySeverity.find(s => s.severity === 'high')?.count || 0}
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(`${API_URL}/scraper/duplicates`, {
+                    headers: { 'x-admin-key': adminKey }
+                  });
+                  const data = await response.json();
+                  if (data.success && data.totalDuplicates > 0) {
+                    alert(`🚨 Found ${data.totalDuplicates} duplicates!\n\nGo to Database tab to clean them.`);
+                  }
+                } catch (error) {}
+              }}
+              className="w-full bg-orange-900/30 border border-orange-500 rounded-xl p-3 hover:bg-orange-900/50 transition text-left"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-orange-400 text-sm">Database Health</div>
+                  <div className="text-white text-xs mt-1">Click to check for duplicates</div>
+                </div>
+                <AlertTriangle className="w-5 h-5 text-orange-400" />
               </div>
-            </div>
+            </button>
           </div>
         )}
 
@@ -1272,7 +1296,44 @@ export default function SecurityAuditPanel() {
         {/* Database Tab */}
         {activeTab === 'database' && (
           <div className="bg-gray-800 rounded-2xl p-6 border border-purple-500/30">
-            <h2 className="text-2xl font-bold text-white mb-4">All Credentials ({allCredentials.length})</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-white">All Credentials ({allCredentials.length})</h2>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`${API_URL}/scraper/duplicates`, {
+                      headers: { 'x-admin-key': adminKey }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                      if (data.totalDuplicates === 0) {
+                        alert('No duplicates found! Database is clean.');
+                      } else {
+                        const confirmed = confirm(`Found ${data.totalDuplicates} duplicate credentials in ${data.duplicateGroups} groups.\n\nDelete all duplicates? (Keeps oldest entry)`);
+                        if (confirmed) {
+                          const deleteResponse = await fetch(`${API_URL}/scraper/delete-duplicates`, {
+                            method: 'POST',
+                            headers: { 'x-admin-key': adminKey }
+                          });
+                          const deleteData = await deleteResponse.json();
+                          if (deleteData.success) {
+                            alert(`Deleted ${deleteData.deleted} duplicates!`);
+                            loadStats();
+                            loadAllCredentials();
+                          }
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    alert('Failed: ' + error.message);
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clean Duplicates
+              </button>
+            </div>
             
             {allCredentials.length === 0 ? (
               <div className="text-center py-12 text-gray-400">

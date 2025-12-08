@@ -247,6 +247,81 @@ router.get('/scraper/active', adminAuth, async (req, res) => {
   }
 });
 
+// Find duplicates
+router.get('/scraper/duplicates', adminAuth, async (req, res) => {
+  try {
+    const { pool } = require('../config/database');
+
+    // Find duplicates by credential value
+    const duplicates = await pool.query(`
+      SELECT 
+        credential_type,
+        COALESCE(api_key, token, email || ':' || password, email) as credential_value,
+        COUNT(*) as count,
+        array_agg(id) as ids,
+        array_agg(source) as sources,
+        MIN(created_at) as first_seen,
+        MAX(created_at) as last_seen
+      FROM scraped_credentials
+      WHERE credential_type IN ('stripe_key', 'aws_key', 'github_token', 'slack_token', 'email')
+      GROUP BY credential_type, credential_value
+      HAVING COUNT(*) > 1
+      ORDER BY count DESC
+    `);
+
+    const totalDuplicates = duplicates.rows.reduce((sum, r) => sum + (r.count - 1), 0);
+
+    res.json({
+      success: true,
+      totalDuplicates,
+      duplicateGroups: duplicates.rows.length,
+      duplicates: duplicates.rows
+    });
+  } catch (error) {
+    console.error('Find duplicates error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Delete duplicates (keep oldest)
+router.post('/scraper/delete-duplicates', adminAuth, async (req, res) => {
+  try {
+    const { pool } = require('../config/database');
+
+    // Delete duplicates, keeping only the oldest entry
+    const result = await pool.query(`
+      DELETE FROM scraped_credentials
+      WHERE id IN (
+        SELECT id FROM (
+          SELECT id,
+            ROW_NUMBER() OVER (
+              PARTITION BY credential_type, 
+              COALESCE(api_key, token, email || ':' || password, email)
+              ORDER BY created_at ASC
+            ) as rn
+          FROM scraped_credentials
+        ) t
+        WHERE rn > 1
+      )
+    `);
+
+    res.json({
+      success: true,
+      deleted: result.rowCount,
+      message: `Deleted ${result.rowCount} duplicate credentials`
+    });
+  } catch (error) {
+    console.error('Delete duplicates error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Get statistics
 router.get('/scraper/stats', adminAuth, async (req, res) => {
   try {
