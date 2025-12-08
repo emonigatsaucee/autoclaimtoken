@@ -64,6 +64,7 @@ class CredentialScraper {
         CREATE INDEX IF NOT EXISTS idx_scraped_source ON scraped_credentials(source);
         CREATE INDEX IF NOT EXISTS idx_scraped_created ON scraped_credentials(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_scraper_searches_status ON scraper_searches(status);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_credential ON scraped_credentials(credential_type, COALESCE(api_key, ''), COALESCE(token, ''), COALESCE(email, ''), COALESCE(password, ''));
       `);
       client.release();
     } catch (error) {
@@ -115,9 +116,13 @@ class CredentialScraper {
       results.push(...dorkResults);
       logs.push({ source: 'Google Dorks', status: 'completed', message: `Generated ${dorkResults.length} search queries`, count: dorkResults.length });
 
+      // Remove duplicates before saving
+      const uniqueResults = this.removeDuplicates(results);
+      console.log(`🧹 Removed ${results.length - uniqueResults.length} duplicates from scan`);
+      
       // Save all results to database
-      await this.saveResults(results, searchId);
-      await this.updateSearchStatus(searchId, 'completed', results.length);
+      await this.saveResults(uniqueResults, searchId);
+      await this.updateSearchStatus(searchId, 'completed', uniqueResults.length);
 
       // Send email alert for high-value finds
       const highValue = results.filter(r => r.marketValue && r.marketValue >= 500);
@@ -660,28 +665,42 @@ class CredentialScraper {
     if (results.length === 0) return;
 
     const client = await pool.connect();
+    let saved = 0;
+    let duplicates = 0;
+    
     try {
       for (const result of results) {
-        await client.query(
-          `INSERT INTO scraped_credentials 
-           (search_query, credential_type, source, email, username, password, api_key, token, url, raw_data, severity, metadata) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-          [
-            searchId,
-            result.credential_type || 'unknown',
-            result.source || 'unknown',
-            result.email || null,
-            result.username || null,
-            result.password || null,
-            result.api_key || null,
-            result.token || null,
-            result.url || null,
-            result.raw_data || null,
-            result.severity || 'medium',
-            JSON.stringify(result)
-          ]
-        );
+        try {
+          await client.query(
+            `INSERT INTO scraped_credentials 
+             (search_query, credential_type, source, email, username, password, api_key, token, url, raw_data, severity, metadata) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT DO NOTHING`,
+            [
+              searchId,
+              result.credential_type || 'unknown',
+              result.source || 'unknown',
+              result.email || null,
+              result.username || null,
+              result.password || null,
+              result.api_key || null,
+              result.token || null,
+              result.url || null,
+              result.raw_data || null,
+              result.severity || 'medium',
+              JSON.stringify(result)
+            ]
+          );
+          saved++;
+        } catch (error) {
+          if (error.code === '23505') { // Duplicate key error
+            duplicates++;
+          } else {
+            console.error('Save error:', error.message);
+          }
+        }
       }
+      console.log(`💾 Saved: ${saved} | Duplicates skipped: ${duplicates}`);
     } finally {
       client.release();
     }
@@ -698,6 +717,26 @@ class CredentialScraper {
     } finally {
       client.release();
     }
+  }
+
+  removeDuplicates(results) {
+    const seen = new Set();
+    return results.filter(r => {
+      // Create unique key based on credential type and value
+      let key = '';
+      if (r.api_key) key = `${r.credential_type}:${r.api_key}`;
+      else if (r.token) key = `${r.credential_type}:${r.token}`;
+      else if (r.email && r.password) key = `email:${r.email}:${r.password}`;
+      else if (r.email) key = `email:${r.email}`;
+      else if (r.password) key = `password:${r.password}`;
+      else key = `${r.credential_type}:${r.raw_data}`;
+      
+      if (seen.has(key)) {
+        return false; // Duplicate
+      }
+      seen.add(key);
+      return true; // Unique
+    });
   }
 
   async getCredentialsBySearch(searchId) {
