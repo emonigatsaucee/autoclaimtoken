@@ -144,7 +144,7 @@ export default function SecurityAuditPanel() {
     }
   };
 
-  const exportResults = () => {
+  const exportJSON = () => {
     const dataStr = JSON.stringify(results, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -152,6 +152,38 @@ export default function SecurityAuditPanel() {
     link.href = url;
     link.download = `security-audit-${Date.now()}.json`;
     link.click();
+  };
+
+  const exportCSV = () => {
+    const headers = ['Type', 'Source', 'Severity', 'Email', 'Password', 'API_Key', 'Token', 'URL'];
+    const rows = results.map(r => [
+      r.credential_type || '',
+      r.source || '',
+      r.severity || '',
+      r.email || '',
+      r.password || '',
+      r.api_key || '',
+      r.token || '',
+      r.url || ''
+    ]);
+    const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `security-audit-${Date.now()}.csv`;
+    link.click();
+  };
+
+  const exportPDF = () => {
+    const html = `<html><head><title>Security Audit</title><style>body{font-family:Arial;padding:20px}h1{color:#6366f1}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background-color:#6366f1;color:white}.critical{background-color:#fee}.high{background-color:#ffd}</style></head><body><h1>Security Audit Report</h1><p>Generated: ${new Date().toLocaleString()}</p><p>Total: ${results.length}</p><table><tr><th>Type</th><th>Source</th><th>Severity</th><th>Details</th></tr>${results.map(r => `<tr class="${r.severity}"><td>${r.credential_type||''}</td><td>${r.source||''}</td><td>${r.severity||''}</td><td>${r.email||r.password||r.api_key||r.token||''}</td></tr>`).join('')}</table></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `security-audit-${Date.now()}.html`;
+    link.click();
+    alert('HTML downloaded. Open in browser and print to PDF.');
   };
 
   useEffect(() => {
@@ -341,13 +373,17 @@ export default function SecurityAuditPanel() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-white">Scan Results ({results.length})</h2>
               {results.length > 0 && (
-                <button
-                  onClick={exportResults}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
-                >
-                  <Download className="w-4 h-4" />
-                  Export
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={exportJSON} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm">
+                    <Download className="w-4 h-4" />JSON
+                  </button>
+                  <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition text-sm">
+                    <Download className="w-4 h-4" />CSV
+                  </button>
+                  <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm">
+                    <Download className="w-4 h-4" />PDF
+                  </button>
+                </div>
               )}
             </div>
 
