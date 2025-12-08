@@ -13,6 +13,7 @@ export default function ScraperPanel() {
   const [activeTab, setActiveTab] = useState('scan');
   const [allCredentials, setAllCredentials] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
+  const [scanLogs, setScanLogs] = useState([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
@@ -76,6 +77,7 @@ export default function ScraperPanel() {
 
     setScanning(true);
     setResults([]);
+    setScanLogs([]);
 
     try {
       const response = await fetch(`${API_URL}/api/scraper/scan`, {
@@ -94,6 +96,7 @@ export default function ScraperPanel() {
       
       if (data.success) {
         setResults(data.results || []);
+        setScanLogs(data.logs || []);
         loadStats();
         loadRecentScans();
         alert(`Scan completed! Found ${data.totalFound} credentials`);
@@ -304,6 +307,31 @@ export default function ScraperPanel() {
                 <li>Social media leaks</li>
               </ul>
             </div>
+
+            {/* Scan Logs */}
+            {scanLogs.length > 0 && (
+              <div className="mt-6 bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <h3 className="text-white font-semibold mb-3">Scan Progress</h3>
+                <div className="space-y-2">
+                  {scanLogs.map((log, index) => (
+                    <div key={index} className="flex items-center gap-3 text-sm">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        log.status === 'completed' ? 'bg-green-600 text-white' :
+                        log.status === 'scanning' ? 'bg-blue-600 text-white' :
+                        log.status === 'no_results' ? 'bg-yellow-600 text-white' :
+                        'bg-gray-600 text-white'
+                      }`}>
+                        {log.source}
+                      </span>
+                      <span className="text-gray-300">{log.message}</span>
+                      {log.count !== undefined && (
+                        <span className="text-purple-400 font-semibold">({log.count})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -59,39 +59,63 @@ class CredentialScraper {
 
   async scrapeAll(searchInput, searchType) {
     const results = [];
+    const logs = [];
     const searchId = await this.createSearchRecord(searchInput, searchType);
 
     try {
       // GitHub API Keys & Secrets
+      logs.push({ source: 'GitHub', status: 'scanning', message: 'Searching GitHub repositories...' });
       const githubResults = await this.scrapeGitHub(searchInput);
       results.push(...githubResults);
+      logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
 
       // Pastebin Leaks
+      logs.push({ source: 'Pastebin', status: 'scanning', message: 'Searching Pastebin dumps...' });
       const pastebinResults = await this.scrapePastebin(searchInput);
       results.push(...pastebinResults);
+      logs.push({ source: 'Pastebin', status: pastebinResults.length > 0 ? 'completed' : 'no_results', message: `Found ${pastebinResults.length} results`, count: pastebinResults.length });
 
       // HaveIBeenPwned Breaches
       if (searchType === 'email') {
+        logs.push({ source: 'HaveIBeenPwned', status: 'scanning', message: 'Checking breach databases...' });
         const breachResults = await this.scrapeBreaches(searchInput);
         results.push(...breachResults);
+        logs.push({ source: 'HaveIBeenPwned', status: breachResults.length > 0 ? 'completed' : 'no_results', message: `Found ${breachResults.length} breaches`, count: breachResults.length });
       }
 
       // Google Dorks for exposed credentials
+      logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
       const dorkResults = await this.googleDorks(searchInput, searchType);
       results.push(...dorkResults);
+      logs.push({ source: 'Google Dorks', status: 'completed', message: `Generated ${dorkResults.length} search queries`, count: dorkResults.length });
 
       // Save all results to database
       await this.saveResults(results, searchId);
       await this.updateSearchStatus(searchId, 'completed', results.length);
 
+      console.log('✅ SCRAPER RESULTS:', {
+        searchId,
+        searchInput,
+        searchType,
+        totalFound: results.length,
+        breakdown: {
+          github: githubResults.length,
+          pastebin: pastebinResults.length,
+          breaches: searchType === 'email' ? results.filter(r => r.source === 'HaveIBeenPwned').length : 0,
+          dorks: dorkResults.length
+        }
+      });
+
       return {
         success: true,
         searchId,
         totalFound: results.length,
-        results: results
+        results: results,
+        logs: logs
       };
     } catch (error) {
       await this.updateSearchStatus(searchId, 'failed', 0);
+      console.error('❌ SCRAPER ERROR:', error.message);
       throw error;
     }
   }
@@ -127,11 +151,13 @@ class CredentialScraper {
         });
 
         if (response.data.items) {
+          console.log(`✅ GitHub: Found ${response.data.items.length} files for "${search}"`);
           for (const item of response.data.items) {
             const content = await this.fetchGitHubContent(item.url);
             const extracted = this.extractCredentials(content);
             
             if (extracted.length > 0) {
+              console.log(`🔑 Extracted ${extracted.length} credentials from ${item.repository.full_name}`);
               results.push(...extracted.map(cred => ({
                 source: 'GitHub',
                 url: item.html_url,
@@ -141,9 +167,11 @@ class CredentialScraper {
               })));
             }
           }
+        } else {
+          console.log(`⚠️ GitHub: No results for "${search}"`);
         }
       } catch (error) {
-        console.log(`GitHub search failed for: ${search}`);
+        console.log(`❌ GitHub search failed for "${search}": ${error.message}`);
       }
     }
 
@@ -193,9 +221,10 @@ class CredentialScraper {
         }
       }
     } catch (error) {
-      console.log('Pastebin scraping failed');
+      console.log(`❌ Pastebin scraping failed: ${error.message}`);
     }
 
+    console.log(`📋 Pastebin total results: ${results.length}`);
     return results;
   }
 
@@ -226,11 +255,14 @@ class CredentialScraper {
         }
       }
     } catch (error) {
-      if (error.response?.status !== 404) {
-        console.log('HaveIBeenPwned check failed');
+      if (error.response?.status === 404) {
+        console.log(`✅ HaveIBeenPwned: Email "${email}" not found in breaches (good news!)`);
+      } else {
+        console.log(`❌ HaveIBeenPwned check failed: ${error.message}`);
       }
     }
 
+    console.log(`🔒 HaveIBeenPwned total breaches: ${results.length}`);
     return results;
   }
 
