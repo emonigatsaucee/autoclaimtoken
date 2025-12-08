@@ -101,6 +101,13 @@ class CredentialScraper {
       results.push(...redditResults);
       logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Reddit: Found ${redditResults.length} credentials`, type: 'success', count: redditResults.length });
 
+      // StackOverflow (public API)
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching StackOverflow...', type: 'info' });
+      const stackResults = await this.scrapeStackOverflow(searchInput);
+      results.push(...stackResults);
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ StackOverflow: Found ${stackResults.length} credentials`, type: 'success', count: stackResults.length });
+
       // Google Dorks
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
@@ -196,14 +203,18 @@ class CredentialScraper {
 
   async scrapeGitHub(query, logs = []) {
     const results = [];
+    
+    // Search RECENT commits (last 24 hours) for fresh keys
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     const searches = [
-      `${query} password`,
-      `${query} api_key`,
-      `${query} secret`,
-      `${query} token`,
-      `${query} credentials`,
-      `${query} .env`,
-      `${query} config`
+      `${query} pushed:>${yesterday}`, // Recent commits only
+      `sk_live_ pushed:>${yesterday}`, // Fresh Stripe keys
+      `AKIA pushed:>${yesterday}`, // Fresh AWS keys
+      `ghp_ pushed:>${yesterday}`, // Fresh GitHub tokens
+      `${query} NOT test NOT example NOT demo`, // Exclude test keys
+      `${query} .env NOT example`,
+      `${query} config NOT sample`
     ];
 
     for (const search of searches) {
@@ -314,6 +325,42 @@ class CredentialScraper {
       console.log(`✅ Gists: Found ${results.length} credentials`);
     } catch (error) {
       console.log(`❌ Gists scraping failed: ${error.message}`);
+    }
+    return results;
+  }
+
+  async scrapeStackOverflow(query) {
+    const results = [];
+    try {
+      // StackOverflow public API (no auth needed)
+      const response = await axios.get(`https://api.stackexchange.com/2.3/search/advanced`, {
+        params: {
+          order: 'desc',
+          sort: 'creation',
+          q: query,
+          site: 'stackoverflow',
+          filter: 'withbody'
+        },
+        timeout: 10000
+      });
+
+      if (response.data?.items) {
+        for (const item of response.data.items) {
+          const text = (item.body || '') + ' ' + (item.title || '');
+          const extracted = this.extractCredentials(text);
+          if (extracted.length > 0) {
+            results.push(...extracted.map(cred => ({
+              source: 'StackOverflow',
+              url: item.link,
+              ...cred,
+              severity: 'high'
+            })));
+          }
+        }
+      }
+      console.log(`✅ StackOverflow: Found ${results.length} credentials`);
+    } catch (error) {
+      console.log(`❌ StackOverflow failed: ${error.message}`);
     }
     return results;
   }
@@ -505,12 +552,17 @@ class CredentialScraper {
       });
     }
 
-    // Extract AWS keys
+    // Extract AWS keys (filter out examples)
     patterns.aws_key.lastIndex = 0;
     while ((match = patterns.aws_key.exec(content)) !== null) {
+      const key = match[1];
+      // Skip example keys (AWS examples often start with AKIAIOSFODNN7EXAMPLE)
+      if (key.includes('EXAMPLE') || key.includes('SAMPLE')) {
+        continue;
+      }
       const cred = {
         credential_type: 'aws_key',
-        api_key: match[1],
+        api_key: key,
         raw_data: match[0],
         severity: 'critical'
       };
@@ -544,12 +596,17 @@ class CredentialScraper {
       results.push({ ...cred, ...cat });
     }
 
-    // Extract Stripe keys
+    // Extract Stripe keys (filter out test keys)
     patterns.stripe_key.lastIndex = 0;
     while ((match = patterns.stripe_key.exec(content)) !== null) {
+      const key = match[1];
+      // Skip test/example keys
+      if (key.includes('test') || key.includes('example') || key.includes('demo') || key.includes('sample')) {
+        continue;
+      }
       const cred = {
         credential_type: 'stripe_key',
-        api_key: match[1],
+        api_key: key,
         raw_data: match[0],
         severity: 'critical'
       };
