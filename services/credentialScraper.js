@@ -95,40 +95,7 @@ class CredentialScraper {
       results.push(...gistResults);
       logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Gists: Found ${gistResults.length} credentials`, type: gistResults.length > 0 ? 'success' : 'info', count: gistResults.length });
 
-      // Reddit (free public API)
-      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching Reddit...', type: 'info' });
-      const redditResults = await this.scrapeReddit(searchInput);
-      results.push(...redditResults);
-      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Reddit: Found ${redditResults.length} credentials`, type: 'success', count: redditResults.length });
-
-      // StackOverflow (public API)
-      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching StackOverflow...', type: 'info' });
-      const stackResults = await this.scrapeStackOverflow(searchInput);
-      results.push(...stackResults);
-      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ StackOverflow: Found ${stackResults.length} credentials`, type: 'success', count: stackResults.length });
-
-      // Pastebin
-      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching Pastebin...', type: 'info' });
-      const pastebinResults = await this.scrapePastebin(searchInput);
-      results.push(...pastebinResults);
-      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Pastebin: Found ${pastebinResults.length} credentials`, type: 'success', count: pastebinResults.length });
-
-      // GitLab
-      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching GitLab...', type: 'info' });
-      const gitlabResults = await this.scrapeGitLab(searchInput);
-      results.push(...gitlabResults);
-      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ GitLab: Found ${gitlabResults.length} credentials`, type: 'success', count: gitlabResults.length });
-
-      // Google Dorks
-      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
-      logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
-      const dorkResults = await this.googleDorks(searchInput, searchType);
-      results.push(...dorkResults);
-      logs.push({ source: 'Google Dorks', status: 'completed', message: `Generated ${dorkResults.length} search queries`, count: dorkResults.length });
+      // Skip other scrapers - focus on GitHub only for reliability
 
       // Remove duplicates before saving
       const uniqueResults = this.removeDuplicates(results);
@@ -167,12 +134,7 @@ class CredentialScraper {
         totalValue: `$${totalValue}`,
         breakdown: {
           github: githubResults.length,
-          gists: gistResults.length,
-          reddit: redditResults.length,
-          stackoverflow: stackResults.length,
-          pastebin: pastebinResults.length,
-          gitlab: gitlabResults.length,
-          dorks: dorkResults.length
+          gists: gistResults.length
         },
         byCategory: {
           financial: results.filter(r => r.category === 'financial').length,
