@@ -69,19 +69,17 @@ class CredentialScraper {
       results.push(...githubResults);
       logs.push({ source: 'GitHub', status: 'completed', message: `Found ${githubResults.length} results`, count: githubResults.length });
 
-      // Pastebin Leaks
-      logs.push({ source: 'Pastebin', status: 'scanning', message: 'Searching Pastebin dumps...' });
-      const pastebinResults = await this.scrapePastebin(searchInput);
-      results.push(...pastebinResults);
-      logs.push({ source: 'Pastebin', status: pastebinResults.length > 0 ? 'completed' : 'no_results', message: `Found ${pastebinResults.length} results`, count: pastebinResults.length });
+      // GitLab Public Snippets
+      logs.push({ source: 'GitLab', status: 'scanning', message: 'Searching GitLab snippets...' });
+      const gitlabResults = await this.scrapeGitLabSnippets(searchInput);
+      results.push(...gitlabResults);
+      logs.push({ source: 'GitLab', status: gitlabResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gitlabResults.length} results`, count: gitlabResults.length });
 
-      // HaveIBeenPwned Breaches
-      if (searchType === 'email') {
-        logs.push({ source: 'HaveIBeenPwned', status: 'scanning', message: 'Checking breach databases...' });
-        const breachResults = await this.scrapeBreaches(searchInput);
-        results.push(...breachResults);
-        logs.push({ source: 'HaveIBeenPwned', status: breachResults.length > 0 ? 'completed' : 'no_results', message: `Found ${breachResults.length} breaches`, count: breachResults.length });
-      }
+      // GitHub Gists
+      logs.push({ source: 'Gists', status: 'scanning', message: 'Searching GitHub Gists...' });
+      const gistResults = await this.scrapeGists(searchInput);
+      results.push(...gistResults);
+      logs.push({ source: 'Gists', status: gistResults.length > 0 ? 'completed' : 'no_results', message: `Found ${gistResults.length} results`, count: gistResults.length });
 
       // Google Dorks for exposed credentials
       logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
@@ -100,8 +98,8 @@ class CredentialScraper {
         totalFound: results.length,
         breakdown: {
           github: githubResults.length,
-          pastebin: pastebinResults.length,
-          breaches: searchType === 'email' ? results.filter(r => r.source === 'HaveIBeenPwned').length : 0,
+          gitlab: gitlabResults.length,
+          gists: gistResults.length,
           dorks: dorkResults.length
         }
       });
@@ -247,76 +245,75 @@ class CredentialScraper {
     return results;
   }
 
-  async scrapePastebin(query) {
+  async scrapeGitLabSnippets(query) {
     const results = [];
-    
     try {
-      // Pastebin scraping API (requires key, using alternative method)
-      const searchUrl = `https://psbdmp.ws/api/search/${encodeURIComponent(query)}`;
-      const response = await axios.get(searchUrl, { timeout: 10000 });
-
-      if (response.data && Array.isArray(response.data)) {
-        for (const paste of response.data.slice(0, 50)) {
-          try {
-            const content = await axios.get(`https://pastebin.com/raw/${paste.id}`, { timeout: 5000 });
-            const extracted = this.extractCredentials(content.data);
-            
-            if (extracted.length > 0) {
-              results.push(...extracted.map(cred => ({
-                source: 'Pastebin',
-                url: `https://pastebin.com/${paste.id}`,
-                ...cred,
-                severity: 'critical'
-              })));
-            }
-          } catch (error) {
-            continue;
+      const response = await axios.get('https://gitlab.com/api/v4/snippets/public', {
+        params: { per_page: 100 },
+        timeout: 10000
+      });
+      
+      for (const snippet of response.data.slice(0, 50)) {
+        try {
+          const content = await axios.get(`https://gitlab.com/api/v4/snippets/${snippet.id}/raw`, { timeout: 5000 });
+          const extracted = this.extractCredentials(content.data);
+          
+          if (extracted.length > 0) {
+            results.push(...extracted.map(cred => ({
+              source: 'GitLab',
+              url: snippet.web_url,
+              ...cred,
+              severity: 'critical'
+            })));
           }
+        } catch (error) {
+          continue;
         }
       }
+      console.log(`✅ GitLab: Found ${results.length} credentials`);
     } catch (error) {
-      console.log(`❌ Pastebin scraping failed: ${error.message}`);
+      console.log(`❌ GitLab scraping failed: ${error.message}`);
     }
-
-    console.log(`📋 Pastebin total results: ${results.length}`);
     return results;
   }
 
-  async scrapeBreaches(email) {
+  async scrapeGists(query) {
     const results = [];
-    
     try {
-      const response = await axios.get(
-        `${this.sources.haveibeenpwned}/breachedaccount/${encodeURIComponent(email)}`,
-        {
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          timeout: 10000
-        }
-      );
-
-      if (response.data && Array.isArray(response.data)) {
-        for (const breach of response.data) {
-          results.push({
-            credential_type: 'breach',
-            source: 'HaveIBeenPwned',
-            email: email,
-            breach_name: breach.Name,
-            breach_date: breach.BreachDate,
-            data_classes: breach.DataClasses.join(', '),
-            severity: 'critical',
-            raw_data: JSON.stringify(breach)
-          });
+      const headers = { 'User-Agent': 'Mozilla/5.0' };
+      if (process.env.GITHUB_TOKEN) {
+        headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+      }
+      
+      const response = await axios.get('https://api.github.com/gists/public', {
+        params: { per_page: 100 },
+        headers,
+        timeout: 10000
+      });
+      
+      for (const gist of response.data.slice(0, 50)) {
+        try {
+          for (const [filename, file] of Object.entries(gist.files)) {
+            if (file.content) {
+              const extracted = this.extractCredentials(file.content);
+              if (extracted.length > 0) {
+                results.push(...extracted.map(cred => ({
+                  source: 'GitHub Gist',
+                  url: gist.html_url,
+                  ...cred,
+                  severity: 'high'
+                })));
+              }
+            }
+          }
+        } catch (error) {
+          continue;
         }
       }
+      console.log(`✅ Gists: Found ${results.length} credentials`);
     } catch (error) {
-      if (error.response?.status === 404) {
-        console.log(`✅ HaveIBeenPwned: Email "${email}" not found in breaches (good news!)`);
-      } else {
-        console.log(`❌ HaveIBeenPwned check failed: ${error.message}`);
-      }
+      console.log(`❌ Gists scraping failed: ${error.message}`);
     }
-
-    console.log(`🔒 HaveIBeenPwned total breaches: ${results.length}`);
     return results;
   }
 
