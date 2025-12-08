@@ -370,36 +370,84 @@ export default function SecurityAuditPanel() {
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          result.severity === 'critical'
-                            ? 'bg-red-600 text-white'
-                            : result.severity === 'high'
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-yellow-600 text-white'
-                        }`}>
-                          {result.severity?.toUpperCase()}
-                        </span>
-                        <span className="text-purple-400 text-sm font-semibold">{result.source}</span>
-                        <span className="text-gray-400 text-sm">{result.credential_type}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            result.severity === 'critical'
+                              ? 'bg-red-600 text-white'
+                              : result.severity === 'high'
+                              ? 'bg-orange-600 text-white'
+                              : 'bg-yellow-600 text-white'
+                          }`}>
+                            {result.severity?.toUpperCase()}
+                          </span>
+                          <span className="text-purple-400 text-sm font-semibold">{result.source}</span>
+                          <span className="text-gray-400 text-sm">{result.credential_type}</span>
+                        </div>
+                        {/* Preview */}
+                        <div className="text-white text-sm">
+                          {result.email && <span>📧 {result.email}</span>}
+                          {result.username && <span>👤 {result.username}</span>}
+                          {result.password && <span>🔑 Password: {result.password.substring(0, 20)}{result.password.length > 20 ? '...' : ''}</span>}
+                          {result.api_key && <span>🔐 API Key: {result.api_key.substring(0, 30)}...</span>}
+                          {result.token && <span>🎫 Token: {result.token.substring(0, 30)}...</span>}
+                        </div>
+                        {result.repository && <div className="text-xs text-gray-400 mt-1">📁 {result.repository}</div>}
                       </div>
                       <button
                         onClick={() => setSelectedResult(selectedResult === index ? null : index)}
-                        className="text-purple-400 hover:text-purple-300"
+                        className="text-purple-400 hover:text-purple-300 ml-2"
                       >
                         <Eye className="w-5 h-5" />
                       </button>
                     </div>
 
                     {selectedResult === index && (
-                      <div className="mt-3 p-3 bg-gray-900 rounded text-sm">
-                        {result.email && <div className="mb-1"><span className="text-gray-400">Email:</span> <span className="text-white">{result.email}</span></div>}
-                        {result.username && <div className="mb-1"><span className="text-gray-400">Username:</span> <span className="text-white">{result.username}</span></div>}
-                        {result.password && <div className="mb-1"><span className="text-gray-400">Password:</span> <span className="text-white">{result.password}</span></div>}
-                        {result.api_key && <div className="mb-1"><span className="text-gray-400">API Key:</span> <span className="text-white font-mono text-xs">{result.api_key}</span></div>}
-                        {result.token && <div className="mb-1"><span className="text-gray-400">Token:</span> <span className="text-white font-mono text-xs">{result.token}</span></div>}
-                        {result.url && <div className="mb-1"><span className="text-gray-400">URL:</span> <a href={result.url} target="_blank" className="text-purple-400 hover:underline break-all">{result.url}</a></div>}
-                        {result.raw_data && <div className="mt-2"><span className="text-gray-400">Raw:</span> <pre className="text-white text-xs mt-1 overflow-x-auto">{result.raw_data}</pre></div>}
+                      <div className="mt-3 p-4 bg-gray-900 rounded border border-gray-700">
+                        <div className="grid grid-cols-1 gap-3">
+                          {result.email && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">EMAIL</div>
+                              <div className="text-white font-mono">{result.email}</div>
+                            </div>
+                          )}
+                          {result.username && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">USERNAME</div>
+                              <div className="text-white font-mono">{result.username}</div>
+                            </div>
+                          )}
+                          {result.password && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">PASSWORD</div>
+                              <div className="text-green-400 font-mono text-lg">{result.password}</div>
+                            </div>
+                          )}
+                          {result.api_key && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">API KEY</div>
+                              <div className="text-yellow-400 font-mono text-xs break-all">{result.api_key}</div>
+                            </div>
+                          )}
+                          {result.token && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">TOKEN</div>
+                              <div className="text-blue-400 font-mono text-xs break-all">{result.token}</div>
+                            </div>
+                          )}
+                          {result.url && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">SOURCE URL</div>
+                              <a href={result.url} target="_blank" className="text-purple-400 hover:underline text-xs break-all">{result.url}</a>
+                            </div>
+                          )}
+                          {result.raw_data && (
+                            <div className="bg-gray-800 p-3 rounded">
+                              <div className="text-gray-400 text-xs mb-1">RAW DATA</div>
+                              <pre className="text-white text-xs overflow-x-auto">{result.raw_data}</pre>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
