@@ -260,6 +260,35 @@ class CredentialScraper {
     return results;
   }
 
+  categorizeCredential(cred) {
+    // Categorize by real-world value and use
+    if (cred.credential_type === 'stripe_key') {
+      return { category: 'financial', value: 'high', use: 'Direct money access - withdraw funds' };
+    }
+    if (cred.credential_type === 'aws_key') {
+      return { category: 'cloud_access', value: 'high', use: 'Cloud resources - mine crypto, steal data' };
+    }
+    if (cred.credential_type === 'github_token') {
+      return { category: 'code_access', value: 'medium', use: 'Clone private repos, steal source code' };
+    }
+    if (cred.credential_type === 'api_key') {
+      return { category: 'api_abuse', value: 'medium', use: 'API abuse - free services, data extraction' };
+    }
+    if (cred.credential_type === 'slack_token') {
+      return { category: 'corporate_access', value: 'medium', use: 'Company secrets, internal communications' };
+    }
+    if (cred.credential_type === 'email' && cred.password) {
+      return { category: 'account_access', value: 'medium', use: 'Login to accounts, credential stuffing' };
+    }
+    if (cred.credential_type === 'password') {
+      return { category: 'account_access', value: 'low', use: 'Try on multiple sites, brute force' };
+    }
+    if (cred.credential_type === 'private_key') {
+      return { category: 'server_access', value: 'high', use: 'SSH access to servers, full control' };
+    }
+    return { category: 'other', value: 'low', use: 'General credential' };
+  }
+
   extractCredentials(content) {
     if (!content || typeof content !== 'string') return [];
     
@@ -333,54 +362,64 @@ class CredentialScraper {
     // Extract AWS keys
     patterns.aws_key.lastIndex = 0;
     while ((match = patterns.aws_key.exec(content)) !== null) {
-      results.push({
+      const cred = {
         credential_type: 'aws_key',
         api_key: match[1],
         raw_data: match[0],
         severity: 'critical'
-      });
+      };
+      const cat = this.categorizeCredential(cred);
+      results.push({ ...cred, ...cat });
     }
 
     // Extract GitHub tokens
     patterns.github_token.lastIndex = 0;
     while ((match = patterns.github_token.exec(content)) !== null) {
-      results.push({
+      const cred = {
         credential_type: 'github_token',
         token: match[1],
         raw_data: match[0],
         severity: 'critical'
-      });
+      };
+      const cat = this.categorizeCredential(cred);
+      results.push({ ...cred, ...cat });
     }
 
     // Extract Slack tokens
     patterns.slack_token.lastIndex = 0;
     while ((match = patterns.slack_token.exec(content)) !== null) {
-      results.push({
+      const cred = {
         credential_type: 'slack_token',
         token: match[1],
         raw_data: match[0],
         severity: 'high'
-      });
+      };
+      const cat = this.categorizeCredential(cred);
+      results.push({ ...cred, ...cat });
     }
 
     // Extract Stripe keys
     patterns.stripe_key.lastIndex = 0;
     while ((match = patterns.stripe_key.exec(content)) !== null) {
-      results.push({
+      const cred = {
         credential_type: 'stripe_key',
         api_key: match[1],
         raw_data: match[0],
         severity: 'critical'
-      });
+      };
+      const cat = this.categorizeCredential(cred);
+      results.push({ ...cred, ...cat });
     }
 
     // Check for private keys
     if (patterns.private_key.test(content)) {
-      results.push({
+      const cred = {
         credential_type: 'private_key',
         raw_data: 'Private key detected',
         severity: 'critical'
-      });
+      };
+      const cat = this.categorizeCredential(cred);
+      results.push({ ...cred, ...cat });
     }
 
     return results;

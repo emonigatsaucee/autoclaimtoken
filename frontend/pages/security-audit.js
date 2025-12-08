@@ -265,7 +265,7 @@ export default function SecurityAuditPanel() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           {['scan', 'results', 'critical', 'history', 'database'].map(tab => (
             <button
               key={tab}
@@ -282,6 +282,35 @@ export default function SecurityAuditPanel() {
             </button>
           ))}
         </div>
+        
+        {/* Category Filters */}
+        {(activeTab === 'results' || activeTab === 'critical') && results.length > 0 && (
+          <div className="bg-gray-800 rounded-xl p-4 mb-6 border border-purple-500/30">
+            <div className="text-white font-semibold mb-3">📊 Filter by Use Case:</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="bg-green-900/30 border border-green-500 rounded-lg p-3">
+                <div className="text-green-400 font-bold text-lg">{results.filter(r => r.category === 'financial').length}</div>
+                <div className="text-green-300 text-xs">💰 Financial (Stripe)</div>
+                <div className="text-gray-400 text-xs mt-1">Direct money access</div>
+              </div>
+              <div className="bg-blue-900/30 border border-blue-500 rounded-lg p-3">
+                <div className="text-blue-400 font-bold text-lg">{results.filter(r => r.category === 'cloud_access').length}</div>
+                <div className="text-blue-300 text-xs">☁️ Cloud (AWS)</div>
+                <div className="text-gray-400 text-xs mt-1">Mine crypto, steal data</div>
+              </div>
+              <div className="bg-purple-900/30 border border-purple-500 rounded-lg p-3">
+                <div className="text-purple-400 font-bold text-lg">{results.filter(r => r.category === 'api_abuse').length}</div>
+                <div className="text-purple-300 text-xs">🔌 API Keys</div>
+                <div className="text-gray-400 text-xs mt-1">Free services, data</div>
+              </div>
+              <div className="bg-yellow-900/30 border border-yellow-500 rounded-lg p-3">
+                <div className="text-yellow-400 font-bold text-lg">{results.filter(r => r.category === 'account_access').length}</div>
+                <div className="text-yellow-300 text-xs">🔑 Accounts</div>
+                <div className="text-gray-400 text-xs mt-1">Login credentials</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scan Tab */}
         {activeTab === 'scan' && (
@@ -466,7 +495,7 @@ export default function SecurityAuditPanel() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
                             result.severity === 'critical'
                               ? 'bg-red-600 text-white'
@@ -478,7 +507,25 @@ export default function SecurityAuditPanel() {
                           </span>
                           <span className="text-purple-400 text-sm font-semibold">{result.source}</span>
                           <span className="text-gray-400 text-sm">{result.credential_type}</span>
+                          {result.category && (
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              result.category === 'financial' ? 'bg-green-600 text-white' :
+                              result.category === 'cloud_access' ? 'bg-blue-600 text-white' :
+                              result.category === 'api_abuse' ? 'bg-purple-600 text-white' :
+                              result.category === 'account_access' ? 'bg-yellow-600 text-white' :
+                              'bg-gray-600 text-white'
+                            }`}>
+                              {result.category === 'financial' ? '💰 MONEY' :
+                               result.category === 'cloud_access' ? '☁️ CLOUD' :
+                               result.category === 'api_abuse' ? '🔌 API' :
+                               result.category === 'account_access' ? '🔑 LOGIN' :
+                               result.category}
+                            </span>
+                          )}
                         </div>
+                        {result.use && (
+                          <div className="text-xs text-green-400 mb-2">✅ {result.use}</div>
+                        )}
                         {/* Preview */}
                         <div className="text-white text-sm">
                           {result.email && <span>📧 {result.email}</span>}
