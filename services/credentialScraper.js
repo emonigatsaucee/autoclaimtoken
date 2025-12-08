@@ -193,24 +193,11 @@ class CredentialScraper {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
+    // Simple searches that work
     const searches = [
-      // ULTRA FRESH - Last 6 hours
-      `sk_live_ pushed:>${oneDayAgo} NOT test NOT example`,
-      `AKIA pushed:>${oneDayAgo} NOT test NOT example`,
-      `ghp_ pushed:>${oneDayAgo} NOT test NOT example`,
-      `xoxb- pushed:>${oneDayAgo} NOT test`,
-      // .env files (most likely to have live keys)
-      `filename:.env pushed:>${oneDayAgo} NOT example`,
-      `filename:config.json pushed:>${oneDayAgo}`,
-      `filename:credentials pushed:>${oneDayAgo}`,
-      // Specific services
-      `stripe_secret pushed:>${oneDayAgo}`,
-      `aws_secret_access_key pushed:>${oneDayAgo}`,
-      `github_token pushed:>${oneDayAgo}`,
-      // Accidental commits
-      `remove password pushed:>${oneDayAgo}`,
-      `remove key pushed:>${oneDayAgo}`,
-      `oops pushed:>${oneDayAgo}`
+      query,
+      `${query} extension:env`,
+      `${query} extension:json`
     ];
 
     for (const search of searches) {
@@ -226,7 +213,7 @@ class CredentialScraper {
         }
         
         const response = await axios.get(this.sources.github, {
-          params: { q: search, per_page: 100 },
+          params: { q: search, per_page: 30, sort: 'indexed' },
           headers: headers,
           timeout: 10000
         });
