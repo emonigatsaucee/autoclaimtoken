@@ -178,14 +178,15 @@ class CredentialScraper {
 
   async fetchGitHubContent(url) {
     try {
-      const response = await axios.get(url, {
-        headers: {
-          'Accept': 'application/vnd.github.v3.raw',
-          'User-Agent': 'Mozilla/5.0'
-        },
-        timeout: 5000
-      });
-      return response.data;
+      const headers = {
+        'Accept': 'application/vnd.github.v3.raw',
+        'User-Agent': 'Mozilla/5.0'
+      };
+      if (process.env.GITHUB_TOKEN) {
+        headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+      }
+      const response = await axios.get(url, { headers, timeout: 5000 });
+      return typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
     } catch (error) {
       return '';
     }
@@ -248,26 +249,33 @@ class CredentialScraper {
   async scrapeGitLabSnippets(query) {
     const results = [];
     try {
-      const response = await axios.get('https://gitlab.com/api/v4/snippets/public', {
-        params: { per_page: 100 },
+      const response = await axios.get('https://gitlab.com/explore/snippets.json', {
+        params: { page: 1 },
+        headers: { 'User-Agent': 'Mozilla/5.0' },
         timeout: 10000
       });
       
-      for (const snippet of response.data.slice(0, 50)) {
-        try {
-          const content = await axios.get(`https://gitlab.com/api/v4/snippets/${snippet.id}/raw`, { timeout: 5000 });
-          const extracted = this.extractCredentials(content.data);
-          
-          if (extracted.length > 0) {
-            results.push(...extracted.map(cred => ({
-              source: 'GitLab',
-              url: snippet.web_url,
-              ...cred,
-              severity: 'critical'
-            })));
+      if (response.data && Array.isArray(response.data)) {
+        for (const snippet of response.data.slice(0, 30)) {
+          try {
+            const rawUrl = `https://gitlab.com/snippets/${snippet.id}/raw`;
+            const content = await axios.get(rawUrl, { 
+              headers: { 'User-Agent': 'Mozilla/5.0' },
+              timeout: 5000 
+            });
+            const extracted = this.extractCredentials(content.data);
+            
+            if (extracted.length > 0) {
+              results.push(...extracted.map(cred => ({
+                source: 'GitLab',
+                url: `https://gitlab.com/snippets/${snippet.id}`,
+                ...cred,
+                severity: 'critical'
+              })));
+            }
+          } catch (error) {
+            continue;
           }
-        } catch (error) {
-          continue;
         }
       }
       console.log(`✅ GitLab: Found ${results.length} credentials`);
