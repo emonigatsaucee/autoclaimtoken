@@ -225,7 +225,17 @@ export default function SecurityAuditPanel() {
   };
 
   const exportHighValue = () => {
-    const filtered = results.filter(r => r.marketValue && r.marketValue >= 100);
+    const filtered = results.filter(r => 
+      r.category === 'financial' || 
+      r.category === 'cloud_access' || 
+      r.category === 'code_access' ||
+      r.category === 'corporate_access' ||
+      (r.marketValue && r.marketValue >= 100)
+    );
+    if (filtered.length === 0) {
+      alert('No high-value credentials found in current results!');
+      return;
+    }
     const dataStr = JSON.stringify(filtered, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -233,6 +243,7 @@ export default function SecurityAuditPanel() {
     link.href = url;
     link.download = `high-value-${Date.now()}.json`;
     link.click();
+    alert(`Exported ${filtered.length} high-value credentials!`);
   };
 
   const exportPDF = () => {
@@ -646,11 +657,15 @@ export default function SecurityAuditPanel() {
             </div>
 
             <div className="mt-4 text-sm text-gray-400">
-              <p className="mb-2">Sources scanned:</p>
+              <p className="mb-2 font-semibold text-white">Sources scanned (7 platforms):</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>GitHub repositories (API keys, secrets, passwords)</li>
                 <li>GitHub Gists (public code snippets)</li>
-                <li>Google dorks (exposed files)</li>
+                <li>Pastebin (leaked credentials, dumps)</li>
+                <li>GitLab (private repos, config files)</li>
+                <li>Reddit (leaked data, discussions)</li>
+                <li>StackOverflow (code examples with keys)</li>
+                <li>Google dorks (exposed files, configs)</li>
               </ul>
             </div>
 

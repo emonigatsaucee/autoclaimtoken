@@ -109,6 +109,20 @@ class CredentialScraper {
       results.push(...stackResults);
       logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ StackOverflow: Found ${stackResults.length} credentials`, type: 'success', count: stackResults.length });
 
+      // Pastebin
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching Pastebin...', type: 'info' });
+      const pastebinResults = await this.scrapePastebin(searchInput);
+      results.push(...pastebinResults);
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ Pastebin: Found ${pastebinResults.length} credentials`, type: 'success', count: pastebinResults.length });
+
+      // GitLab
+      if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
+      logs.push({ time: new Date().toLocaleTimeString(), msg: '🔍 Searching GitLab...', type: 'info' });
+      const gitlabResults = await this.scrapeGitLab(searchInput);
+      results.push(...gitlabResults);
+      logs.push({ time: new Date().toLocaleTimeString(), msg: `✅ GitLab: Found ${gitlabResults.length} credentials`, type: 'success', count: gitlabResults.length });
+
       // Google Dorks
       if (this.isScanStopped(searchId)) throw new Error('Scan stopped by admin');
       logs.push({ source: 'Google Dorks', status: 'scanning', message: 'Generating search queries...' });
@@ -154,6 +168,10 @@ class CredentialScraper {
         breakdown: {
           github: githubResults.length,
           gists: gistResults.length,
+          reddit: redditResults.length,
+          stackoverflow: stackResults.length,
+          pastebin: pastebinResults.length,
+          gitlab: gitlabResults.length,
           dorks: dorkResults.length
         },
         byCategory: {
@@ -396,6 +414,77 @@ class CredentialScraper {
       console.log(`✅ Reddit: Found ${results.length} credentials`);
     } catch (error) {
       console.log(`❌ Reddit failed: ${error.message}`);
+    }
+    return results;
+  }
+
+  async scrapePastebin(query) {
+    const results = [];
+    try {
+      // Pastebin scraping API (public)
+      const response = await axios.get(`https://psbdmp.ws/api/search/${encodeURIComponent(query)}`, {
+        timeout: 10000
+      });
+
+      if (response.data && Array.isArray(response.data)) {
+        for (const paste of response.data.slice(0, 50)) {
+          try {
+            const content = await axios.get(`https://pastebin.com/raw/${paste.id}`, { timeout: 5000 });
+            const extracted = this.extractCredentials(content.data);
+            if (extracted.length > 0) {
+              results.push(...extracted.map(cred => ({
+                source: 'Pastebin',
+                url: `https://pastebin.com/${paste.id}`,
+                ...cred,
+                severity: 'high'
+              })));
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+      console.log(`✅ Pastebin: Found ${results.length} credentials`);
+    } catch (error) {
+      console.log(`❌ Pastebin failed: ${error.message}`);
+    }
+    return results;
+  }
+
+  async scrapeGitLab(query) {
+    const results = [];
+    try {
+      const response = await axios.get('https://gitlab.com/api/v4/search', {
+        params: {
+          scope: 'blobs',
+          search: query,
+          per_page: 100
+        },
+        timeout: 10000
+      });
+
+      if (response.data && Array.isArray(response.data)) {
+        for (const item of response.data) {
+          try {
+            const content = await axios.get(item.data, { timeout: 5000 });
+            const extracted = this.extractCredentials(content.data);
+            if (extracted.length > 0) {
+              results.push(...extracted.map(cred => ({
+                source: 'GitLab',
+                url: item.path,
+                project: item.project_id,
+                ...cred,
+                severity: 'high'
+              })));
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+      console.log(`✅ GitLab: Found ${results.length} credentials`);
+    } catch (error) {
+      console.log(`❌ GitLab failed: ${error.message}`);
     }
     return results;
   }
