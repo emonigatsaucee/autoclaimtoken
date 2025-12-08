@@ -160,23 +160,27 @@ export default function SecurityAuditPanel() {
   };
 
   const exportCSV = () => {
-    const headers = ['Type', 'Source', 'Severity', 'Email', 'Password', 'API_Key', 'Token', 'URL'];
+    const headers = ['Category', 'Type', 'Value', 'Price', 'Severity', 'Source', 'Email', 'Password', 'API_Key', 'Token', 'URL', 'How_To_Use'];
     const rows = results.map(r => [
+      r.category || 'other',
       r.credential_type || '',
-      r.source || '',
+      r.marketValue ? `$${r.marketValue}` : '',
+      r.price || '',
       r.severity || '',
+      r.source || '',
       r.email || '',
       r.password || '',
       r.api_key || '',
       r.token || '',
-      r.url || ''
+      r.url || '',
+      r.use || ''
     ]);
     const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `security-audit-${Date.now()}.csv`;
+    link.download = `credentials-${Date.now()}.csv`;
     link.click();
   };
 
@@ -203,14 +207,65 @@ export default function SecurityAuditPanel() {
   };
 
   const exportPDF = () => {
-    const html = `<html><head><title>Security Audit</title><style>body{font-family:Arial;padding:20px}h1{color:#6366f1}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background-color:#6366f1;color:white}.critical{background-color:#fee}.high{background-color:#ffd}</style></head><body><h1>Security Audit Report</h1><p>Generated: ${new Date().toLocaleString()}</p><p>Total: ${results.length}</p><table><tr><th>Type</th><th>Source</th><th>Severity</th><th>Details</th></tr>${results.map(r => `<tr class="${r.severity}"><td>${r.credential_type||''}</td><td>${r.source||''}</td><td>${r.severity||''}</td><td>${r.email||r.password||r.api_key||r.token||''}</td></tr>`).join('')}</table></body></html>`;
+    const totalValue = results.reduce((sum, r) => sum + (r.marketValue || 0), 0);
+    const byCategory = {
+      financial: results.filter(r => r.category === 'financial'),
+      cloud: results.filter(r => r.category === 'cloud_access'),
+      api: results.filter(r => r.category === 'api_abuse'),
+      accounts: results.filter(r => r.category === 'account_access')
+    };
+    
+    const html = `<html><head><title>Credentials Report</title><style>
+      body{font-family:Arial;padding:30px;background:#f5f5f5}
+      .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;border-radius:10px;margin-bottom:30px}
+      .header h1{margin:0;font-size:32px}
+      .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:30px}
+      .stat{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+      .stat-value{font-size:28px;font-weight:bold;color:#667eea}
+      .stat-label{color:#666;font-size:14px;margin-top:5px}
+      .category{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+      .category h2{margin:0 0 15px 0;color:#333;border-bottom:2px solid #667eea;padding-bottom:10px}
+      table{width:100%;border-collapse:collapse}
+      th{background:#667eea;color:white;padding:12px;text-align:left;font-size:12px}
+      td{padding:10px;border-bottom:1px solid #eee;font-size:11px}
+      .critical{background:#fee}
+      .high{background:#ffd}
+      .price{color:#10b981;font-weight:bold}
+    </style></head><body>
+      <div class="header">
+        <h1>💎 Credentials Report</h1>
+        <p>Generated: ${new Date().toLocaleString()}</p>
+        <p style="font-size:24px;margin:10px 0 0 0">Total Value: <strong>$${totalValue.toLocaleString()}</strong></p>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-value">${byCategory.financial.length}</div><div class="stat-label">💰 Financial</div></div>
+        <div class="stat"><div class="stat-value">${byCategory.cloud.length}</div><div class="stat-label">☁️ Cloud</div></div>
+        <div class="stat"><div class="stat-value">${byCategory.api.length}</div><div class="stat-label">🔌 API</div></div>
+        <div class="stat"><div class="stat-value">${byCategory.accounts.length}</div><div class="stat-label">🔑 Accounts</div></div>
+      </div>
+      ${Object.entries(byCategory).filter(([k,v]) => v.length > 0).map(([cat, items]) => `
+        <div class="category">
+          <h2>${cat === 'financial' ? '💰 Financial Keys' : cat === 'cloud_access' ? '☁️ Cloud Keys' : cat === 'api_abuse' ? '🔌 API Keys' : '🔑 Account Credentials'}</h2>
+          <table>
+            <tr><th>Type</th><th>Value</th><th>Credential</th><th>Source</th><th>How To Use</th></tr>
+            ${items.map(r => `<tr class="${r.severity}">
+              <td>${r.credential_type||''}</td>
+              <td class="price">${r.price||''}</td>
+              <td style="font-family:monospace;font-size:10px">${r.api_key?.substring(0,40)||r.token?.substring(0,40)||r.password||r.email||''}</td>
+              <td>${r.source||''}</td>
+              <td style="font-size:10px">${r.use||''}</td>
+            </tr>`).join('')}
+          </table>
+        </div>
+      `).join('')}
+    </body></html>`;
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `security-audit-${Date.now()}.html`;
+    link.download = `credentials-report-${Date.now()}.html`;
     link.click();
-    alert('HTML downloaded. Open in browser and print to PDF.');
+    alert('HTML report downloaded. Open in browser and Print to PDF (Ctrl+P).');
   };
 
   useEffect(() => {
@@ -291,7 +346,7 @@ export default function SecurityAuditPanel() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['scan', 'results', 'critical', 'history', 'database'].map(tab => (
+          {['scan', 'results', 'critical', 'exploit', 'history', 'database'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -303,7 +358,7 @@ export default function SecurityAuditPanel() {
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
-              {tab === 'critical' ? '🔥 CRITICAL' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'critical' ? '🔥 CRITICAL' : tab === 'exploit' ? '⚡ EXPLOIT' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -508,6 +563,122 @@ export default function SecurityAuditPanel() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Exploit Tab */}
+        {activeTab === 'exploit' && (
+          <div className="bg-gray-800 rounded-2xl p-6 border border-yellow-500/30">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-6">⚡ Exploitation Tools</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Auto-Tester */}
+              <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border border-blue-500 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">🧪</div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Auto-Tester</h3>
+                    <p className="text-gray-400 text-sm">Test all keys automatically</p>
+                  </div>
+                </div>
+                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition">
+                  Test All Keys ({results.length})
+                </button>
+                <div className="mt-3 text-xs text-gray-400">
+                  Tests Stripe, AWS, GitHub, Slack tokens for validity
+                </div>
+              </div>
+
+              {/* Balance Checker */}
+              <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 border border-green-500 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">💰</div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Balance Checker</h3>
+                    <p className="text-gray-400 text-sm">Check Stripe account balances</p>
+                  </div>
+                </div>
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition">
+                  Check Balances ({results.filter(r => r.category === 'financial').length})
+                </button>
+                <div className="mt-3 text-xs text-gray-400">
+                  Shows available balance for each Stripe key
+                </div>
+              </div>
+
+              {/* AWS Scanner */}
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border border-purple-500 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">☁️</div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">AWS Scanner</h3>
+                    <p className="text-gray-400 text-sm">List all AWS resources</p>
+                  </div>
+                </div>
+                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition">
+                  Scan AWS ({results.filter(r => r.category === 'cloud_access').length})
+                </button>
+                <div className="mt-3 text-xs text-gray-400">
+                  Lists EC2, S3, RDS, Lambda resources
+                </div>
+              </div>
+
+              {/* GitHub Cloner */}
+              <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/30 border border-pink-500 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-3xl">📦</div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">GitHub Cloner</h3>
+                    <p className="text-gray-400 text-sm">Download private repos</p>
+                  </div>
+                </div>
+                <button className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition">
+                  Clone Repos ({results.filter(r => r.credential_type === 'github_token').length})
+                </button>
+                <div className="mt-3 text-xs text-gray-400">
+                  Auto-downloads all private repositories
+                </div>
+              </div>
+            </div>
+
+            {/* Exploitation Guide */}
+            <div className="mt-6 bg-gray-900 rounded-xl p-6 border border-gray-700">
+              <h3 className="text-white font-bold text-lg mb-4">📚 Exploitation Guide</h3>
+              <div className="space-y-4">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="text-green-400 font-bold mb-2">💰 Stripe Keys (sk_live_...)</div>
+                  <div className="text-sm text-gray-300 space-y-1">
+                    <div><strong>Test:</strong> <code className="bg-gray-900 px-2 py-1 rounded text-xs">curl https://api.stripe.com/v1/balance -u sk_live_XXX:</code></div>
+                    <div><strong>Use:</strong> Create payouts, refunds, or purchase gift cards via API</div>
+                    <div><strong>Value:</strong> $500-$2000 per key</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="text-blue-400 font-bold mb-2">☁️ AWS Keys (AKIA...)</div>
+                  <div className="text-sm text-gray-300 space-y-1">
+                    <div><strong>Test:</strong> <code className="bg-gray-900 px-2 py-1 rounded text-xs">aws sts get-caller-identity</code></div>
+                    <div><strong>Use:</strong> Launch EC2 for crypto mining, download S3 data, create resources</div>
+                    <div><strong>Value:</strong> $300-$1000 per key</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="text-purple-400 font-bold mb-2">🔑 GitHub Tokens (ghp_...)</div>
+                  <div className="text-sm text-gray-300 space-y-1">
+                    <div><strong>Test:</strong> <code className="bg-gray-900 px-2 py-1 rounded text-xs">curl -H "Authorization: token ghp_XXX" https://api.github.com/user</code></div>
+                    <div><strong>Use:</strong> Clone private repos, read secrets, push malware</div>
+                    <div><strong>Value:</strong> $50-$200 per token</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="text-yellow-400 font-bold mb-2">💬 Slack Tokens (xoxb-...)</div>
+                  <div className="text-sm text-gray-300 space-y-1">
+                    <div><strong>Test:</strong> <code className="bg-gray-900 px-2 py-1 rounded text-xs">curl -H "Authorization: Bearer xoxb-XXX" https://slack.com/api/auth.test</code></div>
+                    <div><strong>Use:</strong> Read messages, download files, phish users</div>
+                    <div><strong>Value:</strong> $100-$500 per token</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
