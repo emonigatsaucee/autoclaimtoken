@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Database, AlertTriangle, CheckCircle, XCircle, Loader, Eye, Trash2, Download } from 'lucide-react';
 
-export default function ScraperPanel() {
+export default function SecurityAuditPanel() {
   const [adminKey, setAdminKey] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [searchInput, setSearchInput] = useState('');
@@ -150,7 +150,7 @@ export default function ScraperPanel() {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `scraper-results-${Date.now()}.json`;
+    link.download = `security-audit-${Date.now()}.json`;
     link.click();
   };
 
@@ -166,7 +166,7 @@ export default function ScraperPanel() {
         <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-purple-500/30">
           <div className="text-center mb-6">
             <Database className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Credential Scraper</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Security Audit Panel</h1>
             <p className="text-gray-400">Admin Access Required</p>
           </div>
           
@@ -197,8 +197,8 @@ export default function ScraperPanel() {
         <div className="bg-gray-800 rounded-2xl p-6 mb-6 border border-purple-500/30">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Credential Scraper Panel</h1>
-              <p className="text-gray-400">Real-time credential discovery across multiple sources</p>
+              <h1 className="text-3xl font-bold text-white mb-2">Security Audit Dashboard</h1>
+              <p className="text-gray-400">Monitor security exposures across platforms</p>
             </div>
             <Database className="w-12 h-12 text-purple-400" />
           </div>
@@ -250,7 +250,7 @@ export default function ScraperPanel() {
         {/* Scan Tab */}
         {activeTab === 'scan' && (
           <div className="bg-gray-800 rounded-2xl p-6 border border-purple-500/30">
-            <h2 className="text-2xl font-bold text-white mb-4">Start New Scan</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Start Security Audit</h2>
             
             <div className="mb-4">
               <label className="block text-gray-400 mb-2">Search Type</label>
