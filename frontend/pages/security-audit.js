@@ -1096,6 +1096,15 @@ export default function SecurityAuditPanel() {
                             <div className="bg-gray-900 p-3 rounded mt-2">
                               <div className="text-yellow-400 text-xs font-bold mb-1">💡 HOW TO EXPLOIT:</div>
                               <div className="text-gray-300 text-xs mb-2">{r.exploit}</div>
+                              
+                              {r.repo_url && (
+                                <div className="mb-2">
+                                  <div className="text-blue-400 text-xs font-bold mb-1">🔗 SOURCE REPO:</div>
+                                  <a href={r.repo_url} target="_blank" className="text-purple-400 hover:underline text-xs break-all">{r.repo_url}</a>
+                                  {r.file_path && <div className="text-gray-500 text-xs mt-1">📄 {r.file_path}</div>}
+                                </div>
+                              )}
+                              
                               {r.commands && r.commands.length > 0 && (
                                 <div>
                                   <div className="text-blue-400 text-xs font-bold mb-1">⚡ COMMANDS:</div>

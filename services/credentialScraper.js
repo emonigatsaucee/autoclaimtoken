@@ -270,6 +270,8 @@ class CredentialScraper {
                   source: 'GitHub',
                   url: item.html_url,
                   repository: item.repository.full_name,
+                  repo_url: `https://github.com/${item.repository.full_name}`,
+                  file_path: item.path,
                   ...cred,
                   severity: cred.validated ? 'critical' : 'high'
                 })));
@@ -652,19 +654,38 @@ class CredentialScraper {
       });
     }
 
-    // Extract AWS keys (filter out examples)
+    // Extract AWS keys (filter out examples) + Find matching secret
     patterns.aws_key.lastIndex = 0;
     while ((match = patterns.aws_key.exec(content)) !== null) {
       const key = match[1];
-      // Skip example keys (AWS examples often start with AKIAIOSFODNN7EXAMPLE)
       if (key.includes('EXAMPLE') || key.includes('SAMPLE')) {
         continue;
       }
+      
+      // Try to find matching AWS secret key in same content
+      const secretPatterns = [
+        /AWS_SECRET_ACCESS_KEY[\s:=]+["']?([a-zA-Z0-9\/+=]{40})["']?/i,
+        /aws_secret_access_key[\s:=]+["']?([a-zA-Z0-9\/+=]{40})["']?/i,
+        /SECRET_ACCESS_KEY[\s:=]+["']?([a-zA-Z0-9\/+=]{40})["']?/i,
+        /secret[_-]?key[\s:=]+["']?([a-zA-Z0-9\/+=]{40})["']?/i
+      ];
+      
+      let secretKey = null;
+      for (const pattern of secretPatterns) {
+        const secretMatch = pattern.exec(content);
+        if (secretMatch) {
+          secretKey = secretMatch[1];
+          break;
+        }
+      }
+      
       const cred = {
         credential_type: 'aws_key',
         api_key: key,
+        secret_key: secretKey,
         raw_data: match[0],
-        severity: 'critical'
+        severity: secretKey ? 'critical' : 'high',
+        exploitable: secretKey ? true : false
       };
       const cat = this.categorizeCredential(cred);
       results.push({ ...cred, ...cat });

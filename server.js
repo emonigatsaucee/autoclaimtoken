@@ -151,7 +151,9 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: {
       health: '/health',
-      api: '/api'
+      api: '/api',
+      breach: '/api/breach/check',
+      scraper: '/scraper/scan'
     }
   });
 });
@@ -176,6 +178,7 @@ app.use('/api', require('./routes/bnbTokens'));
 app.use('/', require('./routes/testCookies'));
 app.use('/', require('./routes/scraperAPI'));
 app.use('/api', require('./routes/exploitAPI'));
+app.use('/api', require('./routes/breachAPI'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
